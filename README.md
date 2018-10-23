@@ -1,4 +1,4 @@
-# sw-fec-codec
+# swif-codec
 Open-source sliding window FEC codec (IETF hackathon)
 
 Main goal is to develop an open-source C-language codec for a sliding window FEC code. These codes can boost performance of content delivery protocols in harsh environments where packet losses can be frequent, while keeping the FEC-related added latency low.
