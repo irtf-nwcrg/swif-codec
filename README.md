@@ -33,7 +33,7 @@ Parts of this document can be re-used (e.g., its PRNG and coding coefficients ge
 
 However the goal **IS NOT** to implement RLC. For instance in-network re-encoding should be supported by SWiF Codec that is totally out-of-scope for RLC.
 
-The [ietf98 TSVWG slides](https://datatracker.ietf.org/meeting/98/materials/slides-98-tsvwg-sessb-63-fecframe-drafts-00) (slides 9-10-11) explain how Sliding Window FEC Codes, like RLC, work.
+The [ietf98 TSVWG slides 9-10-11](https://datatracker.ietf.org/meeting/98/materials/slides-98-tsvwg-sessb-63-fecframe-drafts-00) explain how Sliding Window FEC Codes, like RLC, work.
 
 
 ## Eight simple ideas to start understanding FEC and Network Coding
