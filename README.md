@@ -77,7 +77,7 @@ The codec is not supposed to include everything since parts of a FEC Scheme are 
 	Note that this implementation does not include in its public version support for Sliding Window Codes.
 	However it includes GF(256) support from Luigi Rizzo in the Reed-Solomon codec as well as an advanced performance evaluation framework (eperftool).
 
-#- NB: Kodo (Morten V. Pedersen, Steinwurf) is highly relevent as it provides several Sliding Window codecs [http://docs.steinwurf.com/kodo.html].
+- NB: Kodo (Morten V. Pedersen, Steinwurf) is highly relevent as it provides several Sliding Window codecs [http://docs.steinwurf.com/kodo.html].
 	However it is **NOT RECOMMENDED** to get inspiration from this project because of incompatible licences with the SWiFCodec project.
 
 
