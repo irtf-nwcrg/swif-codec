@@ -55,10 +55,8 @@ This work has strong relationships with the Generic API I-D [https://datatracker
 ## Idea 7-
 ### "With NC, network equipments can perform FEC encoding to improve network usage"
 - trivial example where a network equipment could reduce traffic (it sends a single "P1 XOR P2" packet instead of sending both P1 and P2):
-.     
-
-<pre><code>
-Alice          Wi-Fi router          Bob    
+      
+<pre><code>Alice          Wi-Fi router          Bob    
   |    --P1-->      |                 |    
   |                 |     <--P2--     |    
   | <--P1 XOR P2--  |  --P1 XOR P2--> |    
