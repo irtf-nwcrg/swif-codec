@@ -8,17 +8,26 @@ This development is done in the context of the "Coding for Efficient Network Com
 
 This work has strong relationships with the Generic API I-D [https://datatracker.ietf.org/doc/draft-roca-nwcrg-generic-fec-api/] and RLC codes [https://datatracker.ietf.org/doc/draft-ietf-tsvwg-rlc-fec-scheme/] as examples of sliding window codes. Possible applications to QUIC [https://datatracker.ietf.org/doc/draft-swett-nwcrg-coding-for-quic/] and [https://datatracker.ietf.org/doc/draft-roca-nwcrg-rlc-fec-scheme-for-quic/], among others, are expected. 
 
-## Reference document
+## Reference documents
+
+### API for the SWiF Codec
 
 [API Internet-draft](https://datatracker.ietf.org/doc/draft-roca-nwcrg-generic-fec-api/)
 
-[API Slides](https://github.com/irtf-nwcrg/rg-materials/blob/master/ietf102-2018-07/03_roca_generic_fec_api.pdf)
+[API Slides (ietf102 nwcrg meeting)](https://github.com/irtf-nwcrg/rg-materials/blob/master/ietf102-2018-07/03_roca_generic_fec_api.pdf)
 
 This dradft and associated slides discuss two things:
-- what mechanisms should be in the SWiF Codec and in the caller?
-The codec is not supposed to include everything since parts of a FEC Scheme are protocol specific (e.g., signalling aspects).
+- what mechanisms should be in the SWiF Codec versus in the caller?
+The codec is not supposed to include everything since parts of a FEC Scheme are clearly protocol specific (e.g., signalling aspects).
 
 - a description of the codec API.
+
+### RLC Sliding Window FEC Scheme whose parts can be reused
+
+The [RLC FEC Scheme](https://tools.ietf.org/html/draft-ietf-tsvwg-rlc-fec-scheme) describes a Sliding Window FEC Scheme (i.e., the codec plus signalling aspects).
+Parts of this document can be re-used (e.g., its PRNG and coding coefficients generation function, some of the internal parameters, etc.).
+
+However the goal **IS NOT** to implement RLC. For instance in-network re-encoding should be supported by SWiF Codec that is totally out-of-scope for RLC.
 
 
 ## Eight simple ideas to start understanding FEC and Network Coding
