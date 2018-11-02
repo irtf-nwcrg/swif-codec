@@ -20,7 +20,7 @@ This work has strong relationships with the Generic API I-D [https://datatracker
 	However it is **NOT RECOMMENDED** to get inspiration from this project because of incompatible licences with the SWiFCodec project.
 
 
-# Eight simple ideas to understand FEC and Network Coding
+# Eight simple ideas to start understanding FEC and Network Coding
 
 ## Idea 1-
 ### "We focus on networks where a packet either arrives or is lost"
