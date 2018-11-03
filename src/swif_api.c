@@ -3,6 +3,8 @@
  * https://github.com/irtf-nwcrg/swif-codec
  */
 
+#include "swif_includes.h"
+
 
 /*******************************************************************************
  * Coding Window Functions at an Encoder and Decoder

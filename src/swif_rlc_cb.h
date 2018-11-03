@@ -12,21 +12,23 @@
  * depending on the context.
  */
 typedef struct swif_encoder_rlc_cb {
-        /* when a function returns with SWIF_STATUS_ERROR, the errno
-         * variable contains a more detailed error type. */
-        swif_errno_t    errno;
+	swif_codepoint_t	codepoint,
 
-        /* desired verbosity: 0 is the minimum verbosity, the maximum
-         * level being implementation specific. */
-        uint32_t        verbosity;
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. */
+	swif_errno_t		errno;
 
-        /* maximum number of source symbols used for any repair symbol */
-        uint32_t        max_coding_window_size;
+	/* desired verbosity: 0 is the minimum verbosity, the maximum
+	 * level being implementation specific. */
+	uint32_t		verbosity;
 
-        /* exact size (in bytes) of any source or repair symbol */
-        uint32_t        symbol_size;
+	/* maximum number of source symbols used for any repair symbol */
+	uint32_t		max_coding_window_size;
 
-        /* add whatever may be needed hereafter... */
+	/* exact size (in bytes) of any source or repair symbol */
+	uint32_t		symbol_size;
+
+	/* add whatever may be needed hereafter... */
 } swif_encoder_rlc_cb_t;
 
 
@@ -38,26 +40,28 @@ typedef struct swif_encoder_rlc_cb {
  * depending on the context.
  */
 typedef struct swif_decoder_rlc_cb {
-        /* when a function returns with SWIF_STATUS_ERROR, the errno
-         * variable contains a more detailed error type. */
-        swif_errno_t    errno;
+	swif_codepoint_t	codepoint,
 
-        /* desired verbosity: 0 is the minimum verbosity, the maximum
-         * level being implementation specific. */
-        uint32_t        verbosity;
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. */
+	swif_errno_t		errno;
 
-        /* maximum number of source symbols used for any repair symbol */
-        uint32_t        max_coding_window_size;
+	/* desired verbosity: 0 is the minimum verbosity, the maximum
+	 * level being implementation specific. */
+	uint32_t		verbosity;
 
-        /* max. number of source symbols kepts in current linear system.
-         * If the linear system grows above this limit, old source
-         * symbols in excess are removed and the application callback
-         * called. This value should be larger than the
-         * max_coding_window_size. */
-        uint32_t        max_linear_system_size;
+	/* maximum number of source symbols used for any repair symbol */
+	uint32_t		max_coding_window_size;
 
-        /* exact size (in bytes) of any source or repair symbol */
-        uint32_t        symbol_size;
+	/* max. number of source symbols kepts in current linear system.
+	 * If the linear system grows above this limit, old source
+	 * symbols in excess are removed and the application callback
+	 * called. This value should be larger than the
+	 * max_coding_window_size. */
+	uint32_t		max_linear_system_size;
 
-        /* add whatever may be needed hereafter... */
+	/* exact size (in bytes) of any source or repair symbol */
+	uint32_t		symbol_size;
+
+	/* add whatever may be needed hereafter... */
 } swif_decoder_rlc_cb_t;

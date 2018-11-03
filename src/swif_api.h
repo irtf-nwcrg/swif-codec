@@ -280,11 +280,13 @@ swif_status_t   swif_encoder_get_coding_coefs_tab (
  * new pieces of information that are specific to each codec.
  */
 typedef struct swif_encoder {
-        /* when a function returns with SWIF_STATUS_ERROR, the errno
-         * variable contains a more detailed error type. This variable
-         * is set by the codec and accessible to the application in
-         * READ ONLY mode. Otherwise its value is undefined. */
-        swif_errno_t        errno;
+	swif_codepoint_t	codepoint;
+
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. This variable
+	 * is set by the codec and accessible to the application in
+	 * READ ONLY mode. Otherwise its value is undefined. */
+	swif_errno_t		errno;
 } swif_encoder_t;
 
 
@@ -417,11 +419,13 @@ swif_status_t   swif_build_repair_symbol (
  * structure below being a non normative example.
  */
 typedef struct swif_decoder {
-        /* when a function returns with SWIF_STATUS_ERROR, the errno
-         * variable contains a more detailed error type. This variable
-         * is set by the codec and accessible to the application in
-         * READ ONLY mode. Otherwise its value is undefined. */
-        swif_errno_t    errno;
+	swif_codepoint_t	codepoint;
+
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. This variable
+	 * is set by the codec and accessible to the application in
+	 * READ ONLY mode. Otherwise its value is undefined. */
+	swif_errno_t		errno;
 } swif_decoder_t;
 
 
@@ -537,7 +541,7 @@ swif_status_t   swif_decoder_set_parameters  (
 
 /**
  * This function gets one or more FEC codec specific parameters,
- *        using a type/length/value approach for maximum flexibility.
+ * using a type/length/value approach for maximum flexibility.
  *
  * @param dec           context (i.e., pointer to decoder structure).
  * @param type          (IN) Type of parameter.
