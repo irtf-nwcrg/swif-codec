@@ -12,7 +12,7 @@
  * depending on the context.
  */
 typedef struct swif_encoder_rlc_cb {
-	swif_codepoint_t	codepoint,
+	swif_codepoint_t	codepoint;
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */
@@ -28,6 +28,13 @@ typedef struct swif_encoder_rlc_cb {
 	/* exact size (in bytes) of any source or repair symbol */
 	uint32_t		symbol_size;
 
+	/* coding coefficients table. To be initialized before building a new repair symbol */
+	uint8_t			*cc_tab;
+
+	/* linked list of source symbols currently in the coding window */
+	enc_coding_window_t	*cw_head;
+	uint32_t		cw_nb_in_list;
+
 	/* add whatever may be needed hereafter... */
 } swif_encoder_rlc_cb_t;
 
@@ -40,7 +47,7 @@ typedef struct swif_encoder_rlc_cb {
  * depending on the context.
  */
 typedef struct swif_decoder_rlc_cb {
-	swif_codepoint_t	codepoint,
+	swif_codepoint_t	codepoint;
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */

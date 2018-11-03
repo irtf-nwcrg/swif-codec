@@ -277,5 +277,38 @@ uint8_t lc_inv(uint8_t x, uint8_t log2_nb_bit_coef)
   }
 }
 
+
+/*---------------------------------------------------------------------------*/
+
+
+void coded_packet_copy_from(coded_packet_t* dst, coded_packet_t* src)
+{
+    memcpy(dst, src, sizeof(*src));
+}
+
+
+/* p1 pointer MUST be different from p2 pointer */
+static void coded_packet_destructive_linear_combination
+(uint8_t coef1, coded_packet_t* p1_and_result,
+ uint8_t coef2, coded_packet_t* p2)
+{
+  ASSERT(p1_and_result != p2);
+  //if (coef1 != 1) // [XXX] uncomment for opt.
+  coded_packet_to_mul(p1_and_result, coef1);
+  //if (coef2 != 1) // [XXX] uncomment for opt.
+  coded_packet_to_mul(p2, coef2);
+  coded_packet_to_add(p1_and_result, p1_and_result, p2);
+}
+
+
+/* p1 += coef2 x p2 ; p1 pointer may be equal to p2 pointer */
+void swif_symbol_add_mult (char* p1, uint8_t coef2, char* p2)
+{
+  coded_packet_t p2_copy;
+  coded_packet_copy_from(&p2_copy, p2);
+  coded_packet_destructive_linear_combination(1, p1, coef2, &p2_copy);
+}
+
+
 /*---------------------------------------------------------------------------*/
 /** @} */

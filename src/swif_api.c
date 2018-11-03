@@ -21,34 +21,13 @@
  */
 swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
 {
+// NOT YET
 }
 
 swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec)
 {
+// NOT YET
 }
-
-
-/**
- * Add a sequential set of source symbols (there MUST NOT be any gap) to
- * the coding window. This function may be called several times if there
- * are gaps in the encoding window. Calling this function does not reset
- * the current coding window, but appends these source symbols to it.
- */
-swif_status_t   swif_encoder_add_source_symbol_tab_to_coding_window  (
-                                swif_encoder_t* enc,
-                                void*           new_src_symbol_buf_tab[],
-                                esi_t           first_src_symbol_esi,
-                                uint32_t        nb_symbols_in_tab)
-{
-}
-
-swif_status_t   swif_decoder_add_source_symbol_tab_to_coding_window  (
-                                swif_decoder_t* dec,
-                                esi_t           first_src_symbol_esi,
-                                uint32_t        nb_symbols_in_tab)
-{
-}
-
 
 /**
  * Add this source symbol to the coding window.
@@ -60,12 +39,15 @@ swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
                                 void*           new_src_symbol_buf,
                                 esi_t           new_src_symbol_esi)
 {
+ajouter un élément à la liste chainée des symboles sources
+retirer le symbole source le plus ancien si l'EW déborde.
 }
 
 swif_status_t   swif_decoder_add_source_symbol_to_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           new_src_symbol_esi)
 {
+// NOT YET
 }
 
 
@@ -76,12 +58,14 @@ swif_status_t   swif_encoder_remove_source_symbol_from_coding_window (
                                 swif_encoder_t* enc,
                                 esi_t           old_src_symbol_esi)
 {
+// NOT YET
 }
 
 swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           old_src_symbol_esi)
 {
+// NOT YET
 }
 
 
@@ -102,6 +86,7 @@ swif_status_t   swif_encoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
+// NOT YET
 }
 
 swif_status_t   swif_decoder_set_coding_coefs_tab (
@@ -109,6 +94,7 @@ swif_status_t   swif_decoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
+// NOT YET
 }
 
 
@@ -149,6 +135,7 @@ swif_status_t   swif_encoder_get_coding_coefs_tab (
                                 void**          coding_coefs_tab,
                                 uint32_t*       nb_coefs_in_tab)
 {
+// NOT YET
 }
 
 
@@ -201,6 +188,7 @@ swif_status_t   swif_encoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
+// NOT YET
 }
 
 /**
@@ -213,6 +201,7 @@ swif_status_t   swif_encoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
+// NOT YET
 }
 
 
@@ -241,6 +230,7 @@ swif_decoder_t* swif_decoder_create (
                                 uint32_t        max_coding_window_size,
                                 uint32_t        max_linear_system_size)
 {
+// NOT YET
 }
 
 
@@ -249,6 +239,7 @@ swif_decoder_t* swif_decoder_create (
  **/
 swif_status_t   swif_decoder_release (swif_decoder_t*        dec)
 {
+// NOT YET
 }
 
 
@@ -272,6 +263,7 @@ swif_status_t   swif_decoder_set_callback_functions (
                                         esi_t   esi),
                 void*        context_4_callback)
 {
+// NOT YET
 }
 
 
@@ -285,6 +277,7 @@ swif_status_t   swif_decoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
+// NOT YET
 }
 
 
@@ -298,6 +291,7 @@ swif_status_t   swif_decoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
+// NOT YET
 }
 
 
@@ -311,6 +305,7 @@ swif_status_t   swif_decoder_decode_with_new_source_symbol (
                                 void* const     new_symbol_buf,
                                 esi_t           new_symbol_esi)
 {
+// NOT YET
 }
 
 
@@ -323,5 +318,6 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
                                 void* const     new_symbol_buf)
 {
+// NOT YET
 }
 
