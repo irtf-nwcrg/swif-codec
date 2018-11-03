@@ -98,3 +98,5 @@ The [ietf98 TSVWG slides 9-10-11](https://datatracker.ietf.org/meeting/98/materi
 	However it is **NOT RECOMMENDED** to get inspiration from this project because of incompatible licences with the SWiFCodec project.
 
 
+# Contact:
+vincent.roca@inria.fr

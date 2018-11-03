@@ -1,5 +1,6 @@
 The SWiF Codec IETF Hackathon project is distributed under the GNU LGPL
 licence, version 3.
+Contact: vincent.roca@inria.fr
 
 ---
 
