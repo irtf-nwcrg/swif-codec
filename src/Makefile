@@ -31,13 +31,11 @@ CFLAGS += -Wall -g3 -fPIC
 
 #------------------------------
 
-SRCS = swif_api.c swif_linear-code.c swif_prng.c
+SRCS = swif_api.c swif_linear-code.c swif_prng.c swif_coding_coefficients.c
 
-HEADERS = $(SRCS:.c=.h)
+HEADERS = $(SRCS:.c=.h) swif_general.h swif_includes.h swif_rlc_cb.h
 
 OBJS = $(SRCS:.c=.o)
-
-#------------------------------
 
 #---------------------------------------------------------------------------
 # Main targets
@@ -61,14 +59,14 @@ DEPS = $(SRCS:.c=.d)
 # Library
 #---------------------------------------------------------------------------
 
-liblc.a: ${OBJS}
-	${AR} cru $@ ${OBJS}
+libswif.a: ${OBJS}
+	   ${AR} cru $@ ${OBJS}
 
 #---------------------------------------------------------------------------
 # Testing
 #---------------------------------------------------------------------------
 
-test-coded-packet: test-coded-packet.o liblc.a
+test-coded-packet: test-coded-packet.o libswif.a
 	${CC} ${CFLAGS} -o $@ $< -llc -L.
 
 #---------------------------------------------------------------------------
