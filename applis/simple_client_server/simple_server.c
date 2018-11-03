@@ -68,15 +68,16 @@ static void	source_symbol_removed_from_coding_window_callback (void*   context,
 int
 main(int argc, char* argv[])
 {
-	of_codepoint_t	codepoint;				/* identifier of the codec to use */
+	swif_codepoint_t codepoint;				/* identifier of the codec to use */
 	swif_encoder_t	*ses		= NULL;
 	void**		enc_symbols_tab	= NULL;			/* table containing pointers to the encoding (i.e. source + repair) symbols buffers */
 	uint32_t	symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
 	uint32_t	ew_size;				/* encoding window size */
 	uint32_t	k;					/* total number of source symbols */
 	uint32_t	n;					/* total number of encoding symbols (i.e. source + repair) in the session */
-	uint32_t	ssi;					/* source symbol id */
+	esi_t		esi;					/* source symbol id */
 	uint32_t	i;
+	uint32_t	idx;					/* index in the source+repair table */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t	fec_oti;				/* FEC Object Transmission Information as sent to the client */
@@ -150,7 +151,7 @@ main(int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != OF_STATUS_OK) {
+			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
 				printf(stderr, "ERROR:  swif_build_repair_symbol() failed after esi=%u\n", esi);
 				ret = -1;
 				goto end;
@@ -198,9 +199,9 @@ main(int argc, char* argv[])
 		/* Add a pkt header wich only countains the ESI, i.e. a 32bits sequence number, in network byte order in order
 		 * to be portable regardless of the local and remote byte endian representation (the receiver will do the
 		 * opposite with ntohl()...) */
-		*(uint32_t*)pkt_with_fpi = htonl(rand_order[i]);
-		memcpy(4 + pkt_with_fpi, enc_symbols_tab[rand_order[i]], SYMBOL_SIZE);
-		printf("%05d => sending symbol %u (%s)\n", i + 1, rand_order[i], (rand_order[i] < k) ? "src" : "repair");
+		*(uint32_t*)pkt_with_fpi = htonl(i);
+		memcpy(4 + pkt_with_fpi, enc_symbols_tab[i], SYMBOL_SIZE);
+		printf("%05d => sending symbol %u (%s)\n", i + 1, i, (i < k) ? "src" : "repair");
 		if ((ret = sendto(so, pkt_with_fpi, SYMBOL_SIZE + 4, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
 			printf(stderr, "sendto() failed!\n");
 			ret = -1;
@@ -223,9 +224,6 @@ end:
 	}
 	if (params) {
 		free(params);
-	}
-	if (rand_order) {
-		free(rand_order);
 	}
 	if (enc_symbols_tab) {
 		for (esi = 0; esi < n; esi++) {
