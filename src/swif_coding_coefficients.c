@@ -38,58 +38,62 @@ int generate_coding_coefficients (uint16_t  repair_key,
                                  uint8_t   dt,
                                  uint8_t   m)
 {
-   uint32_t	i;
-   tinymt32_t	s;    /* PRNG internal state */
-
-   if (dt > 15) {
-       return SWIF_STATUS_ERROR; /* bad dt parameter */
-   }
-   switch (m) {
-   case 1:
-       if (dt == 15) {
-           /* all coefficients are 1 */
-           memset(cc_tab, 1, cc_nb);
-       } else {
-           /* here coefficients are either 0 or 1 */
-           tinymt32_init(&s, repair_key);
-           for (i = 0 ; i < cc_nb ; i++) {
-               if (tinymt32_rand(&s, 16) <= dt) {
-                   cc_tab[i] = (uint8_t) 1;
-               } else {
-                   cc_tab[i] = (uint8_t) 0;
-               }
-           }
-       }
-       break;
-
-   case 8:
-       tinymt32_init(&s, repair_key);
-       if (dt == 15) {
-           /* coefficient 0 is avoided here in order to include
-            * all the source symbols */
-           for (i = 0 ; i < cc_nb ; i++) {
-               do {
-                   cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
-               } while (cc_tab[i] == 0);
-           }
-       } else {
-           /* here a certain fraction of coefficients should be 0 */
-           for (i = 0 ; i < cc_nb ; i++) {
-               if (tinymt32_rand(&s, 16) <= dt) {
-                   do {
-                       cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
-                   } while (cc_tab[i] == 0);
-               } else {
-                   cc_tab[i] = 0;
-               }
-           }
-       }
-       break;
-
-   default:
-       /* bad parameter m */
-       return SWIF_STATUS_ERROR;
-   }
-   return SWIF_STATUS_OK;
+    uint32_t	i;
+    tinymt32_t	s;    /* PRNG internal state */
+ 
+    /* SWiF codec is for the moment limited to FF(256) and full density */
+    if (dt != 15 || m != 8) {
+        return SWIF_STATUS_ERROR; /* bad dt parameter */
+    }
+    if (dt > 15) {
+        return SWIF_STATUS_ERROR; /* bad dt parameter */
+    }
+    switch (m) {
+    case 1:
+        if (dt == 15) {
+            /* all coefficients are 1 */
+            memset(cc_tab, 1, cc_nb);
+        } else {
+            /* here coefficients are either 0 or 1 */
+            tinymt32_init(&s, repair_key);
+            for (i = 0 ; i < cc_nb ; i++) {
+                if (tinymt32_rand(&s, 16) <= dt) {
+                    cc_tab[i] = (uint8_t) 1;
+                } else {
+                    cc_tab[i] = (uint8_t) 0;
+                }
+            }
+        }
+        break;
+ 
+    case 8:
+        tinymt32_init(&s, repair_key);
+        if (dt == 15) {
+            /* coefficient 0 is avoided here in order to include
+             * all the source symbols */
+            for (i = 0 ; i < cc_nb ; i++) {
+                do {
+                    cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
+                } while (cc_tab[i] == 0);
+            }
+        } else {
+            /* here a certain fraction of coefficients should be 0 */
+            for (i = 0 ; i < cc_nb ; i++) {
+                if (tinymt32_rand(&s, 16) <= dt) {
+                    do {
+                        cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
+                    } while (cc_tab[i] == 0);
+                } else {
+                    cc_tab[i] = 0;
+                }
+            }
+        }
+        break;
+ 
+    default:
+        /* bad parameter m */
+        return SWIF_STATUS_ERROR;
+    }
+    return SWIF_STATUS_OK;
 }
 
