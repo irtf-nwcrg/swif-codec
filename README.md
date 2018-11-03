@@ -30,7 +30,7 @@ The codec is not supposed to include everything since parts of a FEC Scheme are 
 
 ### RLC Sliding Window FEC Scheme whose parts can be reused
 
-The [RLC FEC Scheme](https://tools.ietf.org/html/draft-ietf-tsvwg-rlc-fec-scheme) describes a Sliding Window FEC Scheme (i.e., the codec plus signalling aspects).
+The [RLC FEC Scheme](https://datatracker.ietf.org/doc/draft-ietf-tsvwg-rlc-fec-scheme/) describes a Sliding Window FEC Scheme (i.e., the codec plus signalling aspects).
 Parts of this document can be re-used (e.g., its PRNG and coding coefficients generation function, some of the internal parameters, etc.).
 
 However the goal **IS NOT** to implement RLC. For instance in-network re-encoding should be supported by SWiF Codec that is totally out-of-scope for RLC.
