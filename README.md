@@ -78,6 +78,8 @@ The [ietf98 TSVWG slides 9-10-11](https://datatracker.ietf.org/meeting/98/materi
   |    --P1-->      |                 |    
   |                 |     <--P2--     |    
   | <--P1 XOR P2--  |  --P1 XOR P2--> |    
+  |                 |                 |    
+recover P2                     Recover P1
 </code></pre>
 
 ### Idea 8-
