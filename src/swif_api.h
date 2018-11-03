@@ -63,7 +63,46 @@ typedef enum {
  * With Sliding Window FEC codes, an ESI is in fact a source symbol
  * identifier, unlike block FEC codes.
  */
-typedef uint32_t    esi_t
+typedef uint32_t    esi_t;
+
+
+/*******************************************************************************
+ * Encoder/decoder codec instance (generic part)
+ */
+
+
+/**
+ * Throughout the API, a pointer to this structure is used as an
+ * identifier of the encoder instance (or "enc").
+ *
+ * This generic structure is meant to be extended by each codec with
+ * new pieces of information that are specific to each codec.
+ */
+typedef struct swif_encoder {
+	swif_codepoint_t	codepoint;
+
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. This variable
+	 * is set by the codec and accessible to the application in
+	 * READ ONLY mode. Otherwise its value is undefined. */
+	swif_errno_t		swif_errno;
+} swif_encoder_t;
+
+
+/**
+ * Decoder structure that contains whatever is needed for decoding.
+ * The exact content of this structure is FEC code dependent, the
+ * structure below being a non normative example.
+ */
+typedef struct swif_decoder {
+	swif_codepoint_t	codepoint;
+
+	/* when a function returns with SWIF_STATUS_ERROR, the errno
+	 * variable contains a more detailed error type. This variable
+	 * is set by the codec and accessible to the application in
+	 * READ ONLY mode. Otherwise its value is undefined. */
+	swif_errno_t		swif_errno;
+} swif_decoder_t;
 
 
 /*******************************************************************************
@@ -241,24 +280,6 @@ swif_status_t   swif_encoder_get_coding_coefs_tab (
 
 
 /**
- * Throughout the API, a pointer to this structure is used as an
- * identifier of the encoder instance (or "enc").
- *
- * This generic structure is meant to be extended by each codec with
- * new pieces of information that are specific to each codec.
- */
-typedef struct swif_encoder {
-	swif_codepoint_t	codepoint;
-
-	/* when a function returns with SWIF_STATUS_ERROR, the errno
-	 * variable contains a more detailed error type. This variable
-	 * is set by the codec and accessible to the application in
-	 * READ ONLY mode. Otherwise its value is undefined. */
-	swif_errno_t		errno;
-} swif_encoder_t;
-
-
-/**
  * Create and initialize an encoder, providing only key parameters.
  *
  * @param codepoint     opaque identifier that fully identifies the FEC
@@ -375,26 +396,9 @@ swif_status_t   swif_build_repair_symbol (
                                 void*           new_buf);
 
 
-
 /*******************************************************************************
  * Decoder functions
  */
-
-
-/**
- * Decoder structure that contains whatever is needed for decoding.
- * The exact content of this structure is FEC code dependent, the
- * structure below being a non normative example.
- */
-typedef struct swif_decoder {
-	swif_codepoint_t	codepoint;
-
-	/* when a function returns with SWIF_STATUS_ERROR, the errno
-	 * variable contains a more detailed error type. This variable
-	 * is set by the codec and accessible to the application in
-	 * READ ONLY mode. Otherwise its value is undefined. */
-	swif_errno_t		errno;
-} swif_decoder_t;
 
 
 /**
