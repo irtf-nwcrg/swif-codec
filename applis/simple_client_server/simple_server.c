@@ -1,3 +1,11 @@
+/*
+ * Simple demo application on top of the SWiF Codec API.
+ *
+ * It is inspired from the same application from openFEC
+ * (http://openfec.org/downloads.html) modified in order
+ * to be used with the appropriate API.
+ */
+
 /* $Id: simple_server.c 216 2014-12-13 13:21:07Z roca $ */
 /*
  * OpenFEC.org AL-FEC Library.
@@ -31,9 +39,6 @@
  * knowledge of the CeCILL-C license and that you accept its terms.
  */
 
-/* this is the encoder */
-#define OF_USE_ENCODER
-
 #include "simple_client_server.h"
 
 
@@ -45,16 +50,16 @@
 static SOCKET	init_socket (SOCKADDR_IN	*dst_host);
 
 /**
- * Shuffles the array randomly.
- */
-static void	randomize_array (UINT32		**array,
-				 UINT32		arrayLen);
-
-/**
  * Dumps len32 32-bit words of a buffer (typically a symbol).
  */
 static void	dump_buffer_32 (void	*buf,
-				UINT32	len32);
+				uint32_t	len32);
+
+/**
+ * Callback (not really required).
+ */
+static void	source_symbol_removed_from_coding_window_callback (void*   context,
+								   esi_t   old_symbol_esi);
 
 
 /*************************************************************************************************/
@@ -63,84 +68,43 @@ static void	dump_buffer_32 (void	*buf,
 int
 main(int argc, char* argv[])
 {
-	of_codec_id_t	codec_id;				/* identifier of the codec to use */
-	of_session_t	*ses 		= NULL;			/* openfec codec instance identifier */
-	of_parameters_t	*params		= NULL;			/* structure used to initialize the openfec session */
+	of_codepoint_t	codepoint;				/* identifier of the codec to use */
+	swif_encoder_t	*ses		= NULL;
 	void**		enc_symbols_tab	= NULL;			/* table containing pointers to the encoding (i.e. source + repair) symbols buffers */
-	UINT32		symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
-	UINT32		k;					/* number of source symbols in the block */
-	UINT32		n;					/* number of encoding symbols (i.e. source + repair) in the block */
-	UINT32		esi;					/* Encoding Symbol ID, used to identify each encoding symbol */
-	UINT32		i;
-	UINT32*		rand_order	= NULL;			/* table used to determine a random transmission order. This randomization process
-								 * is essential for LDPC-Staircase optimal performance */
+	uint32_t	symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
+	uint32_t	ew_size;				/* encoding window size */
+	uint32_t	k;					/* total number of source symbols */
+	uint32_t	n;					/* total number of encoding symbols (i.e. source + repair) in the session */
+	uint32_t	ssi;					/* source symbol id */
+	uint32_t	i;
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t	fec_oti;				/* FEC Object Transmission Information as sent to the client */
 	INT32		lost_after_index= -1;			/* all the packets to send after this index are considered as lost during transmission */
 	SOCKADDR_IN	dst_host;
-	UINT32		ret		= -1;
+	uint32_t	ret		= -1;
 
-	
-	if (argc == 1)
-	{
-		/* k value is ommited, so use default */
-		k = DEFAULT_K;
+	if (argc == 1) {
+		/* ew_size value is ommited, so use default */
+		ew_size = DEFAULT_EW_SIZE;
+	} else {
+		ew_size = atoi(argv[1]);
 	}
-	else
-	{
-		k = atoi(argv[1]);
-	}
-	n = (UINT32)floor((double)k / (double)CODE_RATE);
-	/* Choose which codec is the most appropriate. If small enough, choose Reed-Solomon (with m=8), otherwise LDPC-Staircase.
-	 * Then finish the openfec session initialization accordingly */
-	if (n <= 255)
-	{
-		/* fill in the code specific part of the of_..._parameters_t structure */
-		of_rs_2_m_parameters_t	*my_params;
+	k = 1000;
+	n = (uint32_t)floor((double)ew_size / (double)CODE_RATE);
 
-		printf("\nInitialize a Reed-Solomon over GF(2^m) codec instance, (n, k)=(%u, %u)...\n", n, k);
-		codec_id = OF_CODEC_REED_SOLOMON_GF_2_M_STABLE;
-		if ((my_params = (of_rs_2_m_parameters_t *)calloc(1, sizeof(* my_params))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory for codec %d\n", codec_id))
-			ret = -1;
-			goto end;
-		}
-		my_params->m = 8;
-		params = (of_parameters_t *) my_params;
-	}
-	else
-	{
-		/* fill in the code specific part of the of_..._parameters_t structure */
-		of_ldpc_parameters_t	*my_params;
-
-		printf("\nInitialize an LDPC-Staircase codec instance, (n, k)=(%u, %u)...\n", n, k);
-		codec_id = OF_CODEC_LDPC_STAIRCASE_STABLE;
-		if ((my_params = (of_ldpc_parameters_t *)calloc(1, sizeof(* my_params))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory for codec %d\n", codec_id))
-			ret = -1;
-			goto end;
-		}
-		my_params->prng_seed	= rand();
-		my_params->N1		= 7;
-		params = (of_parameters_t *) my_params;
-	}
-	params->nb_source_symbols	= k;		/* fill in the generic part of the of_parameters_t structure */
-	params->nb_repair_symbols	= n - k;
+	printf("\nInitialize a SWiF Codec instance, (n, k)=(%u, %u)...\n", n, k);
+	codepoint = SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC;
 	params->encoding_symbol_length	= SYMBOL_SIZE;
 
 	/* Open and initialize the openfec session now... */
-	if ((ret = of_create_codec_instance(&ses, codec_id, OF_ENCODER, VERBOSITY)) != OF_STATUS_OK)
-	{
-		OF_PRINT_ERROR(("of_create_codec_instance() failed\n"))
+	if ((ses = swif_encoder_create(codepoint, codec_id, SYMBOL_SIZE, ew_size)) != SWIF_STATUS_OK) {
+		printf(stderr, "swif_encoder_create() failed\n");
 		ret = -1;
 		goto end;
 	}
-	if (of_set_fec_parameters(ses, params) != OF_STATUS_OK)
-	{
-		OF_PRINT_ERROR(("of_set_fec_parameters() failed for codec_id %d\n", codec_id))
+	if (swif_encoder_set_callback_functions(ses, source_symbol_removed_from_coding_window_callback(), NULL) != SWIF_STATUS_OK) {
+		printf(stderr, "swif_encoder_set_callback_functions() failed\n");
 		ret = -1;
 		goto end;
 	}
@@ -151,114 +115,94 @@ main(int argc, char* argv[])
 	 * encoding. */
 	printf("\nFilling source symbols...\n");
 	if ((enc_symbols_tab = (void**) calloc(n, sizeof(void*))) == NULL) {
-		OF_PRINT_ERROR(("no memory (calloc failed for enc_symbols_tab, n=%u)\n", n))
+		printf(stderr, "no memory (calloc failed for enc_symbols_tab, n=%u)\n", n);
 		ret = -1;
 		goto end;
 	}
 	/* In order to detect corruption, the first symbol is filled with 0x1111..., the second with 0x2222..., etc.
 	 * NB: the 0x0 value is avoided since it is a neutral element in the target finite fields, i.e. it prevents the detection
 	 * of symbol corruption */
-	for (esi = 0; esi < k; esi++ )
-	{
-		if ((enc_symbols_tab[esi] = calloc(symb_sz_32, sizeof(UINT32))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory (calloc failed for enc_symbols_tab[%d])\n", esi))
+	uint32_t	int_between_repairs;
+	interval_between_repairs = k / (n - k);
+	idx = 0;
+	key = 0;
+	for (esi = 0; esi < k; esi++) {
+		if ((enc_symbols_tab[idx] = calloc(symb_sz_32, sizeof(uint32_t))) == NULL) {
+			printf(stderr, "no memory (calloc failed for enc_symbols_tab[%u]/esi=%u)\n", idx, esi);
 			ret = -1;
 			goto end;
 		}
-		memset(enc_symbols_tab[esi], (char)(esi + 1), SYMBOL_SIZE);
-		if (VERBOSITY > 1)
-		{
+		memset(enc_symbols_tab[idx], (char)(esi + 1), SYMBOL_SIZE);
+		if (VERBOSITY > 1) {
 			printf("src[%03d]= ", esi);
-			dump_buffer_32(enc_symbols_tab[esi], 1);
+			dump_buffer_32(enc_symbols_tab[idx], 1);
+		}
+		idx++;
+		if ((esi %  interval_between_repairs) == 0 || esi == k-1) {
+			/* it's time to produce repair packets, they are regularly spaced plus a last one at the end of session */
+			if ((enc_symbols_tab[idx] = calloc(symb_sz_32, sizeof(uint32_t))) == NULL) {
+				printf(stderr, "no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
+				ret = -1;
+				goto end;
+			}
+			if (swif_decoder_generate_coding_coefs(ses, key++, 0) != SWIF_STATUS_OK) {
+				printf(stderr, "ERROR:  swif_decoder_generate_coding_coefs() failed after esi=%u\n", esi);
+				ret = -1;
+				goto end;
+			}
+			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != OF_STATUS_OK) {
+				printf(stderr, "ERROR:  swif_build_repair_symbol() failed after esi=%u\n", esi);
+				ret = -1;
+				goto end;
+			}
+			if (VERBOSITY > 1) {
+				printf("repair[%03d]= ", esi);
+				dump_buffer_32(enc_symbols_tab[idx], 4);
+			}
+			idx++;
 		}
 	}
-
-	/* Now build the n-k repair symbols... */
-	printf("\nBuilding repair symbols...\n");
-	for (esi = k; esi < n; esi++)
-	{
-		if ((enc_symbols_tab[esi] = (char*)calloc(symb_sz_32, sizeof(UINT32))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory (calloc failed for enc_symbols_tab[%d])\n", esi))
-			ret = -1;
-			goto end;
-		}
-		if (of_build_repair_symbol(ses, enc_symbols_tab, esi) != OF_STATUS_OK) {
-			OF_PRINT_ERROR(("ERROR: of_build_repair_symbol() failed for esi=%u\n", esi))
-			ret = -1;
-			goto end;
-		}
-		if (VERBOSITY > 1)
-		{
-			printf("repair[%03d]= ", esi);
-			dump_buffer_32(enc_symbols_tab[esi], 4);
-		}
-	}
-
-	/* Randomize the packet order, it's important for LDPC-Staircase codes for instance... */
-	printf("\nRandomizing transmit order...\n");
-	if ((rand_order = (UINT32*)calloc(n, sizeof(UINT32))) == NULL)
-	{
-		OF_PRINT_ERROR(("no memory (calloc failed for rand_order)\n"))
-		ret = -1;
-		goto end;
-	}
-	randomize_array(&rand_order, n);
 
 	/* Finally initialize the UDP socket and throw our packets... */
-	if ((so = init_socket(&dst_host)) == INVALID_SOCKET)
-	{
-		OF_PRINT_ERROR(("Error initializing socket!\n"))
+	if ((so = init_socket(&dst_host)) == INVALID_SOCKET) {
+		printf(stderr, "Error initializing socket!\n");
 		ret = -1;
 		goto end;
 	}
 	printf("First of all, send the FEC OTI for this object to %s/%d\n", DEST_IP, DEST_PORT);
 	/* Initialize and send the FEC OTI to the client */
 	/* convert back to host endianess */
-	fec_oti.codec_id	= htonl(codec_id);
+	fec_oti.codepoint	= htonl(codepoint);
+	fec_oti.ew_size		= htonl(ew_size);
 	fec_oti.k		= htonl(k);
 	fec_oti.n		= htonl(n);
 	if ((ret = sendto(so, (void*)&fec_oti, sizeof(fec_oti), 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) != sizeof(fec_oti)) {
-		OF_PRINT_ERROR(("Error while sending the FEC OTI\n"))
+		printf(stderr, "Error while sending the FEC OTI\n");
 		ret = -1;
 		goto end;
 	}
 
-	lost_after_index = n * (1 - LOSS_RATE);
-	if (lost_after_index < k)
-	{
-		OF_PRINT_ERROR(("The loss rate %f is to high: only %u packets will be sent, whereas k=%u\n", LOSS_RATE, lost_after_index, k))
-		ret = -1;
-		goto end;
-	}
-	printf("Sending %u source and repair packets to %s/%d. All packets sent at index %u and higher are considered as lost\n",
-		n, DEST_IP, DEST_PORT, lost_after_index);
 	/* Allocate a buffer where we'll copy each symbol plus its simplistif FPI (in this example consisting only of the ESI).
 	 * This needs to be fixed in real applications, with the actual FPI required for this code. Also doing a memcpy is
 	 * rather suboptimal in terms of performance! */
-	if ((pkt_with_fpi = malloc(4 + SYMBOL_SIZE)) == NULL)
-	{
-		OF_PRINT_ERROR(("no memory (malloc failed for pkt_with_fpi)\n"))
+	if ((pkt_with_fpi = malloc(4 + SYMBOL_SIZE)) == NULL) {
+		printf(stderr, "no memory (malloc failed for pkt_with_fpi)\n");
 		ret = -1;
 		goto end;
 	}
-	for (i = 0; i < n; i++)
-	{
-		if (i == lost_after_index)
-		{
+	for (i = 0; i < n; i++) {
+		if (i == lost_after_index) {
 			/* the remaining packets are considered as lost, exit loop */
 			break;
 		}
 		/* Add a pkt header wich only countains the ESI, i.e. a 32bits sequence number, in network byte order in order
 		 * to be portable regardless of the local and remote byte endian representation (the receiver will do the
 		 * opposite with ntohl()...) */
-		*(UINT32*)pkt_with_fpi = htonl(rand_order[i]);
+		*(uint32_t*)pkt_with_fpi = htonl(rand_order[i]);
 		memcpy(4 + pkt_with_fpi, enc_symbols_tab[rand_order[i]], SYMBOL_SIZE);
 		printf("%05d => sending symbol %u (%s)\n", i + 1, rand_order[i], (rand_order[i] < k) ? "src" : "repair");
-		if ((ret = sendto(so, pkt_with_fpi, SYMBOL_SIZE + 4, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR)
-		{
-			OF_PRINT_ERROR(("sendto() failed!\n"))
+		if ((ret = sendto(so, pkt_with_fpi, SYMBOL_SIZE + 4, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
+			printf(stderr, "sendto() failed!\n");
 			ret = -1;
 			goto end;
 		}
@@ -271,68 +215,30 @@ main(int argc, char* argv[])
 
 end:
 	/* Cleanup everything... */
-	if (so!= INVALID_SOCKET)
-	{
+	if (so!= INVALID_SOCKET) {
 		close(so);
 	}
-	if (ses)
-	{
+	if (ses) {
 		of_release_codec_instance(ses);
 	}
-	if (params)
-	{
+	if (params) {
 		free(params);
 	}
 	if (rand_order) {
 		free(rand_order);
 	}
-	if (enc_symbols_tab)
-	{
-		for (esi = 0; esi < n; esi++)
-		{
-			if (enc_symbols_tab[esi])
-			{
+	if (enc_symbols_tab) {
+		for (esi = 0; esi < n; esi++) {
+			if (enc_symbols_tab[esi]) {
 				free(enc_symbols_tab[esi]);
 			}
 		}
 		free(enc_symbols_tab);
 	}
-	if (pkt_with_fpi)
-	{
+	if (pkt_with_fpi) {
 		free(pkt_with_fpi);
 	}
 	return ret;
-}
-
-
-/* Randomize an array of integers */
-void
-randomize_array (UINT32		**array,
-		 UINT32		arrayLen)
-{
-	UINT32		backup	= 0;
-	UINT32		randInd	= 0;
-	UINT32		seed;		/* random seed for the srand() function */
-	UINT32		i;
-
-	struct timeval	tv;
-	if (gettimeofday(&tv, NULL) < 0) {
-		OF_PRINT_ERROR(("gettimeofday() failed"))
-		exit(-1);
-	}
-	seed = (int)tv.tv_usec;
-	srand(seed);
-	for (i = 0; i < arrayLen; i++)
-	{
-		(*array)[i] = i;
-	}
-	for (i = 0; i < arrayLen; i++)
-	{
-		backup = (*array)[i];
-		randInd = rand()%arrayLen;
-		(*array)[i] = (*array)[randInd];
-		(*array)[randInd] = backup;
-	}
 }
 
 
@@ -356,13 +262,13 @@ init_socket (SOCKADDR_IN	*dst_host)
 
 static void
 dump_buffer_32 (void	*buf,
-		UINT32	len32)
+		uint32_t	len32)
 {
-	UINT32	*ptr;
-	UINT32	j = 0;
+	uint32_t	*ptr;
+	uint32_t	j = 0;
 
 	printf("0x");
-	for (ptr = (UINT32*)buf; len32 > 0; len32--, ptr++) {
+	for (ptr = (uint32_t*)buf; len32 > 0; len32--, ptr++) {
 		/* convert to big endian format to be sure of byte order */
 		printf( "%08X", htonl(*ptr));
 		if (++j == 10)
@@ -374,3 +280,10 @@ dump_buffer_32 (void	*buf,
 	printf("\n");
 }
 
+
+static void 
+source_symbol_removed_from_coding_window_callback (void*   context,
+						   esi_t   old_symbol_esi)
+{
+	printf("callback: symbol %u removed\n", old_symbol_esi);
+}

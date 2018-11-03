@@ -1,3 +1,11 @@
+/*
+ * Simple demo application on top of the SWiF Codec API.
+ *
+ * It is inspired from the same application from openFEC
+ * (http://openfec.org/downloads.html) modified in order
+ * to be used with the appropriate API.
+ */
+
 /* $Id: simple_client.c 216 2014-12-13 13:21:07Z roca $ */
 /*
  * OpenFEC.org AL-FEC Library.
@@ -67,7 +75,7 @@ static of_status_t	get_next_pkt (SOCKET	so,
  * Dumps len32 32-bit words of a buffer (typically a symbol).
  */
 static void	dump_buffer_32 (void	*buf,
-				UINT32	len32);
+				uint32_t	len32);
 
 
 /*************************************************************************************************/
@@ -82,18 +90,18 @@ main (int argc, char* argv[])
 	void**		recvd_symbols_tab= NULL;		/* table containing pointers to received symbols (no FPI here).
 								 * The allocated buffer start 4 bytes (i.e., sizeof(FPI)) before... */
 	void**		src_symbols_tab	= NULL;			/* table containing pointers to the source symbol buffers (no FPI here) */
-	UINT32		symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
-	UINT32		k;					/* number of source symbols in the block */
-	UINT32		n;					/* number of encoding symbols (i.e. source + repair) in the block */
-	UINT32		esi;					/* Encoding Symbol ID, used to identify each encoding symbol */
+	uint32_t		symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
+	uint32_t		k;					/* number of source symbols in the block */
+	uint32_t		n;					/* number of encoding symbols (i.e. source + repair) in the block */
+	uint32_t		esi;					/* Encoding Symbol ID, used to identify each encoding symbol */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	void		*pkt_with_fpi	= NULL;			/* pointer to a buffer containing the FPI followed by the fixed size packet */
 	fec_oti_t	*fec_oti	= NULL;			/* FEC Object Transmission Information as received from the server */
 	INT32		len;					/* len of the received packet */
 	SOCKADDR_IN	dst_host;
-	UINT32		n_received	= 0;			/* number of symbols (source or repair) received so far */
+	uint32_t		n_received	= 0;			/* number of symbols (source or repair) received so far */
 	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
-	UINT32		ret;
+	uint32_t		ret;
 
 
 	/* First of all, initialize the UDP socket and wait for the FEC OTI to be received. This is absolutely required to
@@ -211,7 +219,7 @@ main (int argc, char* argv[])
 	{
 		/* OK, new packet received... */
 		n_received++;
-		esi = ntohl(*(UINT32*)pkt_with_fpi);
+		esi = ntohl(*(uint32_t*)pkt_with_fpi);
 		if (esi > n)		/* a sanity check, in case... */
 		{
 			OF_PRINT_ERROR(("invalid esi=%u received in a packet's FPI\n", esi))
@@ -243,7 +251,7 @@ main (int argc, char* argv[])
 	{
 		/* OK, new packet received... */
 		n_received++;
-		esi = ntohl(*(UINT32*)pkt_with_fpi);
+		esi = ntohl(*(uint32_t*)pkt_with_fpi);
 		if (esi > n)		/* a sanity check, in case... */
 		{
 			OF_PRINT_ERROR(("invalid esi=%u received in a packet's FPI\n", esi))
@@ -355,7 +363,7 @@ init_socket ()
 {
 	SOCKET		s;
 	SOCKADDR_IN	bindAddr;
-	UINT32		sz = 1024 * 1024;
+	uint32_t		sz = 1024 * 1024;
 
 	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
 	{
@@ -463,13 +471,13 @@ get_next_pkt   (SOCKET		so,
  */
 static void
 dump_buffer_32 (void	*buf,
-		UINT32	len32)
+		uint32_t	len32)
 {
-	UINT32	*ptr;
-	UINT32	j = 0;
+	uint32_t	*ptr;
+	uint32_t	j = 0;
 
 	printf("0x");
-	for (ptr = (UINT32*)buf; len32 > 0; len32--, ptr++) {
+	for (ptr = (uint32_t*)buf; len32 > 0; len32--, ptr++) {
 		/* convert to big endian format to be sure of byte order */
 		printf( "%08X", htonl(*ptr));
 		if (++j == 10)

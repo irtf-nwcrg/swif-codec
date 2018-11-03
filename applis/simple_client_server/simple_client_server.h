@@ -1,3 +1,11 @@
+/*
+ * Simple demo application on top of the SWiF Codec API.
+ *
+ * It is inspired from the same application from openFEC
+ * (http://openfec.org/downloads.html) modified in order
+ * to be used with the appropriate API.
+ */
+
 /* $Id: simple_client_server.h 207 2014-12-10 19:47:50Z roca $ */
 /*
  * OpenFEC.org AL-FEC Library.
@@ -46,7 +54,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>	/* for gettimeofday */
 
-#include "../../../src/lib_common/of_openfec_api.h"
+#include "../../src/swif_api.h"
 
 /*
  * OS dependant definitions
@@ -65,15 +73,13 @@
  * Change as required
  */
 #define SYMBOL_SIZE	1024		/* symbol size, in bytes (must be multiple of 4 in this simple example) */
-#define	DEFAULT_K	100		/* default k value */
+#define	DEFAULT_EW_SIZE	10		/* default encoding window size assumed constant */
 #define CODE_RATE	0.667		/* k/n = 2/3 means we add 50% of repair symbols */
 #define LOSS_RATE	0.30		/* we consider 30% of packet losses... It assumes there's no additional loss during UDP transmissions */
-
 #define VERBOSITY	2		/* Define the verbosity level:
 					 *	0 : no trace
 					 *	1 : main traces
 					 *	2 : full traces with packet dumps */
-
 #define DEST_IP		"127.0.0.1"	/* Destination IPv4 address */
 #define DEST_PORT	10978		/* Destination port (UDP) */
 
@@ -84,10 +90,10 @@
  * NB: all the fields MUST be in Network Endian while sent over the network, so use htonl (resp. ntohl) at the sender (resp. receiver).
  */
 typedef struct {
-	UINT32		codec_id;	/* identifies the code/codec being used. In practice, the "FEC encoding ID" that identifies the FEC Scheme should
-					 * be used instead (see [RFC5052]). In our example, we are not compliant with the RFCs anyway, so keep it simple. */
-	UINT32		k;
-	UINT32		n;
+	uint32_t	codepoint;
+	uint32_t	ew_size;
+	uint32_t	k;	/* total number of source symbols */
+	uint32_t	n;	/* total number of encoding symbols */
 } fec_oti_t;
 
 
