@@ -1,3 +1,11 @@
+/*
+ * Simple demo application on top of the SWiF Codec API.
+ *
+ * It is inspired from the same application from openFEC
+ * (http://openfec.org/downloads.html) modified in order
+ * to be used with the appropriate API.
+ */
+
 /* $Id: README.TXT 202 2014-11-05 09:42:33Z roca $ */
 /*
  * OpenFEC.org AL-FEC Library.
@@ -36,9 +44,9 @@ Principles:
 -----------
 
 This directory contains a simple client-server application, showing how to use
-the OpenFEC Reed-Solomon GF(2^m) and LDPC-Staircase codecs in a simple case,
-with a single object, using a UDP socket and rudimentary signaling. Many
-parameters are set statically (e.g. the code rate) in order to simplify the
+a SWiF Codecs in a simple case, with a single object, using a UDP socket and
+rudimentary signaling.
+Many parameters are set statically (e.g. the code rate) in order to simplify the
 example as much as possible. The object size (in number of symbols) is the only
 input argument.
 
@@ -53,7 +61,7 @@ input argument.
     |      |       |                     |      ^       |
     |      v       |                     |      |       |
     | UDP sendto   |                     | UDP recvfrom |
-    |      |       |                     |      |       |
+    |      |       |                     |      ^       |
     +------|-------+                     +------|-------+
            |           UDP connection           |       
            +------------------------------------+
@@ -61,15 +69,9 @@ input argument.
 
 Signaling is rudimentary in this toy example:
 	- FEC-Object Transmission Information (FEC-OTI) that enables encoder/
-	  decoder synchronisation is not [RFC5170] and [RFC5510] compliant;
+	  decoder synchronisation does not comply with any RFC;
 	- FEC Payload ID (FPI) that carries information to identify each symbol
-	  sent in a UDP packet is not [RFC5170] and [RFC5510] compliant;
-We also assume that the object is small enough to enable encoding in a single
-block. More precisely, if the number of symbols in the object is small enough
-for Reed-Solomon to be used, use it, otherwise use LDPC-Staircase if the number
-of symbols remains below the maximum block size. In practice, a block
-partitionning algorithm should be used to bypass this limit, partitionning large
-objects into as many blocks as needed (see section 9.1 of [RFC5052]).
+	  sent in a UDP packet does not comply with any RFC;
 
 
 About packet erasures:
@@ -111,7 +113,4 @@ The codec being used will be selected based on the object size (small => RS, med
 References:
 -----------
 
-[RFC5052] "Forward Error Correction (FEC) Building Block" (Proposed Standard)
-[RFC5170] "Low Density Parity Check (LDPC) Staircase and Triangle Forward Error Correction (FEC) Schemes" (Proposed Standard) 
-[RFC5510] "Reed-Solomon Forward Error Correction (FEC) Schemes" (Proposed Standard) 
-
+[RLC I-D] "Sliding Window Random Linear Code (RLC) Forward Erasure Correction (FEC) Schemes for FECFRAME", https://datatracker.ietf.org/doc/draft-ietf-tsvwg-rlc-fec-scheme/"
