@@ -48,7 +48,8 @@
   * SUCH DAMAGE.
   */
 
- #include <stdint.h>
+ #include "swif_includes.h"
+
 
  /**
   * tinymt32 internal state vector and parameters
