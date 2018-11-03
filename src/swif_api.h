@@ -52,7 +52,7 @@ typedef enum {
 
         /* codepoint for RLC sliding window code, GF(2^8) and full
          * density (simplified version of FECFRAME FEC Enc. ID XXX). */
-        SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC,
+        SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC
 
         /* list here other identifiers for any codec of interest... */
 } swif_codepoint_t;
