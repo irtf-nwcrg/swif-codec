@@ -76,13 +76,12 @@ main(int argc, char* argv[])
 	uint32_t	k;					/* total number of source symbols */
 	uint32_t	n;					/* total number of encoding symbols (i.e. source + repair) in the session */
 	esi_t		esi;					/* source symbol id */
-	uint32_t	i;
 	uint32_t	idx;					/* index in the source+repair table */
 	uint32_t	interval_between_repairs;		/* number of source symbols between two repair symbols, in line with the code rate */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t	fec_oti;				/* FEC Object Transmission Information as sent to the client */
-	int32_t		lost_after_index= -1;			/* all the packets to send after this index are considered as lost during transmission */
+	fpi_t		*fpi;					/* header (FEC Payload Information) for source and repair symbols */
 	SOCKADDR_IN	dst_host;
 	uint32_t	ret		= -1;
 
@@ -113,21 +112,21 @@ main(int argc, char* argv[])
 		ret = -1;
 		goto end;
 	}
-	/* allocate a buffer where we'll copy each symbol plus its simplified FPI */
+	/* allocate a buffer where we'll copy each symbol plus its simplified FPI.
+	 * This buffer will be reused during the whose session */
 	if ((pkt_with_fpi = malloc(sizeof(fpi_t) + SYMBOL_SIZE)) == NULL) {
 		fprintf(stderr, "no memory (malloc failed for pkt_with_fpi)\n");
 		ret = -1;
 		goto end;
 	}
-
-	/* continue with the SWiF codec initialisation now */
+	/* continue with the SWiF codec */
 	printf("\nInitialize a SWiF encoder instance: k=%u src symbols, ew_size=%u, total %u encoding symbols\n", k, ew_size, n);
-	if ((ses = swif_encoder_create(codepoint, codec_id, SYMBOL_SIZE, ew_size)) != SWIF_STATUS_OK) {
+	if ((ses = swif_encoder_create(codepoint, 2, SYMBOL_SIZE, ew_size)) != SWIF_STATUS_OK) {
 		fprintf(stderr, "swif_encoder_create() failed\n");
 		ret = -1;
 		goto end;
 	}
-	if (swif_encoder_set_callback_functions(ses, source_symbol_removed_from_coding_window_callback(), NULL) != SWIF_STATUS_OK) {
+	if (swif_encoder_set_callback_functions(ses, source_symbol_removed_from_coding_window_callback, NULL) != SWIF_STATUS_OK) {
 		fprintf(stderr, "swif_encoder_set_callback_functions() failed\n");
 		ret = -1;
 		goto end;
@@ -154,11 +153,17 @@ main(int argc, char* argv[])
 			printf("src[%03d]= ", esi);
 			dump_buffer_32(enc_symbols_tab[idx], 1);
 		}
+		/* add it to the encoding window (no need to do anything else for a source symbol) */
+		if (swif_encoder_add_source_symbol_to_coding_window (ses, enc_symbols_tab[idx], SYMBOL_SIZE) != SWIF_STATUS_OK) {
+			fprintf(stderr, "swif_encoder_add_source_symbol_to_coding_window failed for esi=%u)\n", esi);
+			ret = -1;
+			goto end;
+		}
 		/* prepend a header in network byte order */
 		fpi = (fpi_t*)pkt_with_fpi;
-		fpi->is_source = htonl(1);
-		fpi->repair_key = 0;		/* only meaningful in case of a repair */
-		fpi->nss = 0;			/* only meaningful in case of a repair */
+		fpi->is_source = htons(1);
+		fpi->repair_key = htons(0);		/* only meaningful in case of a repair */
+		fpi->nss = htons(0);			/* only meaningful in case of a repair */
 		fpi->esi = htonl(esi);
 		memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
 		printf(" => sending src symbol %u\n", esi);
@@ -173,6 +178,10 @@ main(int argc, char* argv[])
 		idx++;
 
 		if ((esi > 0 && (esi %  interval_between_repairs) == 0) || esi == k-1) {
+			esi_t		first;
+			esi_t		last;
+			uint32_t	nss;
+
 			/* it's time to produce repair packets. They are regularly spaced and we add a last one at the end of session */
 			if ((enc_symbols_tab[idx] = calloc(symb_sz_32, sizeof(uint32_t))) == NULL) {
 				fprintf(stderr, "no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
@@ -180,13 +189,13 @@ main(int argc, char* argv[])
 				goto end;
 			}
 			/* the index is the repair_key */
-			if (swif_decoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
-				fprintf(stderr, "ERROR:  swif_decoder_generate_coding_coefs() failed after esi=%u\n", esi);
+			if (swif_encoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
+				fprintf(stderr, "ERROR:  swif_decoder_generate_coding_coefs() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
 			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
-				fprintf(stderr, "ERROR:  swif_build_repair_symbol() failed after esi=%u\n", esi);
+				fprintf(stderr, "ERROR:  swif_build_repair_symbol() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
@@ -194,13 +203,37 @@ main(int argc, char* argv[])
 				printf("repair[%03d]= ", esi);
 				dump_buffer_32(enc_symbols_tab[idx], 4);
 			}
+			/* prepend a header in network byte order */
+			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) == SWIF_STATUS_OK) {
+				fprintf(stderr, "ERROR:  swif_encoder_get_coding_window_information() failed for repair_key=%u\n", idx);
+				ret = -1;
+				goto end;
+			}
+			/* in our simple case, there is no ESI loop back to zero, so check consistency */
+			if (nss != last - first + 1) {
+				fprintf(stderr, "ERROR:  nss (%u) != last (%u) - first (%u) + 1, it should be equal\n", nss, last, first);
+				ret = -1;
+				goto end;
+			}
+			fpi = (fpi_t*)pkt_with_fpi;
+			fpi->is_source = htons(0);
+			fpi->repair_key = htons(idx);
+			fpi->nss = htons(nss);
+			fpi->esi = htonl(first);
+			memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
+			printf(" => sending src symbol %u\n", esi);
+			if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
+				fprintf(stderr, "sendto() failed!\n");
+				ret = -1;
+				goto end;
+			}
+			/* Perform a short usleep() to slow down transmissions and avoid UDP socket saturation at the receiver.
+			 * Note that the true solution consists in adding some rate control mechanism here, like a leaky or token bucket. */
+			usleep(500);
 			idx++;
 		}
 	}
-
-	for (i = 0; i < n; i++) {
-	}
-	printf( "\nCompleted! %d packets sent successfully.\n", i);
+	printf( "\nCompleted! %d packets sent successfully.\n", idx);
 	ret = 1;
 
 end:
