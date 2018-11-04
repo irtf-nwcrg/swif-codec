@@ -7,139 +7,6 @@
 
 
 /*******************************************************************************
- * Coding Window Functions at an Encoder and Decoder
- */
-
-
-/**
- * This function resets the current coding window. We assume here that
- * this window is maintained by the FEC codec instance.
- * Encoder:     reset the encoding window for the encoding of future
- *              repair symbols.
- * Decoder:     reset the coding window under preparation associated to
- *              a repair symbol just received.
- */
-swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
-{
-// NOT YET
-}
-
-swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec)
-{
-// NOT YET
-}
-
-/**
- * Add this source symbol to the coding window.
- * Encoder:     add a source symbol to the coding window.
- * Decoder:     add a source symbol to the coding window under preparation.
- */
-swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
-                                swif_encoder_t* enc,
-                                void*           new_src_symbol_buf,
-                                esi_t           new_src_symbol_esi)
-{
-ajouter un élément à la liste chainée des symboles sources
-retirer le symbole source le plus ancien si l'EW déborde.
-}
-
-swif_status_t   swif_decoder_add_source_symbol_to_coding_window (
-                                swif_decoder_t* dec,
-                                esi_t           new_src_symbol_esi)
-{
-// NOT YET
-}
-
-
-/**
- * Remove this source symbol from the coding window.
- */
-swif_status_t   swif_encoder_remove_source_symbol_from_coding_window (
-                                swif_encoder_t* enc,
-                                esi_t           old_src_symbol_esi)
-{
-// NOT YET
-}
-
-swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
-                                swif_decoder_t* dec,
-                                esi_t           old_src_symbol_esi)
-{
-// NOT YET
-}
-
-
-/*******************************************************************************
- * Coding Coefficients Functions at an Encoder and Decoder
- */
-
-
-/**
- * Encoder: this function specifies the coding coefficients chosen by
- *          the application if this is the way the codec works.
- * Decoder: communicate with this function the coding coefficients
- *          associated to a repair symbol and carried in the packet
- *          header.
- */
-swif_status_t   swif_encoder_set_coding_coefs_tab (
-                                swif_encoder_t* enc,
-                                void*           coding_coefs_tab,
-                                uint32_t        nb_coefs_in_tab)
-{
-// NOT YET
-}
-
-swif_status_t   swif_decoder_set_coding_coefs_tab (
-                                swif_decoder_t* dec,
-                                void*           coding_coefs_tab,
-                                uint32_t        nb_coefs_in_tab)
-{
-// NOT YET
-}
-
-
-/**
- * The coding coefficients may be generated in a deterministic manner,
- * for instance by a PRNG known by the codec and a seed (perhaps with
- * other parameters) provided by the application.
- * The codec may also choose in an autonomous manner these coefficients.
- * This function is used to trigger this process.
- * When the choice is made in an autonomous manner, the actual coding
- * coefficient or key used by the codec can be retrieved with
- * swif_encoder_get_coding_coefs_tab().
- */
-swif_status_t   swif_encoder_generate_coding_coefs (
-                                swif_encoder_t* enc,
-                                uint32_t        key,
-                                uint32_t        add_param)
-{
-}
-
-swif_status_t   swif_decoder_generate_coding_coefs (
-                                swif_decoder_t* dec,
-                                uint32_t        key,
-                                uint32_t        add_param)
-{
-}
-
-
-/**
- * This function enables the application to retrieve the set of coding
- * coefficients generated and used by build_repair_symbol(). This is
- * useful when the choice of coefficients is performed by the codec in
- * an autonomous manner but needs to be sent in the repair packet header.
- * This function is only used by an encoder.
- */
-swif_status_t   swif_encoder_get_coding_coefs_tab (
-                                swif_encoder_t* enc,
-                                void**          coding_coefs_tab,
-                                uint32_t*       nb_coefs_in_tab)
-{
-// NOT YET
-}
-
-
-/*******************************************************************************
  * Encoder functions
  */
 
@@ -320,4 +187,152 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
 {
 // NOT YET
 }
+
+
+/*******************************************************************************
+ * Coding Window Functions at an Encoder and Decoder
+ */
+
+
+/**
+ * This function resets the current coding window. We assume here that
+ * this window is maintained by the FEC codec instance.
+ * Encoder:     reset the encoding window for the encoding of future
+ *              repair symbols.
+ * Decoder:     reset the coding window under preparation associated to
+ *              a repair symbol just received.
+ */
+swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
+{
+// NOT YET
+}
+
+swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec)
+{
+// NOT YET
+}
+
+/**
+ * Add this source symbol to the coding window.
+ * Encoder:     add a source symbol to the coding window.
+ * Decoder:     add a source symbol to the coding window under preparation.
+ */
+swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
+                                swif_encoder_t* enc,
+                                void*           new_src_symbol_buf,
+                                esi_t           new_src_symbol_esi)
+{
+ajouter un élément à la liste chainée des symboles sources
+retirer le symbole source le plus ancien si l'EW déborde.
+}
+
+swif_status_t   swif_decoder_add_source_symbol_to_coding_window (
+                                swif_decoder_t* dec,
+                                esi_t           new_src_symbol_esi)
+{
+// NOT YET
+}
+
+
+/**
+ * Remove this source symbol from the coding window.
+ */
+swif_status_t   swif_encoder_remove_source_symbol_from_coding_window (
+                                swif_encoder_t* enc,
+                                esi_t           old_src_symbol_esi)
+{
+// NOT YET
+}
+
+swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
+                                swif_decoder_t* dec,
+                                esi_t           old_src_symbol_esi)
+{
+// NOT YET
+}
+
+
+/**
+ * Get information on the current coding window at the encoder.
+ */
+swif_status_t   swif_encoder_get_coding_window_information (
+                                swif_encoder_t* enc,
+                                esi_t*          first,
+                                esi_t*          last,
+                                uint32_t*       nss)
+{
+// NOT YET
+}
+
+
+/*******************************************************************************
+ * Coding Coefficients Functions at an Encoder and Decoder
+ */
+
+
+/**
+ * Encoder: this function specifies the coding coefficients chosen by
+ *          the application if this is the way the codec works.
+ * Decoder: communicate with this function the coding coefficients
+ *          associated to a repair symbol and carried in the packet
+ *          header.
+ */
+swif_status_t   swif_encoder_set_coding_coefs_tab (
+                                swif_encoder_t* enc,
+                                void*           coding_coefs_tab,
+                                uint32_t        nb_coefs_in_tab)
+{
+// NOT YET
+}
+
+
+swif_status_t   swif_decoder_set_coding_coefs_tab (
+                                swif_decoder_t* dec,
+                                void*           coding_coefs_tab,
+                                uint32_t        nb_coefs_in_tab)
+{
+// NOT YET
+}
+
+
+/**
+ * The coding coefficients may be generated in a deterministic manner,
+ * for instance by a PRNG known by the codec and a seed (perhaps with
+ * other parameters) provided by the application.
+ * The codec may also choose in an autonomous manner these coefficients.
+ * This function is used to trigger this process.
+ * When the choice is made in an autonomous manner, the actual coding
+ * coefficient or key used by the codec can be retrieved with
+ * swif_encoder_get_coding_coefs_tab().
+ */
+swif_status_t   swif_encoder_generate_coding_coefs (
+                                swif_encoder_t* enc,
+                                uint32_t        key,
+                                uint32_t        add_param)
+{
+}
+
+swif_status_t   swif_decoder_generate_coding_coefs (
+                                swif_decoder_t* dec,
+                                uint32_t        key,
+                                uint32_t        add_param)
+{
+}
+
+
+/**
+ * This function enables the application to retrieve the set of coding
+ * coefficients generated and used by build_repair_symbol(). This is
+ * useful when the choice of coefficients is performed by the codec in
+ * an autonomous manner but needs to be sent in the repair packet header.
+ * This function is only used by an encoder.
+ */
+swif_status_t   swif_encoder_get_coding_coefs_tab (
+                                swif_encoder_t* enc,
+                                void**          coding_coefs_tab,
+                                uint32_t*       nb_coefs_in_tab)
+{
+// NOT YET
+}
+
 

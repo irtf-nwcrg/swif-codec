@@ -500,11 +500,11 @@ swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
  * the information (it knows when new symbols are added and old
  * symbols removed), but it's easier to let the SWiF Codec care
  * about it. The number of source symbols is also returned.
- * In situations where there's no gap (i.e.,
+ * In situations where there's no gap (i.e., when
  * swif_encoder_remove_source_symbol_from_coding_window() has not
- * been called), this can be redundant with first/last. However
- * it's also quite convenient for the application since first and
- * last may also wrap to zero.
+ * been used), nss can also be calculated with first/last. However
+ * it is more convenient to use nss directly (in particular in case
+ * of wraping to zero of either first or last).
  *
  * @param enc
  * @param first		(in/out) pointer to ESI of the first source
