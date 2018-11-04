@@ -1,9 +1,9 @@
 /*
  * Simple demo application on top of the SWiF Codec API.
  *
- * It is inspired from the same application from openFEC
- * (http://openfec.org/downloads.html) modified in order
- * to be used with the appropriate API.
+ * It is inspired from the same OpenFEC application 
+ * (http://openfec.org/downloads.html), modified in order
+ * to be used with the SWiF API.
  */
 
 /* $Id: simple_server.c 216 2014-12-13 13:21:07Z roca $ */
@@ -78,10 +78,11 @@ main(int argc, char* argv[])
 	esi_t		esi;					/* source symbol id */
 	uint32_t	i;
 	uint32_t	idx;					/* index in the source+repair table */
+	uint32_t	interval_between_repairs;		/* number of source symbols between two repair symbols, in line with the code rate */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t	fec_oti;				/* FEC Object Transmission Information as sent to the client */
-	INT32		lost_after_index= -1;			/* all the packets to send after this index are considered as lost during transmission */
+	int32_t		lost_after_index= -1;			/* all the packets to send after this index are considered as lost during transmission */
 	SOCKADDR_IN	dst_host;
 	uint32_t	ret		= -1;
 
@@ -93,66 +94,99 @@ main(int argc, char* argv[])
 	}
 	k = 1000;
 	n = (uint32_t)floor((double)ew_size / (double)CODE_RATE);
-
-	printf("\nInitialize a SWiF Codec instance, (n, k)=(%u, %u)...\n", n, k);
 	codepoint = SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC;
-	params->encoding_symbol_length	= SYMBOL_SIZE;
 
-	/* Open and initialize the openfec session now... */
+	/* first initialize the UDP socket... */
+	if ((so = init_socket(&dst_host)) == INVALID_SOCKET) {
+		fprintf(stderr, "Error initializing socket!\n");
+		ret = -1;
+		goto end;
+	}
+	printf("First of all, send the FEC OTI to %s/%d\n", DEST_IP, DEST_PORT);
+	/* initialize and send the FEC OTI to the client */
+	fec_oti.codepoint	= htonl(codepoint);
+	fec_oti.ew_size		= htonl(ew_size);
+	fec_oti.k		= htonl(k);
+	fec_oti.n		= htonl(n);
+	if ((ret = sendto(so, (void*)&fec_oti, sizeof(fec_oti), 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) != sizeof(fec_oti)) {
+		fprintf(stderr, "Error while sending the FEC OTI\n");
+		ret = -1;
+		goto end;
+	}
+	/* allocate a buffer where we'll copy each symbol plus its simplified FPI */
+	if ((pkt_with_fpi = malloc(sizeof(fpi_t) + SYMBOL_SIZE)) == NULL) {
+		fprintf(stderr, "no memory (malloc failed for pkt_with_fpi)\n");
+		ret = -1;
+		goto end;
+	}
+
+	/* continue with the SWiF codec initialisation now */
+	printf("\nInitialize a SWiF encoder instance: k=%u src symbols, ew_size=%u, total %u encoding symbols\n", k, ew_size, n);
 	if ((ses = swif_encoder_create(codepoint, codec_id, SYMBOL_SIZE, ew_size)) != SWIF_STATUS_OK) {
-		printf(stderr, "swif_encoder_create() failed\n");
+		fprintf(stderr, "swif_encoder_create() failed\n");
 		ret = -1;
 		goto end;
 	}
 	if (swif_encoder_set_callback_functions(ses, source_symbol_removed_from_coding_window_callback(), NULL) != SWIF_STATUS_OK) {
-		printf(stderr, "swif_encoder_set_callback_functions() failed\n");
+		fprintf(stderr, "swif_encoder_set_callback_functions() failed\n");
 		ret = -1;
 		goto end;
 	}
-
-	/* Allocate and initialize our source symbols...
-	 * In case of a file transmission, the opposite takes place: the file is read and partitionned into a set of k source symbols.
-	 * At the end, it's just equivalent since there is a set of k source symbols that need to be sent reliably thanks to an FEC
-	 * encoding. */
-	printf("\nFilling source symbols...\n");
+	/* allocate the table with pointers to source and repair symbols... */
 	if ((enc_symbols_tab = (void**) calloc(n, sizeof(void*))) == NULL) {
-		printf(stderr, "no memory (calloc failed for enc_symbols_tab, n=%u)\n", n);
+		fprintf(stderr, "no memory (calloc failed for enc_symbols_tab, n=%u)\n", n);
 		ret = -1;
 		goto end;
 	}
-	/* In order to detect corruption, the first symbol is filled with 0x1111..., the second with 0x2222..., etc.
-	 * NB: the 0x0 value is avoided since it is a neutral element in the target finite fields, i.e. it prevents the detection
-	 * of symbol corruption */
-	uint32_t	int_between_repairs;
 	interval_between_repairs = k / (n - k);
 	idx = 0;
-	key = 0;
 	for (esi = 0; esi < k; esi++) {
 		if ((enc_symbols_tab[idx] = calloc(symb_sz_32, sizeof(uint32_t))) == NULL) {
-			printf(stderr, "no memory (calloc failed for enc_symbols_tab[%u]/esi=%u)\n", idx, esi);
+			fprintf(stderr, "no memory (calloc failed for enc_symbols_tab[%u]/esi=%u)\n", idx, esi);
 			ret = -1;
 			goto end;
 		}
+		/* in order to detect corruption, the first source symbol is filled with 0x1111..., the second with 0x2222..., etc.
+		 * NB: the 0x0 value is avoided since it is a neutral element in the target finite fields, i.e. it prevents the detection
+		 * of symbol corruption */
 		memset(enc_symbols_tab[idx], (char)(esi + 1), SYMBOL_SIZE);
 		if (VERBOSITY > 1) {
 			printf("src[%03d]= ", esi);
 			dump_buffer_32(enc_symbols_tab[idx], 1);
 		}
+		/* prepend a header in network byte order */
+		fpi = (fpi_t*)pkt_with_fpi;
+		fpi->is_source = htonl(1);
+		fpi->repair_key = 0;		/* only meaningful in case of a repair */
+		fpi->nss = 0;			/* only meaningful in case of a repair */
+		fpi->esi = htonl(esi);
+		memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
+		printf(" => sending src symbol %u\n", esi);
+		if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
+			fprintf(stderr, "sendto() failed!\n");
+			ret = -1;
+			goto end;
+		}
+		/* Perform a short usleep() to slow down transmissions and avoid UDP socket saturation at the receiver.
+		 * Note that the true solution consists in adding some rate control mechanism here, like a leaky or token bucket. */
+		usleep(500);
 		idx++;
-		if ((esi %  interval_between_repairs) == 0 || esi == k-1) {
-			/* it's time to produce repair packets, they are regularly spaced plus a last one at the end of session */
+
+		if ((esi > 0 && (esi %  interval_between_repairs) == 0) || esi == k-1) {
+			/* it's time to produce repair packets. They are regularly spaced and we add a last one at the end of session */
 			if ((enc_symbols_tab[idx] = calloc(symb_sz_32, sizeof(uint32_t))) == NULL) {
-				printf(stderr, "no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
+				fprintf(stderr, "no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
 				ret = -1;
 				goto end;
 			}
-			if (swif_decoder_generate_coding_coefs(ses, key++, 0) != SWIF_STATUS_OK) {
-				printf(stderr, "ERROR:  swif_decoder_generate_coding_coefs() failed after esi=%u\n", esi);
+			/* the index is the repair_key */
+			if (swif_decoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
+				fprintf(stderr, "ERROR:  swif_decoder_generate_coding_coefs() failed after esi=%u\n", esi);
 				ret = -1;
 				goto end;
 			}
 			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
-				printf(stderr, "ERROR:  swif_build_repair_symbol() failed after esi=%u\n", esi);
+				fprintf(stderr, "ERROR:  swif_build_repair_symbol() failed after esi=%u\n", esi);
 				ret = -1;
 				goto end;
 			}
@@ -164,52 +198,7 @@ main(int argc, char* argv[])
 		}
 	}
 
-	/* Finally initialize the UDP socket and throw our packets... */
-	if ((so = init_socket(&dst_host)) == INVALID_SOCKET) {
-		printf(stderr, "Error initializing socket!\n");
-		ret = -1;
-		goto end;
-	}
-	printf("First of all, send the FEC OTI for this object to %s/%d\n", DEST_IP, DEST_PORT);
-	/* Initialize and send the FEC OTI to the client */
-	/* convert back to host endianess */
-	fec_oti.codepoint	= htonl(codepoint);
-	fec_oti.ew_size		= htonl(ew_size);
-	fec_oti.k		= htonl(k);
-	fec_oti.n		= htonl(n);
-	if ((ret = sendto(so, (void*)&fec_oti, sizeof(fec_oti), 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) != sizeof(fec_oti)) {
-		printf(stderr, "Error while sending the FEC OTI\n");
-		ret = -1;
-		goto end;
-	}
-
-	/* Allocate a buffer where we'll copy each symbol plus its simplistif FPI (in this example consisting only of the ESI).
-	 * This needs to be fixed in real applications, with the actual FPI required for this code. Also doing a memcpy is
-	 * rather suboptimal in terms of performance! */
-	if ((pkt_with_fpi = malloc(4 + SYMBOL_SIZE)) == NULL) {
-		printf(stderr, "no memory (malloc failed for pkt_with_fpi)\n");
-		ret = -1;
-		goto end;
-	}
 	for (i = 0; i < n; i++) {
-		if (i == lost_after_index) {
-			/* the remaining packets are considered as lost, exit loop */
-			break;
-		}
-		/* Add a pkt header wich only countains the ESI, i.e. a 32bits sequence number, in network byte order in order
-		 * to be portable regardless of the local and remote byte endian representation (the receiver will do the
-		 * opposite with ntohl()...) */
-		*(uint32_t*)pkt_with_fpi = htonl(i);
-		memcpy(4 + pkt_with_fpi, enc_symbols_tab[i], SYMBOL_SIZE);
-		printf("%05d => sending symbol %u (%s)\n", i + 1, i, (i < k) ? "src" : "repair");
-		if ((ret = sendto(so, pkt_with_fpi, SYMBOL_SIZE + 4, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
-			printf(stderr, "sendto() failed!\n");
-			ret = -1;
-			goto end;
-		}
-		/* Perform a short usleep() to slow down transmissions and avoid UDP socket saturation at the receiver.
-		 * Note that the true solution consists in adding some rate control mechanism here, like a leaky or token bucket. */
-		usleep(500);
 	}
 	printf( "\nCompleted! %d packets sent successfully.\n", i);
 	ret = 1;
@@ -220,10 +209,7 @@ end:
 		close(so);
 	}
 	if (ses) {
-		of_release_codec_instance(ses);
-	}
-	if (params) {
-		free(params);
+		swif_encoder_release(ses);
 	}
 	if (enc_symbols_tab) {
 		for (esi = 0; esi < n; esi++) {

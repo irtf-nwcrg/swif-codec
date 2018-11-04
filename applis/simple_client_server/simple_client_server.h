@@ -1,9 +1,9 @@
 /*
  * Simple demo application on top of the SWiF Codec API.
  *
- * It is inspired from the same application from openFEC
- * (http://openfec.org/downloads.html) modified in order
- * to be used with the appropriate API.
+ * It is inspired from the same OpenFEC application 
+ * (http://openfec.org/downloads.html), modified in order
+ * to be used with the SWiF API.
  */
 
 /* $Id: simple_client_server.h 207 2014-12-10 19:47:50Z roca $ */
@@ -86,8 +86,7 @@
 
 /*
  * Simplified FEC Object Transmission Information structure, used to synchronize sender and receiver.
- *
- * NB: all the fields MUST be in Network Endian while sent over the network, so use htonl (resp. ntohl) at the sender (resp. receiver).
+ * NB: all the fields MUST be in Network Endianess while sent over the network, so use htonl (resp. ntohl) at the sender (resp. receiver).
  */
 typedef struct {
 	uint32_t	codepoint;
@@ -96,4 +95,15 @@ typedef struct {
 	uint32_t	n;	/* total number of encoding symbols */
 } fec_oti_t;
 
+
+/*
+ * Simplified (and more verbose) FEC Payload Information, valid both for source and repair packets.
+ * NB: all the fields MUST be in Network Endianess while sent over the network, so use htonl (resp. ntohl) at the sender (resp. receiver).
+ */
+typedef struct {
+	uint16_t	is_source;	/* 1 if source, 0 if repair */
+	uint16_t	repair_key;	/* only meaningful in case of a repair */
+	uint16_t	nss;		/* only meaningful in case of a repair */
+	uint32_t	esi;		/* esi of a source symbol, or esi of the first source symbol of the encoding window in case of a repair */
+} fpi_t;
 

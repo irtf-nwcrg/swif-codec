@@ -1,9 +1,9 @@
 /*
  * Simple demo application on top of the SWiF Codec API.
  *
- * It is inspired from the same application from openFEC
- * (http://openfec.org/downloads.html) modified in order
- * to be used with the appropriate API.
+ * It is inspired from the same OpenFEC application 
+ * (http://openfec.org/downloads.html), modified in order
+ * to be used with the SWiF API.
  */
 
 /* $Id: simple_client.c 216 2014-12-13 13:21:07Z roca $ */
@@ -69,7 +69,7 @@ static SOCKET	init_socket (void);
  */
 static of_status_t	get_next_pkt (SOCKET	so,
 				      void	**pkt,
-				      INT32	*len);
+				      int32_t	*len);
 
 /**
  * Dumps len32 32-bit words of a buffer (typically a symbol).
@@ -97,7 +97,7 @@ main (int argc, char* argv[])
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
 	void		*pkt_with_fpi	= NULL;			/* pointer to a buffer containing the FPI followed by the fixed size packet */
 	fec_oti_t	*fec_oti	= NULL;			/* FEC Object Transmission Information as received from the server */
-	INT32		len;					/* len of the received packet */
+	int32_t		len;					/* len of the received packet */
 	SOCKADDR_IN	dst_host;
 	uint32_t		n_received	= 0;			/* number of symbols (source or repair) received so far */
 	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
@@ -393,10 +393,10 @@ init_socket ()
 static of_status_t
 get_next_pkt   (SOCKET		so,
 		void		**pkt,
-		INT32		*len)
+		int32_t		*len)
 {
 	static bool	first_call = true;
-	INT32		saved_len = *len;	/* save it, in case we need to do several calls to recvfrom */
+	int32_t		saved_len = *len;	/* save it, in case we need to do several calls to recvfrom */
 
 	if ((*pkt = malloc(saved_len)) == NULL)
 	{
