@@ -73,12 +73,12 @@ The [ietf98 TSVWG slides 9-10-11](https://datatracker.ietf.org/meeting/98/materi
 
 ### Idea 7-
 #### "With NC, network equipments can perform FEC encoding to improve network usage"
-- trivial example where a network equipment could reduce traffic (it sends a single "P1 XOR P2" packet instead of sending both P1 and P2):
+- trivial example where a network equipment could reduce traffic (it sends a single "P1 XOR P2" packet (using multicast or broadcast) instead of sending both P1 and P2):
      
 <pre><code>Alice        Wireless router          Bob    
   |    --P1-->      |                 |    
   |                 |     <--P2--     |    
-  | <--P1 XOR P2--  |  --P1 XOR P2--> |
+  | <--P1 XOR P2--- | ---P1 XOR P2--> | (multicast or broadcast)
   |                 |                 |
 recover P2                     Recover P1
 </code></pre>

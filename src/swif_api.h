@@ -118,24 +118,25 @@ swif_status_t   swif_encoder_release (swif_encoder_t*        enc);
 
 /**
  * Set the various callback functions for this encoder.
- * All the callback functions require an opaque context parameter, that must be
- * initialized accordingly by the application, since it is application specific.
+ * All the callback functions require an opaque context parameter, that
+ * must be initialized accordingly by the application, since it is
+ * application specific.
  *
  * @param enc
  * @param source_symbol_removed_from_coding_window_callback
- *              (IN) Pointer to the function, within the application, that
- *              needs to be called each time a source symbol is removed from
- *              the left side of the coding window.
- *              This callback is called each time the encoding window slides
- *              to the right and an old source symbol needs to be removed on
- *              the left. The application therefore knows this source symbol
- *              will no longer be used by the codec and can free the
- *              associated buffer if need be. This function does not return
- *              anything.
+ *              (IN) Pointer to the function, within the application,
+ *              that needs to be called each time a source symbol is
+ *              removed from the left side of the coding window.
+ *              This callback is called each time the encoding window
+ *              slides to the right and an old source symbol needs to
+ *              be removed on the left. The application therefore knows
+ *              this source symbol will no longer be used by the codec
+ *              and can free the associated buffer if need be. This
+ *              function does not return anything.
  * @param context_4_callback
- *              (IN) Pointer to the application-specific context that will be
- *              passed to the callback function (if any). This context is not
- *              interpreted by this function.
+ *              (IN) Pointer to the application-specific context that
+ *              will be passed to the callback function (if any). This
+ *              context is not interpreted by this function.
  * @return
  */
 swif_status_t   swif_encoder_set_callback_functions (
