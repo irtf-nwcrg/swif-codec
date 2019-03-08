@@ -35,8 +35,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "general.h"
-#include "linear-code.h"
+#include "swif_general.h"
+#include "swif_linear-code.h"
 
 /*--------------------------------------------------*/
 
@@ -57,7 +57,7 @@
 
 #ifdef WITH_GF256_MUL_TABLE
 
-#include "table-mul-gf256.c"
+#include "swif_table-mul-gf256.c"
 static inline uint8_t gf256_mul(uint8_t a, uint8_t b)
 { return gf256_mul_table[a][b]; }
 
