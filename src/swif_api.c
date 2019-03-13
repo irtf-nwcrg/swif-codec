@@ -222,8 +222,8 @@ swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
                                 void*           new_src_symbol_buf,
                                 esi_t           new_src_symbol_esi)
 {
-ajouter un élément à la liste chainée des symboles sources
-retirer le symbole source le plus ancien si l'EW déborde.
+/* ajouter un élément à la liste chainée des symboles sources
+retirer le symbole source le plus ancien si l'EW déborde. */
 }
 
 swif_status_t   swif_decoder_add_source_symbol_to_coding_window (

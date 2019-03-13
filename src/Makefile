@@ -31,7 +31,8 @@ CFLAGS += -Wall -g3 -fPIC
 
 #------------------------------
 
-SRCS = swif_api.c swif_linear-code.c swif_prng.c swif_coding_coefficients.c
+# TODO : swif_linear-code.c 
+SRCS = swif_api.c swif_prng.c swif_coding_coefficients.c
 
 HEADERS = $(SRCS:.c=.h) swif_general.h swif_includes.h swif_rlc_cb.h
 

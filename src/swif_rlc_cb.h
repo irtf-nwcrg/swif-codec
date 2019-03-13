@@ -32,7 +32,7 @@ typedef struct swif_encoder_rlc_cb {
 	uint8_t			*cc_tab;
 
 	/* linked list of source symbols currently in the coding window */
-	enc_coding_window_t	*cw_head;
+	/* TODO : enc_coding_window_t	*cw_head; */
 	uint32_t		cw_nb_in_list;
 
 	/* add whatever may be needed hereafter... */

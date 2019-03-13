@@ -49,17 +49,7 @@
  */
 
 #include "swif_includes.h"
-
-
-/**
- * tinymt32 internal state vector and parameters
- */
-typedef struct {
-    uint32_t status[4];
-    uint32_t mat1;
-    uint32_t mat2;
-    uint32_t tmat;
-} tinymt32_t;
+#include "swif_prng.h"
 
 static void tinymt32_next_state (tinymt32_t * s);
 static uint32_t tinymt32_temper (tinymt32_t * s);
