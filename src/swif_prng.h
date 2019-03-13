@@ -5,6 +5,16 @@
 
 
 /**
+ * tinymt32 internal state vector and parameters
+ */
+typedef struct {
+    uint32_t status[4];
+    uint32_t mat1;
+    uint32_t mat2;
+    uint32_t tmat;
+} tinymt32_t;
+
+/**
  * This function initializes the internal state array with a 32-bit
  * unsigned integer seed.
  * @param s pointer to tinymt internal state.
@@ -25,3 +35,4 @@ void tinymt32_init     (tinymt32_t *	s,
  */
 uint32_t tinymt32_rand (tinymt32_t *	s,
 			uint32_t	maxv);
+
