@@ -16,7 +16,7 @@ typedef struct swif_encoder_rlc_cb {
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */
-	swif_errno_t		errno;
+	swif_errno_t		swif_errno;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
@@ -51,7 +51,7 @@ typedef struct swif_decoder_rlc_cb {
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */
-	swif_errno_t		errno;
+	swif_errno_t		swif_errno;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
