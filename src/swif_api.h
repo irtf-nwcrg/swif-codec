@@ -288,7 +288,6 @@ typedef struct swif_decoder {
 	 * READ ONLY mode. Otherwise its value is undefined. */
 	swif_errno_t		swif_errno;
 
-
 	swif_status_t   (*set_callback_functions) (
 			struct swif_decoder*  dec,
 			void (*source_symbol_removed_from_linear_system_callback) (
@@ -302,7 +301,6 @@ typedef struct swif_decoder {
 					void    *new_symbol_buf,
 					esi_t   esi),
 			void*        context_4_callback);
-
 
 	swif_status_t   (*set_parameters)  (
 			struct swif_decoder* dec,
@@ -344,7 +342,6 @@ typedef struct swif_decoder {
 			struct swif_decoder* dec,
 			uint32_t        key,
 			uint32_t        add_param);
-
 } swif_decoder_t;
 
 
@@ -560,7 +557,7 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
  */
 swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc);
 
-swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec);
+swif_status_t   swif_decoder_reset_coding_window (swif_decoder_t*  dec);
 
 
 /**
