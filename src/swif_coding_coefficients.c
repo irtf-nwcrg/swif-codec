@@ -1,7 +1,11 @@
+
 /**
  * SWiF Codec: an open-source sliding window FEC codec in C
  * https://github.com/irtf-nwcrg/swif-codec
  */
+#include <stdint.h>
+#include "swif_api.h"
+#include "swif_prng.h"
 
 /*
  * Coding coefficients generator coming from RLC FEC Scheme, version 10, I-D.
@@ -32,6 +36,7 @@
  *                    document only values 1 and 8 are considered.
  * (out)              returns an error code
  */
+
 int generate_coding_coefficients (uint16_t  repair_key,
                                  uint8_t   cc_tab[],
                                  uint16_t  cc_nb,

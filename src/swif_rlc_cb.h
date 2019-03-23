@@ -16,7 +16,7 @@ typedef struct swif_encoder_rlc_cb {
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */
-	swif_errno_t		errno;
+	swif_errno_t		swif_errno;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
@@ -32,7 +32,7 @@ typedef struct swif_encoder_rlc_cb {
 	uint8_t			*cc_tab;
 
 	/* linked list of source symbols currently in the coding window */
-	enc_coding_window_t	*cw_head;
+	/* TODO : enc_coding_window_t	*cw_head; */
 	uint32_t		cw_nb_in_list;
 
 	/* add whatever may be needed hereafter... */
@@ -51,7 +51,7 @@ typedef struct swif_decoder_rlc_cb {
 
 	/* when a function returns with SWIF_STATUS_ERROR, the errno
 	 * variable contains a more detailed error type. */
-	swif_errno_t		errno;
+	swif_errno_t		swif_errno;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
