@@ -70,6 +70,11 @@ typedef uint32_t    esi_t;
  * Encoder functions
  */
 
+/*
+ * TODO: it would make sense to hide the functions (and even
+ * other attributes ?) to the above application so as the
+ * application can only interact through the defined API.
+ */
 
 /**
  * Throughout the API, a pointer to this structure is used as an
@@ -86,6 +91,61 @@ typedef struct swif_encoder {
 	 * is set by the codec and accessible to the application in
 	 * READ ONLY mode. Otherwise its value is undefined. */
 	swif_errno_t		swif_errno;
+
+	swif_status_t   (*set_callback_functions) (
+			struct swif_encoder*        enc,
+			void (*source_symbol_removed_from_coding_window_callback) (
+					void*   context,
+					esi_t   old_symbol_esi),
+			void* context_4_callback);
+
+	swif_status_t   (*set_parameters)  (
+			struct swif_encoder* enc,
+			uint32_t        type,
+			uint32_t        length,
+			void*           value);
+
+	swif_status_t   (*get_parameters)  (
+			struct swif_encoder* enc,
+			uint32_t        type,
+			uint32_t        length,
+			void*           value);
+
+	swif_status_t   (*build_repair_symbol) (
+			struct swif_encoder* enc,
+			void*           new_buf);
+
+	swif_status_t   (*reset_coding_window) (struct swif_encoder*  enc);
+
+	swif_status_t   (*add_source_symbol_to_coding_window) (
+			struct swif_encoder* enc,
+			void*           new_src_symbol_buf,
+			esi_t           new_src_symbol_esi);
+
+	swif_status_t   (*remove_source_symbol_from_coding_window) (
+			struct swif_encoder* enc,
+			esi_t           old_src_symbol_esi);
+
+	swif_status_t	(*get_coding_window_information) (
+			struct swif_encoder*	enc,
+			esi_t*		first,
+			esi_t*		last,
+			uint32_t*	nss);
+
+	swif_status_t   (*set_coding_coefs_tab) (
+			struct swif_encoder* enc,
+			void*           coding_coefs_tab,
+			uint32_t        nb_coefs_in_tab);
+
+	swif_status_t   (*generate_coding_coefs) (
+			struct swif_encoder* enc,
+			uint32_t        key,
+			uint32_t        add_param);
+
+	swif_status_t   (*get_coding_coefs_tab) (
+			struct swif_encoder* enc,
+			void**          coding_coefs_tab,
+			uint32_t*       nb_coefs_in_tab);
 } swif_encoder_t;
 
 
@@ -227,6 +287,64 @@ typedef struct swif_decoder {
 	 * is set by the codec and accessible to the application in
 	 * READ ONLY mode. Otherwise its value is undefined. */
 	swif_errno_t		swif_errno;
+
+
+	swif_status_t   (*set_callback_functions) (
+			struct swif_decoder*  dec,
+			void (*source_symbol_removed_from_linear_system_callback) (
+					void*   context,
+					esi_t   old_symbol_esi),
+			void* (*decodable_source_symbol_callback) (
+					void    *context,
+					esi_t   esi),
+			void* (*decoded_source_symbol_callback) (
+					void    *context,
+					void    *new_symbol_buf,
+					esi_t   esi),
+			void*        context_4_callback);
+
+
+	swif_status_t   (*set_parameters)  (
+			struct swif_decoder* dec,
+			uint32_t        type,
+			uint32_t        length,
+			void*           value);
+
+	swif_status_t   (*get_parameters)  (
+			struct swif_decoder* dec,
+			uint32_t        type,
+			uint32_t        length,
+			void*           value);
+
+	swif_status_t   (*decode_with_new_source_symbol) (
+			struct swif_decoder* dec,
+			void* const     new_symbol_buf,
+			esi_t           new_symbol_esi);
+
+	swif_status_t   (*decode_with_new_repair_symbol) (
+			struct swif_decoder* dec,
+			void* const     new_symbol_buf);
+
+	swif_status_t   (*reset_coding_window) (swif_encoder_t*  dec);
+
+	swif_status_t   (*add_source_symbol_to_coding_window) (
+			struct swif_decoder* dec,
+			esi_t           new_src_symbol_esi);
+
+	swif_status_t   (*remove_source_symbol_from_coding_window) (
+			struct swif_decoder* dec,
+			esi_t           old_src_symbol_esi);
+
+	swif_status_t   (*set_coding_coefs_tab) (
+			struct swif_decoder* dec,
+			void*           coding_coefs_tab,
+			uint32_t        nb_coefs_in_tab);
+
+	swif_status_t   (*generate_coding_coefs) (
+			struct swif_decoder* dec,
+			uint32_t        key,
+			uint32_t        add_param);
+
 } swif_decoder_t;
 
 
