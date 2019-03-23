@@ -19,15 +19,14 @@ swif_encoder_t* swif_encoder_create (
                                 swif_codepoint_t codepoint,
                                 uint32_t        verbosity,
                                 uint32_t        symbol_size,
-                                uint32_t        max_coding_window_size)
-{
-    
+                                uint32_t        max_coding_window_size) {
+
     /* initialize the encoder */
-    switch(codepoint){
-        case: SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC: {
+    switch (codepoint) {
+        case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
             swif_rlc_encoder_create();
+
     }
-    
 }
 
 
@@ -52,6 +51,7 @@ swif_status_t   swif_encoder_set_callback_functions (
                                         esi_t   old_symbol_esi),
                 void* context_4_callback)
 {
+    return (*enc->set_callback_functions)(enc, source_symbol_removed_from_coding_window_callback, context_4_callback);
 }
 
 /**
@@ -64,7 +64,7 @@ swif_status_t   swif_encoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    return (*enc->set_parameters)(enc, type, length, value);
 }
 
 /**
@@ -77,7 +77,7 @@ swif_status_t   swif_encoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    return (*enc->get_parameters)(enc, type, length, value);
 }
 
 
@@ -88,6 +88,7 @@ swif_status_t   swif_build_repair_symbol (
                                 swif_encoder_t* enc,
                                 void*           new_buf)
 {
+    return (*enc->build_repair_symbol)(enc, new_buf);
 }
 
 
@@ -139,7 +140,9 @@ swif_status_t   swif_decoder_set_callback_functions (
                                         esi_t   esi),
                 void*        context_4_callback)
 {
-// NOT YET
+    return (*dec->set_callback_functions)(dec, source_symbol_removed_from_linear_system_callback,
+            decodable_source_symbol_callback, decoded_source_symbol_callback,
+            context_4_callback);
 }
 
 
@@ -153,7 +156,7 @@ swif_status_t   swif_decoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    return (*dec->set_parameters)(dec, type, length, value);
 }
 
 
@@ -167,7 +170,7 @@ swif_status_t   swif_decoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    return (*dec->get_parameters)(dec, type, length, value);
 }
 
 
@@ -181,7 +184,7 @@ swif_status_t   swif_decoder_decode_with_new_source_symbol (
                                 void* const     new_symbol_buf,
                                 esi_t           new_symbol_esi)
 {
-// NOT YET
+    return (*dec->decode_with_new_source_symbol)(dec, new_symbol_buf, new_symbol_esi);
 }
 
 
@@ -194,7 +197,7 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
                                 void* const     new_symbol_buf)
 {
-// NOT YET
+    return (*dec->decode_with_new_repair_symbol)(dec, new_symbol_buf);
 }
 
 
@@ -213,12 +216,12 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
  */
 swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
 {
-// NOT YET
+    return (*enc->reset_coding_window)(enc);
 }
 
 swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec)
 {
-// NOT YET
+    return (*dec->reset_coding_window)(dec);
 }
 
 /**
@@ -233,14 +236,14 @@ swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
 {
 /* ajouter un élément à la liste chainée des symboles sources
 retirer le symbole source le plus ancien si l'EW déborde. */
-
+    return (*enc->add_source_symbol_to_coding_window)(enc, new_src_symbol_buf, new_src_symbol_esi);
 }
 
 swif_status_t   swif_decoder_add_source_symbol_to_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           new_src_symbol_esi)
 {
-// NOT YET
+    return (*dec->add_source_symbol_to_coding_window)(dec, new_src_symbol_esi);
 }
 
 
@@ -251,14 +254,14 @@ swif_status_t   swif_encoder_remove_source_symbol_from_coding_window (
                                 swif_encoder_t* enc,
                                 esi_t           old_src_symbol_esi)
 {
-// NOT YET
+    return (*enc->remove_source_symbol_from_coding_window)(enc, old_src_symbol_esi);
 }
 
 swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           old_src_symbol_esi)
 {
-// NOT YET
+    return (*dec->remove_source_symbol_from_coding_window)(dec, old_src_symbol_esi);
 }
 
 
@@ -271,7 +274,7 @@ swif_status_t   swif_encoder_get_coding_window_information (
                                 esi_t*          last,
                                 uint32_t*       nss)
 {
-// NOT YET
+    return (*enc->get_coding_window_information)(enc, first, last, nss);
 }
 
 
@@ -292,7 +295,7 @@ swif_status_t   swif_encoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-// NOT YET
+    return (*enc->set_coding_coefs_tab)(enc, coding_coefs_tab, nb_coefs_in_tab);
 }
 
 
@@ -301,7 +304,7 @@ swif_status_t   swif_decoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-// NOT YET
+    return (*dec->set_coding_coefs_tab)(dec, coding_coefs_tab, nb_coefs_in_tab);
 }
 
 
@@ -320,6 +323,7 @@ swif_status_t   swif_encoder_generate_coding_coefs (
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
+    return (*enc->generate_coding_coefs)(enc, key, add_param);
 }
 
 swif_status_t   swif_decoder_generate_coding_coefs (
@@ -327,6 +331,7 @@ swif_status_t   swif_decoder_generate_coding_coefs (
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
+    return (*dec->generate_coding_coefs)(dec, key, add_param);
 }
 
 
@@ -342,7 +347,7 @@ swif_status_t   swif_encoder_get_coding_coefs_tab (
                                 void**          coding_coefs_tab,
                                 uint32_t*       nb_coefs_in_tab)
 {
-// NOT YET
+    return (*enc->get_coding_coefs_tab)(enc, coding_coefs_tab, nb_coefs_in_tab);
 }
 
 
