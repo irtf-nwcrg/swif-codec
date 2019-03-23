@@ -12,7 +12,8 @@
  * depending on the context.
  */
 typedef struct swif_encoder_rlc_cb {
-	swif_encoder_t generic_encoder;
+	/* generic part of any control block. MUST be first in structure */
+	swif_encoder_t		generic_encoder;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
@@ -31,10 +32,10 @@ typedef struct swif_encoder_rlc_cb {
 	void			**ew_tab;
 
 	/* the index of the firt source symbol (included) */
-	uint32_t 			ew_left;
+	uint32_t 		ew_left;
 
 	/* the index of the last source symbol added (included) */
-	uint32_t 			ew_right;
+	uint32_t 		ew_right;
 
 	/** identifier of the last source symbol added
 	* we suppose that our source symbols are ordered
@@ -63,7 +64,8 @@ typedef struct swif_encoder_rlc_cb {
  * depending on the context.
  */
 typedef struct swif_decoder_rlc_cb {
-	swif_decoder_t generic_decoder;
+	/* generic part of any control block. MUST be first in structure */
+	swif_decoder_t		generic_decoder;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
