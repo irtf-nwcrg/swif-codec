@@ -5,11 +5,11 @@
 
 #include <stdint.h>
 /* add what's missing here... */
-
+#include <stdlib.h>
+#include <stdio.h>
 #include "swif_general.h"
 #include "swif_api.h"
 #include "swif_rlc_cb.h"
 #include "swif_linear-code.h"
 
 /* add what's missing here... */
-

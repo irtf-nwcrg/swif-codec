@@ -26,10 +26,12 @@ typedef struct swif_encoder_rlc_cb {
 
 	/* coding coefficients table. To be initialized before building a new repair symbol */
 	uint8_t			*cc_tab;
+	void			**ew_tab;
+	void 			**ew_start;
+	void 			**ew_end;
+	esi_t 			ew_esi_end;
+	uint32_t 		ew_esi_nb;
 
-	/* linked list of source symbols currently in the coding window */
-	/* TODO : enc_coding_window_t	*cw_head; */
-	uint32_t		cw_nb_in_list;
 
 	/* add whatever may be needed hereafter... */
 } swif_encoder_rlc_cb_t;
