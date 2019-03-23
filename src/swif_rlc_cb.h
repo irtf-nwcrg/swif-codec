@@ -7,16 +7,12 @@
 /**
  * Control block for an RLC encoder.
  * Encoder structure that contains whatever is needed for encoding.
- * This structure MUST be aligned with swif_encoder_t (same first items) in
- * order to be able to cast a pointer to one of the two structures,
+ * The first field of this structure is the generic swif encoder
+ * so that one can cast a pointer to one of the two structures,
  * depending on the context.
  */
 typedef struct swif_encoder_rlc_cb {
-	swif_codepoint_t	codepoint;
-
-	/* when a function returns with SWIF_STATUS_ERROR, the errno
-	 * variable contains a more detailed error type. */
-	swif_errno_t		swif_errno;
+	swif_encoder_t generic_encoder;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
@@ -42,16 +38,12 @@ typedef struct swif_encoder_rlc_cb {
 /**
  * Control block for an RLC decoder.
  * Decoder structure that contains whatever is needed for decoding.
- * This structure MUST be aligned with swif_decoder_t (same first items) in
- * order to be able to cast a pointer to one of the two structures,
+ * The first field of this structure is the generic swif decoder
+ * so that one can cast a pointer to one of the two structures,
  * depending on the context.
  */
 typedef struct swif_decoder_rlc_cb {
-	swif_codepoint_t	codepoint;
-
-	/* when a function returns with SWIF_STATUS_ERROR, the errno
-	 * variable contains a more detailed error type. */
-	swif_errno_t		swif_errno;
+	swif_decoder_t generic_decoder;
 
 	/* desired verbosity: 0 is the minimum verbosity, the maximum
 	 * level being implementation specific. */
