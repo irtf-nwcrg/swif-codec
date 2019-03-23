@@ -8,17 +8,7 @@
  * Author: Vincent Roca (Inria)
  */
 
-
-/* this is the decoder */
-#define OF_USE_DECODER
-
 #include "simple_client_server.h"
-
-
-/*
- * Chose which decoding method to use... Both should be equivalent.
- */
-#define USE_DECODE_WITH_NEW_SYMBOL
 
 
 /* Prototypes */
@@ -34,17 +24,17 @@ static SOCKET	init_socket (void);
  * has been actually received. It works in blocking mode the first time it's called
  * (as the client can be launched a few seconds before the server), and after that
  * in non blocking (i.e. polling) mode. If no packet is received even after having
- * waited a certain time (0.2s), it return OF_STATUS_FAILURE to indicate that the
+ * waited a certain time (0.2s), it return SWIF_STATUS_FAILURE to indicate that the
  * sender probably stopped all transmissions.
  */
-static of_status_t	get_next_pkt (SOCKET	so,
+static swif_status_t	get_next_pkt (SOCKET	so,
 				      void	**pkt,
 				      int32_t	*len);
 
 /**
  * Dumps len32 32-bit words of a buffer (typically a symbol).
  */
-static void	dump_buffer_32 (void	*buf,
+static void	dump_buffer_32 (void		*buf,
 				uint32_t	len32);
 
 
@@ -54,116 +44,72 @@ static void	dump_buffer_32 (void	*buf,
 int
 main (int argc, char* argv[])
 {
-	of_codec_id_t	codec_id;				/* identifier of the codec to use */
-	of_session_t	*ses 		= NULL;			/* openfec codec instance identifier */
-	of_parameters_t	*params		= NULL;			/* structure used to initialize the openfec session */
+	swif_codepoint_t codepoint;				/* identifier of the codec to use */
+	swif_decoder_t	*ses		= NULL;
+	uint32_t	ew_size;				/* encoding window size */
+	uint32_t	tot_src;				/* total number of source symbols */
+	uint32_t	tot_enc;					/* total number of encoding symbols (i.e. source + repair) in the session */
+	esi_t		esi;					/* source symbol id */
+	//uint32_t	idx;					/* index in the source+repair table */
+	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
+	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
+	fec_oti_t	*fec_oti	= NULL;			/* FEC Object Transmission Information as sent to the client */
+	fpi_t		*fpi;					/* header (FEC Payload Information) for source and repair symbols */
+	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
+	uint32_t	ret		= -1;
 	void**		recvd_symbols_tab= NULL;		/* table containing pointers to received symbols (no FPI here).
 								 * The allocated buffer start 4 bytes (i.e., sizeof(FPI)) before... */
 	void**		src_symbols_tab	= NULL;			/* table containing pointers to the source symbol buffers (no FPI here) */
-	uint32_t		symb_sz_32	= SYMBOL_SIZE / 4;	/* symbol size in units of 32 bit words */
-	uint32_t		k;					/* number of source symbols in the block */
-	uint32_t		n;					/* number of encoding symbols (i.e. source + repair) in the block */
-	uint32_t		esi;					/* Encoding Symbol ID, used to identify each encoding symbol */
-	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
-	void		*pkt_with_fpi	= NULL;			/* pointer to a buffer containing the FPI followed by the fixed size packet */
-	fec_oti_t	*fec_oti	= NULL;			/* FEC Object Transmission Information as received from the server */
 	int32_t		len;					/* len of the received packet */
-	SOCKADDR_IN	dst_host;
-	uint32_t		n_received	= 0;			/* number of symbols (source or repair) received so far */
-	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
-	uint32_t		ret;
+	uint32_t	n_received	= 0;			/* number of symbols (source or repair) received so far */
 
 
 	/* First of all, initialize the UDP socket and wait for the FEC OTI to be received. This is absolutely required to
 	 * synchronize encoder and decoder. We assume this first packet is NEVER lost otherwise decoding is not possible.
 	 * In practice the sender can transmit it periodically, or it is sent through a separate reliable channel. */
-	if ((so = init_socket()) == INVALID_SOCKET)
-	{
-		OF_PRINT_ERROR(("Error initializing socket!\n"))
+	if ((so = init_socket()) == INVALID_SOCKET) {
+		fprintf(stderr, "Error initializing socket!\n");
 		ret = -1;
 		goto end;
 	}
 	len = sizeof(fec_oti_t);		/* size of the expected packet */
-	if ((ret = get_next_pkt(so, (void**)&fec_oti, &len)) != OF_STATUS_OK)
-	{
-		OF_PRINT_ERROR(("get_next_pkt failed (FEC OTI reception)\n"))
+	if ((ret = get_next_pkt(so, (void**)&fec_oti, &len)) != SWIF_STATUS_OK) {
+		fprintf(stderr, "Error, get_next_pkt failed (FEC OTI reception)\n");
 		ret = -1;
 		goto end;
 	}
-	if (len != sizeof(fec_oti_t))
-	{
-		OF_PRINT_ERROR(("FEC OTI reception failed: bad size, expected %lu but received %d instead\n", sizeof(fec_oti_t), ret))
+	if (len != sizeof(fec_oti_t)) {
+		fprintf(stderr, "Error, FEC OTI reception failed: bad size, expected %lu but received %d instead\n", sizeof(fec_oti_t), ret);
 		ret = -1;
 		goto end;
 	}
 	/* convert back to host endianess */
-	codec_id = fec_oti->codec_id	= ntohl(fec_oti->codec_id);
-	k = fec_oti->k			= ntohl(fec_oti->k);
-	n = fec_oti->n			= ntohl(fec_oti->n);
+	codepoint	= ntohl(fec_oti->codepoint);
+	ew_size		= ntohl(fec_oti->ew_size);
+	tot_src		= ntohl(fec_oti->tot_src);
+	tot_enc		= ntohl(fec_oti->tot_enc);
 
 	printf("\nReceiving packets from %s/%d\n", DEST_IP, DEST_PORT);
 
 	/* and check the correctness of data received */
-	if (k > n || k > 40000 || n > 40000)
-	{
-		OF_PRINT_ERROR(("Invalid FEC OTI received: k=%u or n=%u received are probably out of range\n", k, n))
+	if (tot_src > tot_enc || tot_src > 100000 || tot_enc > 100000) {
+		fprintf(stderr, "Error, invalid FEC OTI received: tot_src_symbols=%u or tot_encoding_symbols=%u received are probably out of range\n", tot_src, tot_enc);
 		ret = -1;
 		goto end;
 	}
-	/* now we know which codec the sender has used along with the codec parameters, we can prepar the params structure accordingly */
-	switch (codec_id) {
-	case OF_CODEC_REED_SOLOMON_GF_2_M_STABLE: {
-		/* fill in the code specific part of the of_..._parameters_t structure */
-		of_rs_2_m_parameters_t	*my_params;
-
-		printf("\nInitialize a Reed-Solomon over GF(2^m) codec instance, (n, k)=(%u, %u)...\n", n, k);
-		if ((my_params = (of_rs_2_m_parameters_t *)calloc(1, sizeof(* my_params))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory for codec %d\n", codec_id))
-			ret = -1;
-			goto end;
-		}
-		my_params->m = 8;
-		params = (of_parameters_t *) my_params;
-		break;
-		}
-
-	case OF_CODEC_LDPC_STAIRCASE_STABLE: {
-		/* fill in the code specific part of the of_..._parameters_t structure */
-		of_ldpc_parameters_t	*my_params;
-
-		printf("\nInitialize an LDPC-Staircase codec instance, (n, k)=(%u, %u)...\n", n, k);
-		if ((my_params = (of_ldpc_parameters_t *)calloc(1, sizeof(* my_params))) == NULL)
-		{
-			OF_PRINT_ERROR(("no memory for codec %d\n", codec_id))
-			ret = -1;
-			goto end;
-		}
-		my_params->prng_seed	= rand();
-		my_params->N1		= 7;
-		params = (of_parameters_t *) my_params;
-		break;
-		}
-
-	default:
-		OF_PRINT_ERROR(("Invalid FEC OTI received: codec_id=%u received is not valid\n", codec_id))
+	if (codepoint != SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC) {
+		fprintf(stderr, "Error, invalid Codepoint %u.\n", codepoint);
 		ret = -1;
 		goto end;
 	}
-	params->nb_source_symbols	= k;		/* fill in the generic part of the of_parameters_t structure */
-	params->nb_repair_symbols	= n - k;
-	params->encoding_symbol_length	= SYMBOL_SIZE;
-
+	if (ew_size > tot_src) {
+		fprintf(stderr, "Error, invalid ew_size (%ul), cannot be larger than tot_src (%ul).\n", ew_size, tot_src);
+		ret = -1;
+		goto end;
+	}
 	/* Open and initialize the openfec decoding session now that we know the various parameters used by the sender/encoder... */
-	if ((ret = of_create_codec_instance(&ses, codec_id, OF_DECODER, VERBOSITY)) != OF_STATUS_OK)
-	{
-		OF_PRINT_ERROR(("of_create_codec_instance() failed\n"))
-		ret = -1;
-		goto end;
-	}
-	if (of_set_fec_parameters(ses, params) != OF_STATUS_OK)
-	{
-		OF_PRINT_ERROR(("of_set_fec_parameters() failed for codec_id %d\n", codec_id))
+	if ((ses = swif_decoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size, 2 * ew_size)) != SWIF_STATUS_OK) {
+		fprintf(stderr, "Error, of_create_codec_instance() failed\n");
 		ret = -1;
 		goto end;
 	}
@@ -171,152 +117,113 @@ main (int argc, char* argv[])
 	printf( "\nDecoding in progress. Waiting for new packets...\n" );
 
 	/* allocate a table for the received encoding symbol buffers. We'll update it progressively */
-	if (((recvd_symbols_tab = (void**) calloc(n, sizeof(void*))) == NULL) ||
-	    ((src_symbols_tab = (void**) calloc(n, sizeof(void*))) == NULL))
-	{
-		OF_PRINT_ERROR(("no memory (calloc failed for enc_symbols_tab, n=%u)\n", n))
+	if (((recvd_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL) ||
+	    ((src_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL)) {
+		fprintf(stderr, "Error, no memory (tot_enc=%u)\n", tot_enc);
 		ret = -1;
 		goto end;
 	}
-
 	len = SYMBOL_SIZE + 4;	/* size of the expected packet */
-#ifdef USE_DECODE_WITH_NEW_SYMBOL
 	/*
-	 * this is the standard method: submit each fresh symbol to the library ASAP, upon reception
-	 * (or later, but using the standard of_decode_with_new_symbol() function).
+	 * submit each fresh symbol to the library ASAP, upon reception.
 	 */
-	while ((ret = get_next_pkt(so, &pkt_with_fpi, &len)) == OF_STATUS_OK)
-	{
+	while ((ret = get_next_pkt(so, (void**)&pkt_with_fpi, &len)) == SWIF_STATUS_OK) {
+		uint16_t	is_source;	/* 1 if source, 0 if repair */
+		uint16_t	repair_key;	/* only meaningful in case of a repair */
+		uint16_t	nss;		/* only meaningful in case of a repair */
+		esi_t		esi;		/* esi of a source symbol, or esi of the first source symbol of the encoding window in case of a repair */
+		uint32_t	i;
+
 		/* OK, new packet received... */
 		n_received++;
-		esi = ntohl(*(uint32_t*)pkt_with_fpi);
-		if (esi > n)		/* a sanity check, in case... */
-		{
-			OF_PRINT_ERROR(("invalid esi=%u received in a packet's FPI\n", esi))
+		fpi		= (fpi_t*)pkt_with_fpi;
+		is_source	= htons(fpi->is_source);
+		repair_key	= htons(fpi->repair_key);
+		nss		= htons(fpi->nss);
+		esi		= htonl(fpi->esi);
+		if (esi > tot_enc) {		/* a sanity check, in case... */
+			fprintf(stderr, "Error, invalid esi=%ul received in a packet's FPI\n", esi);
 			ret = -1;
 			goto end;
 		}
 		recvd_symbols_tab[esi] = (char*)pkt_with_fpi + 4;	/* remember */
-		printf("%05d => receiving symbol esi=%u (%s)\n", n_received, esi, (esi < k) ? "src" : "repair");
-		if (of_decode_with_new_symbol(ses, (char*)pkt_with_fpi + 4, esi) == OF_STATUS_ERROR) {
-			OF_PRINT_ERROR(("of_decode_with_new_symbol() failed\n"))
-			ret = -1;
-			goto end;
+		printf("%05d => receiving symbol esi=%u (%s)\n", n_received, esi, (is_source) ? "src" : "repair");
+		if (is_source) {
+			if (swif_decoder_decode_with_new_source_symbol(ses, (char*)pkt_with_fpi + 4, esi) != SWIF_STATUS_OK) {
+				fprintf(stderr, "Error, swif_decoder_decode_with_new_source_symbol() failed\n");
+				ret = -1;
+				goto end;
+			}
+		} else {
+			/* a bit more complex, it's a repair symbol: specify the coding window, generate the coding coefficients,
+			 * then submit the repair symbol  */
+			if (swif_decoder_reset_coding_window(ses) != SWIF_STATUS_OK) {
+				fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
+				ret = -1;
+				goto end;
+			}
+			for (i = esi; i < esi + nss; i++) {
+				if (swif_decoder_add_source_symbol_to_coding_window (ses, i) != SWIF_STATUS_OK) {
+					fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
+					ret = -1;
+					goto end;
+				}
+			}
+			if (swif_decoder_generate_coding_coefs (ses, repair_key, 0) != SWIF_STATUS_OK) {
+				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed\n");
+				ret = -1;
+				goto end;
+			}
+			if (swif_decoder_decode_with_new_repair_symbol(ses, (char*)pkt_with_fpi + 4) != SWIF_STATUS_OK) {
+				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
+				ret = -1;
+				goto end;
+			}
 		}
 		/* check if completed in case we received k packets or more */
-		if ((n_received >= k) && (of_is_decoding_complete(ses) == true)) {
+		if ((n_received >= tot_src) && (0 == true) /* TODO: we need a termination test here! */) {
 			/* done, we recovered everything, no need to continue reception */
 			done = true;
 			break;
 		}
 		len = SYMBOL_SIZE + 4;	/* make sure len contains the size of the expected packet */
 	}
-#else
-	/*
-	 * this is the alternative method: wait to receive all the symbols, then submit them all to
-	 * the library using the of_set_available_symbols() function. In that case decoding will occur
-	 * during the of_finish_decoding() call.
-	 */
-	while ((ret = get_next_pkt(so, &pkt_with_fpi, &len)) == OF_STATUS_OK)
-	{
-		/* OK, new packet received... */
-		n_received++;
-		esi = ntohl(*(uint32_t*)pkt_with_fpi);
-		if (esi > n)		/* a sanity check, in case... */
-		{
-			OF_PRINT_ERROR(("invalid esi=%u received in a packet's FPI\n", esi))
-			ret = -1;
-			goto end;
-		}
-		recvd_symbols_tab[esi] = (char*)pkt_with_fpi + 4;	/* remember */
-		printf("%05d => receiving symbol esi=%u (%s)\n", n_received, esi, (esi < k) ? "src" : "repair");
-		len = SYMBOL_SIZE + 4;	/* make sure len contains the size of the expected packet */
-	}
-	/* now we received everything, submit them all to the codec if we received a sufficiently high number of symbols (i.e. >= k) */
-	if (n_received >= k && (of_set_available_symbols(ses, recvd_symbols_tab) != OF_STATUS_OK))
-	{
-		OF_PRINT_ERROR(("of_set_available_symbols() failed with error (%d)\n", ret))
-		ret = -1;
-		goto end;
-	}
-#endif
-	if (!done && (ret == OF_STATUS_FAILURE) && (n_received >= k))
-	{
-		/* there's no packet any more but we received at least k, and the use of of_decode_with_new_symbol() didn't succedd to decode,
-		 * so try with of_finish_decoding.
-		 * NB: this is useless with MDS codes (e.g. Reed-Solomon), but it is essential with LDPC-Staircase as of_decode_with_new_symbol
-		 * performs ITerative decoding, whereas of_finish_decoding performs ML decoding */
-		ret = of_finish_decoding(ses);
-		if (ret == OF_STATUS_ERROR || ret == OF_STATUS_FATAL_ERROR)
-		{
-			OF_PRINT_ERROR(("of_finish_decoding() failed with error (%d)\n", ret))
-			ret = -1;
-			goto end;
-		}
-		else if (ret == OF_STATUS_OK)
-		{
-			done = true;
-		}
-		/* else ret == OF_STATUS_FAILURE, meaning of_finish_decoding didn't manage to recover all source symbols */
-	}
-	if (done)
-	{
+	if (done) {
 		/* finally, get a copy of the pointers to all the source symbols, those received (that we already know) and those decoded.
 		 * In case of received symbols, the library does not change the pointers (same value). */
-		if (of_get_source_symbols_tab(ses, src_symbols_tab) != OF_STATUS_OK)
-		{
-			OF_PRINT_ERROR(("of_get_source_symbols_tab() failed\n"))
-			ret = -1;
-			goto end;
-		}
-		printf("\nDone! All source symbols rebuilt after receiving %u packets\n", n_received);
-		if (VERBOSITY > 1)
-		{
-			for (esi = 0; esi < k; esi++) {
-				printf("src[%u]= ", esi);
+		printf("\nDone! All source symbols rebuilt after receiving %ul packets\n", n_received);
+		if (VERBOSITY > 1) {
+			for (esi = 0; esi < tot_src; esi++) {
+				printf("src[%ul]= ", esi);
 				dump_buffer_32(src_symbols_tab[esi], 1);
 			}
 		}
-	}
-	else
-	{
-		printf("\nFailed to recover all erased source symbols even after receiving %u packets\n", n_received);
+	} else {
+		printf("\nFailed to recover all erased source symbols even after receiving %ul packets\n", n_received);
 	}
 
 
 end:
 	/* Cleanup everything... */
-	if (so!= INVALID_SOCKET)
-	{
+	if (so!= INVALID_SOCKET) {
 		close(so);
 	}
-	if (ses)
-	{
-		of_release_codec_instance(ses);
+	if (ses) {
+		swif_decoder_release(ses);
 	}
-	if (params)
-	{
-		free(params);
-	}
-	if (fec_oti)
-	{
+	if (fec_oti) {
 		free(fec_oti);
 	}
-	if (recvd_symbols_tab && src_symbols_tab)
-	{
-		for (esi = 0; esi < n; esi++)
-		{
-			if (recvd_symbols_tab[esi])
-			{
+	if (recvd_symbols_tab && src_symbols_tab) {
+		for (esi = 0; esi < tot_enc; esi++) {
+			if (recvd_symbols_tab[esi]) {
 				/* this is a symbol received from the network, without its FPI that starts 4 bytes before */
 				free((char*)recvd_symbols_tab[esi] - 4);
-			}
-			else if (esi < k && src_symbols_tab[esi])
-			{
-				/* this is a source symbol decoded by the openfec codec, so free it */
-				ASSERT(recvd_symbols_tab[esi] == NULL);
-				free(src_symbols_tab[esi]);
-			}
+			} //else if (esi < k && src_symbols_tab[esi]) {
+			//	/* this is a source symbol decoded by the openfec codec, so free it */
+			//	ASSERT(recvd_symbols_tab[esi] == NULL);
+			//	free(src_symbols_tab[esi]);
+			//}
 		}
 		free(recvd_symbols_tab);
 		free(src_symbols_tab);
@@ -335,22 +242,20 @@ init_socket ()
 	SOCKADDR_IN	bindAddr;
 	uint32_t		sz = 1024 * 1024;
 
-	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET)
-	{
-		printf("Error: call to socket() failed\n");
+	if ((s = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET) {
+		fprintf(stderr, "Error: call to socket() failed\n");
 		return INVALID_SOCKET;
 	}
 	bindAddr.sin_family = AF_INET;
 	bindAddr.sin_port = htons((short)DEST_PORT);
 	bindAddr.sin_addr.s_addr = INADDR_ANY;
-	if (bind(s, (SOCKADDR*) &bindAddr, sizeof(bindAddr)) == SOCKET_ERROR)
-	{
-		printf("bind() failed. Port %d may be already in use\n", DEST_PORT);
+	if (bind(s, (SOCKADDR*) &bindAddr, sizeof(bindAddr)) == SOCKET_ERROR) {
+		fprintf(stderr, "bind() failed. Port %d may be already in use\n", DEST_PORT);
 		return INVALID_SOCKET;
 	}
 	/* increase the reception socket size as the default value may lead to a high datagram loss rate */
 	if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, &sz, sizeof(sz)) == -1) {
-		printf("setsockopt() failed to set new UDP socket size to %u\n", sz);
+		fprintf(stderr, "setsockopt() failed to set new UDP socket size to %u\n", sz);
 		return INVALID_SOCKET;
 	}
 	return s;
@@ -360,7 +265,7 @@ init_socket ()
 /**
  * Receives packets on the incoming UDP socket.
  */
-static of_status_t
+static swif_status_t
 get_next_pkt   (SOCKET		so,
 		void		**pkt,
 		int32_t		*len)
@@ -368,71 +273,59 @@ get_next_pkt   (SOCKET		so,
 	static bool	first_call = true;
 	int32_t		saved_len = *len;	/* save it, in case we need to do several calls to recvfrom */
 
-	if ((*pkt = malloc(saved_len)) == NULL)
-	{
-		OF_PRINT_ERROR(("no memory (malloc failed for p)\n"))
-		return OF_STATUS_ERROR;
+	if ((*pkt = malloc(saved_len)) == NULL) {
+		fprintf(stderr, "Error, no memory (malloc failed for p)\n");
+		return SWIF_STATUS_ERROR;
 	}
-	if (first_call)
-	{
+	if (first_call) {
 		/* the first time we must be in blocking mode since the flow may be launched after a few seconds... */
 		first_call = false;
 		*len = recvfrom(so, *pkt, saved_len, 0, NULL, NULL);
-		if (*len < 0)
-		{
+		if (*len < 0) {
 			/* this is an anormal error, exit */
 			perror("recvfrom");
-			OF_PRINT_ERROR(("recvfrom failed\n"))
+			fprintf(stderr, "Error, recvfrom failed\n");
 			free(*pkt);	/* don't forget to free it, otherwise it will leak */
-			return OF_STATUS_ERROR;
+			return SWIF_STATUS_ERROR;
 		}
 		/* set the non blocking mode for this socket now that the flow has been launched */
-		if (fcntl(so, F_SETFL, O_NONBLOCK) < 0)
-		{
-			OF_PRINT_ERROR(("ERROR, fcntl failed to set non blocking mode\n"))
+		if (fcntl(so, F_SETFL, O_NONBLOCK) < 0) {
+			fprintf(stderr, "Error, fcntl failed to set non blocking mode\n");
 			exit(-1);
 		}
 		if (VERBOSITY > 1)
 			printf("%s: pkt received 0, len=%u\n", __FUNCTION__, *len);
-		return OF_STATUS_OK;
+		return SWIF_STATUS_OK;
 	}
 	/* otherwise we are in non-blocking mode... */
 	*len = recvfrom(so, *pkt, saved_len, 0, NULL, NULL);
-	if (*len > 0)
-	{
+	if (*len > 0) {
 		if (VERBOSITY > 1)
 			printf("%s: pkt received 1, len=%u\n", __FUNCTION__, *len);
-		return OF_STATUS_OK;
-	}
-	else if (errno == EAGAIN || errno == EWOULDBLOCK)
-	{
+		return SWIF_STATUS_OK;
+	} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 		/* no packet available, sleep a little bit and retry */
 		SLEEP(200);	/* (in milliseconds) */
 		*len = recvfrom(so, *pkt, saved_len, 0, NULL, NULL);
-		if (*len > 0)
-		{
+		if (*len > 0) {
 			if (VERBOSITY > 1)
 				printf("%s: pkt received 2, len=%u\n", __FUNCTION__, *len);
-			return OF_STATUS_OK;
-		}
-		else
-		{
+			return SWIF_STATUS_OK;
+		} else {
 			/* that's the end of the test, no packet available any more, we're sure of that now... */
 			if (VERBOSITY > 1)
 				printf("%s: end of test, no packet after the sleep\n", __FUNCTION__);
 			free(*pkt);	/* don't forget to free it, otherwise it will leak */
-			return OF_STATUS_FAILURE;
+			return SWIF_STATUS_FAILURE;
 		}
-	}
-	else
-	{
+	} else {
 		/* this is an anormal error, exit */
 		perror("recvfrom");
-		OF_PRINT_ERROR(("ERROR, recvfrom failed\n"))
+		fprintf(stderr, "Error, recvfrom failed\n");
 		free(*pkt);	/* don't forget to free it, otherwise it will leak */
-		return OF_STATUS_ERROR;
+		return SWIF_STATUS_ERROR;
 	}
-	return OF_STATUS_ERROR;	/* never called */
+	return SWIF_STATUS_ERROR;	/* never called */
 }
 
 
@@ -450,8 +343,7 @@ dump_buffer_32 (void	*buf,
 	for (ptr = (uint32_t*)buf; len32 > 0; len32--, ptr++) {
 		/* convert to big endian format to be sure of byte order */
 		printf( "%08X", htonl(*ptr));
-		if (++j == 10)
-		{
+		if (++j == 10) {
 			j = 0;
 			printf("\n");
 		}
