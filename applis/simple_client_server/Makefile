@@ -31,7 +31,7 @@ CFLAGS += -Wall -g3 -fPIC
 
 #------------------------------
 
-SRCS = simple_server.h simple_client.c
+SRCS = simple_server.c simple_client.c
 
 HEADERS = $(SRCS:.c=.h) simple_client_server.h
 
@@ -41,9 +41,12 @@ OBJS = $(SRCS:.c=.o)
 # Main targets
 #---------------------------------------------------------------------------
 
-all: simple_server
+all: simple_client simple_server
 
 simple_server: simple_server.o ../../src/libswif.a
+	${CC} ${CFLAGS} -o $@ $< -lswif -L. -L../../src/
+
+simple_client: simple_client.o ../../src/libswif.a
 	${CC} ${CFLAGS} -o $@ $< -lswif -L. -L../../src/
 
 #---------------------------------------------------------------------------
@@ -64,8 +67,8 @@ DEPS = $(SRCS:.c=.d)
 
 clean:
 	rm -f *.a *.so *.o *.d *~
-	rm -f simple_server
 
 really-clean: clean
+	rm -f simple_server
 
 #---------------------------------------------------------------------------
