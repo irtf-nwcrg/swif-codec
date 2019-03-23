@@ -204,7 +204,7 @@ swif_status_t   swif_rlc_decoder_reset_coding_window (swif_encoder_t*  dec)
  * Decoder:     add a source symbol to the coding window under preparation.
  */
 swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
-                                swif_encoder_t* enc,
+                                swif_encoder_rlc_cb_t* enc,
                                 void*           new_src_symbol_buf,
                                 esi_t           new_src_symbol_esi)
 {
@@ -216,15 +216,32 @@ retirer le symbole source le plus ancien si l'EW déborde. */
 
 // add source symbol to the buffer
 
-    if ( new_src_symbol_esi == ++last_esi_added){
-        *pIn++ = new_src_symbol_buf;             // insert ptr value of new_src_symbol_buf into buffer
-        if (pIn >= pEnd)        // end of circular buffer?
-            pIn = buf;          // wrap around
+    if ( new_src_symbol_esi != enc->ew_esi_right+1){
+        fprintf(stderr, "swif_rlc_encoder_add_source_symbol_to_coding_window() failed! new_src_symbol_esi is not in the right order  \n");
+        return SWIF_STATUS_ERROR;  
+    }
+    if(enc->ew_ss_nb == enc->max_coding_window_size){
     
-    return SWIF_STATUS_OK ;
+        if(enc->source_symbol_removed_from_coding_window_callback  != NULL ){
+            enc->source_symbol_removed_from_coding_window_callback(enc->context_4_callback,
+                                                                    enc->ew_esi_right  - enc->ew_ss_nb);
+        }
+        enc->ew_tab[enc->ew_left] = new_src_symbol_buf;
+        enc->ew_right = enc->ew_left;
+        enc->ew_left = (enc->ew_left +1) % enc->max_coding_window_size;
+        enc->ew_esi_right = new_src_symbol_esi;
+ 
     }   
-    
-return SWIF_STATUS_ERROR ;  
+    else {
+        enc->ew_right = (enc->ew_right +1) % enc->max_coding_window_size;
+        enc->ew_ss_nb++;
+        enc->ew_tab[enc->ew_right] = new_src_symbol_buf;
+        enc->ew_esi_right = new_src_symbol_esi;
+    }
+  
+
+    return SWIF_STATUS_OK;
+ 
 
 }
 
@@ -366,11 +383,13 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
         fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
         return NULL;
     }
-    enc->ew_start = enc->ew_tab;
-    enc->ew_end = enc->ew_start;
-    enc->ew_esi_end = 0;
-    enc->ew_esi_nb = 0;
+    enc->ew_left = enc->ew_tab;
+    enc->ew_right = enc->ew_left;
+    enc->ew_esi_right = 0;
+    enc->ew_ss_nb = 0;
 
+    enc->source_symbol_removed_from_coding_window_callback = NULL;
+    enc->context_4_callback = NULL;
 
     enc->generic_encoder.generate_coding_coefs = swif_rlc_encoder_generate_coding_coefs;
     enc->generic_encoder.get_coding_window_information = swif_rlc_encoder_get_coding_window_information;

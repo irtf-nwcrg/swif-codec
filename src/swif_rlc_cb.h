@@ -26,13 +26,31 @@ typedef struct swif_encoder_rlc_cb {
 
 	/* coding coefficients table. To be initialized before building a new repair symbol */
 	uint8_t			*cc_tab;
+	
+	/* pointer to the table containing source symbols */
 	void			**ew_tab;
-	void 			**ew_start;
-	void 			**ew_end;
-	esi_t 			ew_esi_end;
-	uint32_t 		ew_esi_nb;
 
+	/* the index of the firt source symbol (included) */
+	uint32_t 			ew_left;
 
+	/* the index of the last source symbol added (included) */
+	uint32_t 			ew_right;
+
+	/** identifier of the last source symbol added
+	* we suppose that our source symbols are ordered
+	 */
+	esi_t 			ew_esi_right;
+
+	/** number of source currently in the encoding window 
+	* useful to differentiate the state of the buffer
+	*/
+	uint32_t 		ew_ss_nb;
+
+	void (*source_symbol_removed_from_coding_window_callback) (
+                                        void*   context,
+                                        esi_t   old_symbol_esi);
+	
+	void 			*context_4_callback;
 	/* add whatever may be needed hereafter... */
 } swif_encoder_rlc_cb_t;
 
