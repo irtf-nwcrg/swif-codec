@@ -12,6 +12,12 @@ This work has strong relationships with the Generic API I-D [https://datatracker
 
 --------
 
+## Assumptions and limits of the SWIF-codec
+
+The codec is not thread-safe: a single codec instance is limited to a single execution thread.
+However a given application may use several threads, each of them creating their own codec instances.
+
+
 ## Reference documents
 
 ### API for the SWiF Codec
