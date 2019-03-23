@@ -1,36 +1,3 @@
-swif_encoder_t* swif_rlc_encoder_create (
-                                swif_codepoint_t codepoint,
-                                uint32_t        verbosity,
-                                uint32_t        symbol_size,
-                                uint32_t        max_coding_window_size)
-{
-    
-    /* initialize the encoder */
-    
-    assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC;
-            swif_encoder_rlc_cb_t *enc = NULL;
-            if(enc = calloc(1,sizeof(swif_encoder_rlc_cb_t)) == NULL){
-                fprintf(stderr, "swif_encoder_create() failed! No memory \n");
-                return NULL;
-            }
-            (*enc).generic_encoder.codepoint = codepoint;
-            (*enc).symbol_size = symbol_size;
-            (*enc).max_coding_window_size = max_coding_window_size;
-            if (enc->cc_tab = calloc(max_coding_window_size, sizeof(uintptr_t)) == NULL){
-                fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
-                return NULL;
-            }
-            if (enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t)) == NULL){
-                fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
-                return NULL;
-            }
-            enc->ew_start = enc->ew_tab;
-            enc->ew_end = enc->ew_start;
-            enc->ew_esi_end = 0;
-            enc->ew_esi_nb = 0;
-
-    
-}
 
 
 
@@ -372,3 +339,49 @@ swif_status_t   swif_rlc_encoder_get_coding_coefs_tab (
 
 
 
+
+
+swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
+                                         uint32_t        verbosity,
+                                         uint32_t        symbol_size,
+                                         uint32_t        max_coding_window_size)
+{
+
+    /* initialize the encoder */
+
+    assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
+    swif_encoder_rlc_cb_t *enc = NULL;
+    if(enc = calloc(1,sizeof(swif_encoder_rlc_cb_t)) == NULL){
+        fprintf(stderr, "swif_encoder_create() failed! No memory \n");
+        return NULL;
+    }
+    (*enc).generic_encoder.codepoint = codepoint;
+    (*enc).symbol_size = symbol_size;
+    (*enc).max_coding_window_size = max_coding_window_size;
+    if (enc->cc_tab = calloc(max_coding_window_size, sizeof(uintptr_t)) == NULL){
+        fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
+        return NULL;
+    }
+    if (enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t)) == NULL){
+        fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
+        return NULL;
+    }
+    enc->ew_start = enc->ew_tab;
+    enc->ew_end = enc->ew_start;
+    enc->ew_esi_end = 0;
+    enc->ew_esi_nb = 0;
+
+
+    enc->generic_encoder.generate_coding_coefs = swif_rlc_encoder_generate_coding_coefs;
+    enc->generic_encoder.get_coding_window_information = swif_rlc_encoder_get_coding_window_information;
+    enc->generic_encoder.get_coding_coefs_tab = swif_rlc_encoder_get_coding_coefs_tab;
+    enc->generic_encoder.get_parameters = swif_rlc_encoder_get_parameters;
+    enc->generic_encoder.set_parameters = swif_rlc_encoder_set_parameters;
+    enc->generic_encoder.set_callback_functions = swif_rlc_encoder_set_callback_functions;
+    enc->generic_encoder.set_coding_coefs_tab = swif_rlc_encoder_set_coding_coefs_tab;
+    enc->generic_encoder.remove_source_symbol_from_coding_window = swif_rlc_encoder_remove_source_symbol_from_coding_window;
+    enc->generic_encoder.add_source_symbol_to_coding_window = swif_rlc_encoder_add_source_symbol_to_coding_window;
+    enc->generic_encoder.reset_coding_window = swif_rlc_encoder_reset_coding_window;
+    // TODO: enc->generic_encoder.build_repair_symbol ?
+    return (swif_encoder_t *) enc;
+}
