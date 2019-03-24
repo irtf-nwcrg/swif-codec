@@ -32,7 +32,7 @@ CFLAGS += -Wall -g3 -fPIC
 #------------------------------
 
 # TODO : swif_linear-code.c 
-SRCS += swif_api.c swif_prng.c swif_coding_coefficients.c swif_symbol.c
+SRCS += swif_api.c swif_prng.c swif_coding_coefficients.c swif_symbol.c swif_rlc_api.c
 SRCS += swif_full_symbol.c
 SRCS += $(EXTRA_SRCS)
 
