@@ -131,10 +131,6 @@ main(int argc, char* argv[])
 		 * NB: the 0x0 value is avoided since it is a neutral element in the target finite fields, i.e. it prevents the detection
 		 * of symbol corruption */
 		memset(enc_symbols_tab[idx], (char)(esi + 1), SYMBOL_SIZE);
-		if (VERBOSITY > 1) {
-			printf("src[%03d]= ", esi);
-			dump_buffer_32(enc_symbols_tab[idx], 1);
-		}
 		/* add it to the encoding window (no need to do anything else for a source symbol) */
 		if (swif_encoder_add_source_symbol_to_coding_window (ses, enc_symbols_tab[idx], esi) != SWIF_STATUS_OK) {
 			fprintf(stderr, "Error, swif_encoder_add_source_symbol_to_coding_window failed for esi=%u)\n", esi);
@@ -148,7 +144,12 @@ main(int argc, char* argv[])
 		fpi->nss = htons(0);			/* only meaningful in case of a repair */
 		fpi->esi = htonl(esi);
 		memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-		printf(" => sending src symbol %u\n", esi);
+		if (VERBOSITY > 1) {
+			printf("src[%03d]= ", esi);
+			dump_buffer_32(pkt_with_fpi, 8);
+		} else {
+			printf(" => sending src symbol %u\n", esi);
+		}
 		if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
 			fprintf(stderr, "Error, sendto() failed!\n");
 			ret = -1;
