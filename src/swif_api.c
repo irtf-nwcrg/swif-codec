@@ -19,16 +19,15 @@ swif_encoder_t* swif_encoder_create (
                                 swif_codepoint_t codepoint,
                                 uint32_t        verbosity,
                                 uint32_t        symbol_size,
-                                uint32_t        max_coding_window_size) {
-
+                                uint32_t        max_coding_window_size)
+{
     /* initialize the encoder */
     switch (codepoint) {
         case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
-            swif_rlc_encoder_create(codepoint, verbosity, symbol_size, max_coding_window_size);
+            return (swif_rlc_encoder_create(codepoint, verbosity, symbol_size, max_coding_window_size));
         default:
-            fprintf(stderr, "swif_encoder_create ! codepoint not recognized  \n");
+            fprintf(stderr, "Error, swif_encoder_create: codepoint not recognized\n");
             return NULL;
-
     }
 }
 
@@ -75,7 +74,7 @@ swif_status_t   swif_encoder_set_parameters  (
  * using a type/length/value approach for maximum flexibility.
  */
 swif_status_t   swif_encoder_get_parameters  (
-                                swif_encoder_t* enc,
+			swif_encoder_t* enc,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)

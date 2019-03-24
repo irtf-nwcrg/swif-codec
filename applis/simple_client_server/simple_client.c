@@ -108,7 +108,7 @@ main (int argc, char* argv[])
 		goto end;
 	}
 	/* Open and initialize the openfec decoding session now that we know the various parameters used by the sender/encoder... */
-	if ((ses = swif_decoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size, 2 * ew_size)) != SWIF_STATUS_OK) {
+	if ((ses = swif_decoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size, 2 * ew_size)) == NULL) {
 		fprintf(stderr, "Error, of_create_codec_instance() failed\n");
 		ret = -1;
 		goto end;

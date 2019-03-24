@@ -94,7 +94,7 @@ main(int argc, char* argv[])
 	}
 	/* continue with the SWIF codec */
 	printf("\nInitialize a SWIF encoder instance: tot_src=%ul src symbols, ew_size=%ul, total %ul encoding symbols\n", tot_src, ew_size, tot_enc);
-	if ((ses = swif_encoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size)) != SWIF_STATUS_OK) {
+	if ((ses = swif_encoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size)) == NULL) {
 		fprintf(stderr, "Error, swif_encoder_create() failed\n");
 		ret = -1;
 		goto end;

@@ -24,13 +24,15 @@ swif_status_t   swif_rlc_encoder_set_callback_functions (
                                         esi_t   old_symbol_esi),
                 void* context_4_callback)
 {
-	assert(enc);
-	swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+
+    assert(enc);
     rlc_enc->source_symbol_removed_from_coding_window_callback =
 				source_symbol_removed_from_coding_window_callback;
     rlc_enc->context_4_callback = context_4_callback;
 	return SWIF_STATUS_OK;
 }
+
 
 /**
  * This function sets one or more FEC codec specific parameters,
@@ -96,7 +98,7 @@ swif_decoder_t* swif_rlc_decoder_create (
                                 uint32_t        max_linear_system_size)
 {
 // NOT YET
-	return SWIF_STATUS_OK;
+	return NULL;
 }
 
 
