@@ -12,7 +12,7 @@ extensions = [
         library_dirs=["../../src", "../../liblc/src"]),
 ]
 
-module = cythonize("swif.pyx")
+module = cythonize("swif.pyx", language_level=3)
 
 setup(name='SWIF Codec', ext_modules=cythonize(extensions))
 

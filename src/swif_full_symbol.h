@@ -64,9 +64,16 @@ uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol);
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol);
 
 /**
+ * @brief get the symbol 'data'. result_data should be a pointer to a
+ *        a block of memory of full_symbol_get_size(full_symbol)
+ */
+void full_symbol_get_data
+(swif_full_symbol_t *full_symbol, uint8_t *result_data);
+
+    
+/**
  * @brief get the coefficient corresponding to the specified symbol identifier
  */
-
 uint8_t full_symbol_get_coef
 (swif_full_symbol_t *full_symbol, uint32_t symbol_id);
     
@@ -103,6 +110,11 @@ void full_symbol_free(swif_full_symbol_t *swif_full_symbol);
  */
 swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t *swif_full_symbol);
 
+/**
+ * @brief Dump a full symbol on a FILE
+ */    
+    void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
+    
 /*---------------------------------------------------------------------------*/
     
 /**

@@ -16,6 +16,7 @@
 
 struct s_swif_full_symbol_t {
     coded_packet_t* coded_packet;
+    uint32_t symbol_size;
 };
 
 /*---------------------------------------------------------------------------*/
@@ -65,6 +66,7 @@ swif_full_symbol_t *full_symbol_alloc
     }
 
     result->coded_packet = coded_packet;
+    result->symbol_size = symbol_size;
     coded_packet_init(result->coded_packet, LIBLC_GF256);
     return result;
 }
@@ -82,6 +84,9 @@ swif_full_symbol_t *full_symbol_create_from_source
         return NULL;
     }
     coded_packet_set_coef(result->coded_packet, symbol_id, 1);
+    memcpy(coded_packet_data(result->coded_packet), symbol_data, symbol_size);
+    result->symbol_size = symbol_size;
+    coded_packet_adjust_min_max_coef(result->coded_packet);
     return result;
 }
 
@@ -99,6 +104,8 @@ swif_full_symbol_t *full_symbol_create
         coded_packet_set_coef(result->coded_packet, i+min_symbol_id, coef);
     }
     memcpy(coded_packet_data(result->coded_packet), symbol_data, symbol_size);
+    coded_packet_adjust_min_max_coef(result->coded_packet);
+    result->symbol_size = symbol_size;
     return result;
 }
 
@@ -117,19 +124,20 @@ void full_symbol_free(swif_full_symbol_t* full_symbol)
 /**
  * @brief Create a new (unlinked) copy of a full_symbol
  */
-swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t* swif_full_symbol)
+swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t* full_symbol)
 {
-    /* XXX: TODO */
+    swif_full_symbol_t *result = full_symbol_alloc(
+        COEF_HEADER_SIZE, full_symbol->symbol_size);
+    memcpy(result->coded_packet, full_symbol->coded_packet,
+           sizeof(coded_packet_t));
+    return result;
 }
 
 /**
  * @brief get the size of the data
  */
 uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol)
-{
-    /* XXX: TODO */
-}
-
+{ return full_symbol->symbol_size; }
 
 /**
  * @brief get the minimum source index that appears in the symbol
@@ -137,7 +145,12 @@ uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol)
  */
 uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
 {
-    /* XXX: TODO */
+    coded_packet_adjust_min_max_coef(full_symbol->coded_packet);
+    if (full_symbol->coded_packet->coef_pos_min != COEF_POS_NONE) {
+        return full_symbol->coded_packet->coef_pos_min;
+    } else {
+        return FULL_SYMBOL_ID_NONE;        
+    }
 }
 
 /**
@@ -146,7 +159,12 @@ uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
  */
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
 {
-    /* XXX: TODO */
+    coded_packet_adjust_min_max_coef(full_symbol->coded_packet);
+    if (full_symbol->coded_packet->coef_pos_max != COEF_POS_NONE) {
+        return full_symbol->coded_packet->coef_pos_max;
+    } else {
+        return FULL_SYMBOL_ID_NONE;        
+    }
 }
 
 /**
@@ -155,7 +173,25 @@ uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
 uint8_t full_symbol_get_coef
 (swif_full_symbol_t *full_symbol, uint32_t symbol_id)
 {
-    /* XXX: TODO */
+    return coded_packet_get_coef(full_symbol->coded_packet, symbol_id);
+}
+
+/**
+ * @brief get the symbol 'data'. result_data should be a pointer to a
+ *        a block of memory of full_symbol_get_size(full_symbol)
+ */
+void full_symbol_get_data
+(swif_full_symbol_t *full_symbol, uint8_t *result_data)
+{
+    memcpy(result_data, coded_packet_data(full_symbol->coded_packet),
+           full_symbol->symbol_size);
+}
+
+void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
+{
+    fprintf(out, "{'size':%u, 'internal':", full_symbol->symbol_size);
+    coded_packet_pywrite(out, full_symbol->coded_packet);
+    fprintf(out, "}");    
 }
 
 /*---------------------------------------------------------------------------*/
