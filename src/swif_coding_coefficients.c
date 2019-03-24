@@ -88,6 +88,6 @@ int swif_rlc_generate_coding_coefficients (uint16_t  repair_key,
     default:
         return -2; /* error, bad parameter m */
     }
-    return 0 /* success */
+    return 0; /* success */
 }
 

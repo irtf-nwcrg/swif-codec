@@ -24,7 +24,7 @@ swif_encoder_t* swif_encoder_create (
     /* initialize the encoder */
     switch (codepoint) {
         case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
-            swif_rlc_encoder_create();
+            swif_rlc_encoder_create(codepoint, verbosity, symbol_size, max_coding_window_size);
 
     }
 }
@@ -219,7 +219,7 @@ swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
     return (*enc->reset_coding_window)(enc);
 }
 
-swif_status_t   swif_decoder_reset_coding_window (swif_encoder_t*  dec)
+swif_status_t   swif_decoder_reset_coding_window (swif_decoder_t*  dec)
 {
     return (*dec->reset_coding_window)(dec);
 }
