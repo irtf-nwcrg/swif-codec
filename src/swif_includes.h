@@ -11,5 +11,6 @@
 #include "swif_api.h"
 #include "swif_rlc_cb.h"
 #include "swif_linear-code.h"
+#include "swif_prng.h"
 
 /* add what's missing here... */
