@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "swif_general.h"
 #include "swif_api.h"
