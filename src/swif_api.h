@@ -3,6 +3,15 @@
  * https://github.com/irtf-nwcrg/swif-codec
  */
 
+#ifndef __SWIF_API_H__
+#define __SWIF_API_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+/*---------------------------------------------------------------------------*/
+
 
 /**
  * Return value of any function.
@@ -626,4 +635,10 @@ swif_status_t   swif_encoder_get_coding_coefs_tab (
                                 void**          coding_coefs_tab,
                                 uint32_t*       nb_coefs_in_tab);
 
+/*---------------------------------------------------------------------------*/
 
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __SWIF_API_H__ */
