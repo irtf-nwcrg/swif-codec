@@ -69,12 +69,12 @@ swif_status_t   swif_rlc_build_repair_symbol (
                                 void*           new_buf)
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
-    if (new_buf= calloc(enc->max_coding_window_size, sizeof(enc->symbol_size)) == NULL){
+    if ((new_buf= calloc(1, sizeof(enc->symbol_size))) == NULL){
         fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory \n");
         return SWIF_STATUS_ERROR;
     }
-    for(uint32_t i=enc->ew_left; i< enc->ew_right; i++){
-        new_buf = symbol_add_scaled(enc->ew_tab[i], enc->cc_tab[i], enc->ew_tab[i+1], enc->symbol_size);
+    for(uint32_t i=enc->ew_left; i < enc->ew_ss_nb; i++){
+        symbol_add_scaled(new_buf, enc->cc_tab[i % enc->max_coding_window_size], enc->ew_tab[i % enc->max_coding_window_size], enc->symbol_size);
             return SWIF_STATUS_OK;
     }
 }
