@@ -1,17 +1,15 @@
-
 /**
  * SWiF Codec: an open-source sliding window FEC codec in C
  * https://github.com/irtf-nwcrg/swif-codec
  */
-#include <stdint.h>
-#include "swif_api.h"
-#include "swif_prng.h"
 
-/*
- * Coding coefficients generator coming from RLC FEC Scheme, version 10, I-D.
+#include "swif_includes.h"
+
+
+/**
+ * Coding coefficients generator coming from RLC FEC Scheme Internet-Draft:
  * https://datatracker.ietf.org/doc/draft-ietf-tsvwg-rlc-fec-scheme/
  */
-
 
 /*
  * Fills in the table of coding coefficients (of the right size)
@@ -19,7 +17,7 @@
  * use for the repair symbol key provided.
  *
  * (in) repair_key    key associated to this repair symbol. This
- *                    parameter is ignored (useless) if m=2 and dt=15
+ *                    parameter is ignored (useless) if m=1 and dt=15
  * (in/out) cc_tab[]  pointer to a table of the right size to store
  *                    coding coefficients. All coefficients are
  *                    stored as bytes, regardless of the m parameter,
@@ -34,24 +32,20 @@
  *                    a fraction of them will be 0.
  * (in) m             Finite Field GF(2^^m) parameter. In this
  *                    document only values 1 and 8 are considered.
- * (out)              returns an error code
+ * (out)              returns 0 in case of success, an error code
+ *                    different than 0 otherwise.
  */
-
-int generate_coding_coefficients (uint16_t  repair_key,
-                                 uint8_t   cc_tab[],
-                                 uint16_t  cc_nb,
-                                 uint8_t   dt,
-                                 uint8_t   m)
+int swif_rlc_generate_coding_coefficients (uint16_t  repair_key,
+                                           uint8_t   cc_tab[],
+                                           uint16_t  cc_nb,
+                                           uint8_t   dt,
+                                           uint8_t   m)
 {
-    uint32_t	i;
-    tinymt32_t	s;    /* PRNG internal state */
- 
-    /* SWiF codec is for the moment limited to FF(256) and full density */
-    if (dt != 15 || m != 8) {
-        return SWIF_STATUS_ERROR; /* bad dt parameter */
-    }
+    uint32_t      i;
+    tinymt32_t    s;    /* PRNG internal state */
+
     if (dt > 15) {
-        return SWIF_STATUS_ERROR; /* bad dt parameter */
+        return -1; /* error, bad dt parameter */
     }
     switch (m) {
     case 1:
@@ -62,15 +56,11 @@ int generate_coding_coefficients (uint16_t  repair_key,
             /* here coefficients are either 0 or 1 */
             tinymt32_init(&s, repair_key);
             for (i = 0 ; i < cc_nb ; i++) {
-                if (tinymt32_rand(&s, 16) <= dt) {
-                    cc_tab[i] = (uint8_t) 1;
-                } else {
-                    cc_tab[i] = (uint8_t) 0;
-                }
+                cc_tab[i] = (tinymt32_rand16(&s) <= dt) ? 1 : 0;
             }
         }
         break;
- 
+
     case 8:
         tinymt32_init(&s, repair_key);
         if (dt == 15) {
@@ -78,15 +68,15 @@ int generate_coding_coefficients (uint16_t  repair_key,
              * all the source symbols */
             for (i = 0 ; i < cc_nb ; i++) {
                 do {
-                    cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
+                    cc_tab[i] = (uint8_t) tinymt32_rand256(&s);
                 } while (cc_tab[i] == 0);
             }
         } else {
-            /* here a certain fraction of coefficients should be 0 */
+            /* here a certain number of coefficients should be 0 */
             for (i = 0 ; i < cc_nb ; i++) {
-                if (tinymt32_rand(&s, 16) <= dt) {
+                if (tinymt32_rand16(&s) <= dt) {
                     do {
-                        cc_tab[i] = (uint8_t) tinymt32_rand(&s, 256);
+                        cc_tab[i] = (uint8_t) tinymt32_rand256(&s);
                     } while (cc_tab[i] == 0);
                 } else {
                     cc_tab[i] = 0;
@@ -94,11 +84,10 @@ int generate_coding_coefficients (uint16_t  repair_key,
             }
         }
         break;
- 
+
     default:
-        /* bad parameter m */
-        return SWIF_STATUS_ERROR;
+        return -2; /* error, bad parameter m */
     }
-    return SWIF_STATUS_OK;
+    return 0 /* success */
 }
 
