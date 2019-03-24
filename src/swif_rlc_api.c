@@ -71,14 +71,16 @@ swif_status_t   swif_rlc_build_repair_symbol (
                                 void*           new_buf)
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
-    if ((new_buf= calloc(1, sizeof(enc->symbol_size))) == NULL){
-        fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory \n");
+    uint32_t	i;
+
+    if ((new_buf = calloc(1, sizeof(enc->symbol_size))) == NULL) {
+        fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
         return SWIF_STATUS_ERROR;
     }
-    for(uint32_t i=enc->ew_left; i < enc->ew_ss_nb; i++){
+    for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
         symbol_add_scaled(new_buf, enc->cc_tab[i % enc->max_coding_window_size], enc->ew_tab[i % enc->max_coding_window_size], enc->symbol_size);
     }
-     return SWIF_STATUS_OK;
+    return SWIF_STATUS_OK;
 }
 
 
@@ -419,6 +421,6 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->generic_encoder.remove_source_symbol_from_coding_window	= swif_rlc_encoder_remove_source_symbol_from_coding_window;
     enc->generic_encoder.add_source_symbol_to_coding_window		= swif_rlc_encoder_add_source_symbol_to_coding_window;
     enc->generic_encoder.reset_coding_window		= swif_rlc_encoder_reset_coding_window;
-    // TODO: enc->generic_encoder.build_repair_symbol ?
+    enc->generic_encoder.build_repair_symbol		= swif_rlc_build_repair_symbol;
     return (swif_encoder_t *) enc;
 }

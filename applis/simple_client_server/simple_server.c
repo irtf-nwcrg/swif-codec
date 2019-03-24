@@ -42,7 +42,7 @@ main(int argc, char* argv[])
 	void**		enc_symbols_tab	= NULL;			/* table containing pointers to the encoding (i.e. source + repair) symbols buffers */
 	uint32_t	ew_size;				/* encoding window size */
 	uint32_t	tot_src;				/* total number of source symbols */
-	uint32_t	tot_enc;					/* total number of encoding symbols (i.e. source + repair) in the session */
+	uint32_t	tot_enc;				/* total number of encoding symbols (i.e. source + repair) in the session */
 	esi_t		esi;					/* source symbol id */
 	uint32_t	idx;					/* index in the source+repair table */
 	uint32_t	interval_between_repairs;		/* number of source symbols between two repair symbols, in line with the code rate */
@@ -65,7 +65,12 @@ main(int argc, char* argv[])
 		goto end;
 	}
 	tot_src = 1000;
-	tot_enc = (uint32_t)floor((double)ew_size / (double)CODE_RATE);
+	tot_enc = (uint32_t)floor((double)tot_src / (double)CODE_RATE);
+	if (tot_enc < tot_src) {
+		fprintf(stderr, "Error initializing tot_enc (%u). Cannot be < tot_src (%u)!\n", tot_enc, tot_src);
+		ret = -1;
+		goto end;
+	}
 	codepoint = SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC;
 
 	/* first initialize the UDP socket... */
@@ -143,7 +148,7 @@ main(int argc, char* argv[])
 		fpi->nss = htons(0);			/* only meaningful in case of a repair */
 		fpi->esi = htonl(esi);
 		memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-		printf(" => sending src symbol %ul\n", esi);
+		printf(" => sending src symbol %u\n", esi);
 		if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
 			fprintf(stderr, "Error, sendto() failed!\n");
 			ret = -1;
