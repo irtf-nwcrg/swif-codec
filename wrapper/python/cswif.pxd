@@ -6,6 +6,7 @@
 #---------------------------------------------------------------------------
 
 from libc.stdint cimport uint8_t, uint32_t, int64_t, bool
+from libc.stdio cimport FILE
 
 cdef extern from "../../src/swif_api.h":
     ctypedef enum swif_status_t:
@@ -51,7 +52,8 @@ cdef extern from "../../src/swif_rlc_cb.h":
 
 cdef extern from "../../src/swif_full_symbol.h":
      cdef struct s_swif_full_symbol_t:
-        pass
+         #uint32_t symbol_size
+         pass
      ctypedef s_swif_full_symbol_t swif_full_symbol_t
 
      swif_full_symbol_t *full_symbol_create_from_source(
@@ -76,11 +78,19 @@ cdef extern from "../../src/swif_full_symbol.h":
      uint8_t  full_symbol_get_coef(swif_full_symbol_t *full_symbol,
                                    uint32_t symbol_id);
 
+     void     full_symbol_set_coef(swif_full_symbol_t *full_symbol,
+                                   uint32_t symbol_id, uint8_t coef);
+     
      bint full_symbol_is_zero(swif_full_symbol_t *full_symbol);
 
      void full_symbol_free(swif_full_symbol_t* swif_full_symbol);
      
      swif_full_symbol_t *full_symbol_clone(
          swif_full_symbol_t* swif_full_symbol);
+
+     void full_symbol_get_data(
+         swif_full_symbol_t *full_symbol, uint8_t *result_data);
+
+     void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);     
 
 #---------------------------------------------------------------------------

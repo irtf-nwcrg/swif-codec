@@ -2,6 +2,8 @@
 # C.A. - 2019
 #---------------------------------------------------------------------------
 
+cimport stdio
+
 cimport cswif
 from cswif cimport *
 
@@ -63,12 +65,17 @@ cdef class FullSymbol:
 
     cpdef from_other(self, FullSymbol other):
         self.release()
-        self.symbol = full_symbol_clone(other.symbol) # XXX:TODO
+        self.symbol = full_symbol_clone(other.symbol)
+        return self
 
+    cpdef is_zero(self):
+        assert self.symbol is not NULL    
+        return full_symbol_is_zero(self.symbol)
+    
     cpdef get_size(self):
         assert self.symbol is not NULL
         return full_symbol_get_size(self.symbol)
-
+    
     cpdef get_min_symbol_id(self):
         assert self.symbol is not NULL
         return full_symbol_get_min_symbol_id(self.symbol)
@@ -81,23 +88,27 @@ cdef class FullSymbol:
         assert self.symbol is not NULL    
         return full_symbol_count_coef(self.symbol)
 
-    cpdef is_zero(self):
-        assert self.symbol is not NULL    
-        return full_symbol_is_zero(self.symbol)
-
     cpdef get_coef(self, symbol_id):
-        assert self.symbol is not NULL    
+        assert self.symbol is not NULL
         return full_symbol_get_coef(self.symbol, symbol_id)
 
     def get_coefs(self):
         if self.is_zero():
-            return None
+            return (0, b"")
         min_id = self.get_min_symbol_id()
         nb_coefs = self.count_coefs()
         content = bytes([self.get_coef(min_id+i) for i in range(nb_coefs)])
         return min_id, content
 
+    cpdef get_data(self):
+        assert self.symbol is not NULL    
+        symbol_size = self.get_size()
+        result = bytes(symbol_size)
+        full_symbol_get_data(self.symbol, result)
+        return result
+
     cpdef clone(self):
+        assert self.symbol is not NULL    
         return FullSymbol().from_other(self)
 
     cpdef release(self):
@@ -110,5 +121,16 @@ cdef class FullSymbol:
         if self.symbol is not NULL:
             full_symbol_free(self.symbol)
             self.symbol = NULL
+
+    cpdef get_info(self):
+        assert self.symbol is not NULL
+        #if not self.is_zero():
+        return self.get_coefs()+(self.get_data(),)
+        #else:
+        #    return (0, b"", self.get_data())
+
+    cpdef dump(self):
+        assert self.symbol is not NULL
+        return full_symbol_dump(self.symbol, stdio.stdout)
 
 #---------------------------------------------------------------------------

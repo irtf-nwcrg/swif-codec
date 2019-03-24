@@ -18,4 +18,7 @@ ensure-liblc:
 clean:
 	rm -rf *~ swif.c swif.*.so swif.so build
 
+test:
+	python3 -m pytest
+
 #---------------------------------------------------------------------------
