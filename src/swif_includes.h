@@ -11,12 +11,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "swif_general.h"
 #include "swif_api.h"
 #include "swif_rlc_cb.h"
 #include "swif_linear-code.h"
 #include "swif_prng.h"
+#include "swif_symbol.h"
 
 
 #endif /* SWIF_INCLUDES_H */
