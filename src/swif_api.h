@@ -74,6 +74,9 @@ typedef enum {
  */
 typedef uint32_t    esi_t;
 
+/* Unused/invalid esi value. Must be coherent with esi_t definition */
+#define INVALID_ESI	0xFFFFFFFF
+
 
 /*******************************************************************************
  * Encoder functions

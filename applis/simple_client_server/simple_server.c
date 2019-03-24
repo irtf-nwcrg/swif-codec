@@ -131,7 +131,7 @@ main(int argc, char* argv[])
 			dump_buffer_32(enc_symbols_tab[idx], 1);
 		}
 		/* add it to the encoding window (no need to do anything else for a source symbol) */
-		if (swif_encoder_add_source_symbol_to_coding_window (ses, enc_symbols_tab[idx], SYMBOL_SIZE) != SWIF_STATUS_OK) {
+		if (swif_encoder_add_source_symbol_to_coding_window (ses, enc_symbols_tab[idx], esi) != SWIF_STATUS_OK) {
 			fprintf(stderr, "Error, swif_encoder_add_source_symbol_to_coding_window failed for esi=%ul)\n", esi);
 			ret = -1;
 			goto end;
