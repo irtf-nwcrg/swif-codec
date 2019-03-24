@@ -60,7 +60,7 @@ main(int argc, char* argv[])
 		ew_size = atoi(argv[1]);
 	}
 	if (ew_size < 2) {
-		fprintf(stderr, "Error: invalid encoding window size (%ul). Cannot be < 2.\n", ew_size);
+		fprintf(stderr, "Error: invalid encoding window size (%u). Cannot be < 2.\n", ew_size);
 		ret = -1;
 		goto end;
 	}
@@ -98,7 +98,7 @@ main(int argc, char* argv[])
 		goto end;
 	}
 	/* continue with the SWIF codec */
-	printf("\nInitialize a SWIF encoder instance: tot_src=%ul src symbols, ew_size=%ul, total %ul encoding symbols\n", tot_src, ew_size, tot_enc);
+	printf("\nInitialize a SWIF encoder instance: tot_src=%u src symbols, ew_size=%u, total %u encoding symbols\n", tot_src, ew_size, tot_enc);
 	if ((ses = swif_encoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size)) == NULL) {
 		fprintf(stderr, "Error, swif_encoder_create() failed\n");
 		ret = -1;
@@ -111,7 +111,7 @@ main(int argc, char* argv[])
 	}
 	/* allocate the table with pointers to source and repair symbols... */
 	if ((enc_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL) {
-		fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab, tot_enc=%ul)\n", tot_enc);
+		fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab, tot_enc=%u)\n", tot_enc);
 		ret = -1;
 		goto end;
 	}
@@ -123,7 +123,7 @@ main(int argc, char* argv[])
 	idx = 0;
 	for (esi = 0; esi < tot_src; esi++) {
 		if ((enc_symbols_tab[idx] = malloc(SYMBOL_SIZE)) == NULL) {
-			fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab[%ul]/esi=%ul)\n", idx, esi);
+			fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab[%u]/esi=%u)\n", idx, esi);
 			ret = -1;
 			goto end;
 		}
@@ -137,7 +137,7 @@ main(int argc, char* argv[])
 		}
 		/* add it to the encoding window (no need to do anything else for a source symbol) */
 		if (swif_encoder_add_source_symbol_to_coding_window (ses, enc_symbols_tab[idx], esi) != SWIF_STATUS_OK) {
-			fprintf(stderr, "Error, swif_encoder_add_source_symbol_to_coding_window failed for esi=%ul)\n", esi);
+			fprintf(stderr, "Error, swif_encoder_add_source_symbol_to_coding_window failed for esi=%u)\n", esi);
 			ret = -1;
 			goto end;
 		}
@@ -171,12 +171,12 @@ main(int argc, char* argv[])
 			}
 			/* the index is the repair_key */
 			if (swif_encoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
-				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed for repair_key=%ul\n", idx);
+				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
 			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
-				fprintf(stderr, "Error, swif_build_repair_symbol() failed for repair_key=%ul\n", idx);
+				fprintf(stderr, "Error, swif_build_repair_symbol() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
@@ -185,14 +185,14 @@ main(int argc, char* argv[])
 				dump_buffer_32(enc_symbols_tab[idx], 4);
 			}
 			/* prepend a header in network byte order */
-			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) == SWIF_STATUS_OK) {
-				fprintf(stderr, "Error, swif_encoder_get_coding_window_information() failed for repair_key=%ul\n", idx);
+			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) != SWIF_STATUS_OK) {
+				fprintf(stderr, "Error, swif_encoder_get_coding_window_information() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
 			/* in our simple case, there is no ESI loop back to zero, so check consistency */
-			if (nss != last - first + 1) {
-				fprintf(stderr, "Error, nss (%ul) != last (%ul) - first (%ul) + 1, it should be equal\n", nss, last, first);
+			if (nss != last - first) {
+				fprintf(stderr, "Error, nss (%u) != last (%u) - first (%u) + 1, it should be equal\n", nss, last, first);
 				ret = -1;
 				goto end;
 			}
@@ -202,7 +202,7 @@ main(int argc, char* argv[])
 			fpi->nss = htons(nss);
 			fpi->esi = htonl(first);
 			memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-			printf(" => sending src symbol %ul\n", esi);
+			printf(" => sending src symbol %u\n", esi);
 			if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
 				fprintf(stderr, "Error, sendto() failed!\n");
 				ret = -1;
@@ -282,5 +282,5 @@ static void
 source_symbol_removed_from_coding_window_callback (void*   context,
 						   esi_t   old_symbol_esi)
 {
-	printf("callback: symbol %ul removed\n", old_symbol_esi);
+	printf("callback: symbol %u removed\n", old_symbol_esi);
 }

@@ -249,11 +249,16 @@ swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
         enc->ew_right = enc->ew_left;
         enc->ew_left = (enc->ew_left +1) % enc->max_coding_window_size;
         enc->ew_esi_right = new_src_symbol_esi;
-    }   else {
-        enc->ew_right = (enc->ew_right +1) % enc->max_coding_window_size;
-        enc->ew_ss_nb++;
+    } else if (enc->ew_ss_nb == 0) {
+	assert(enc->ew_left == enc->ew_right);
         enc->ew_tab[enc->ew_right] = new_src_symbol_buf;
         enc->ew_esi_right = new_src_symbol_esi;
+        enc->ew_ss_nb++;
+    } else {
+        enc->ew_right = (enc->ew_right + 1) % enc->max_coding_window_size;
+        enc->ew_tab[enc->ew_right] = new_src_symbol_buf;
+        enc->ew_esi_right = new_src_symbol_esi;
+        enc->ew_ss_nb++;
     }
   
     return SWIF_STATUS_OK;
@@ -292,13 +297,17 @@ swif_status_t   swif_rlc_decoder_remove_source_symbol_from_coding_window (
  * Get information on the current coding window at the encoder.
  */
 swif_status_t   swif_rlc_encoder_get_coding_window_information (
-                                swif_encoder_t* enc,
+                                swif_encoder_t* generic_encoder,
                                 esi_t*          first,
                                 esi_t*          last,
                                 uint32_t*       nss)
 {
-// NOT YET
-	return SWIF_STATUS_OK;
+    swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
+
+    *first = enc->ew_esi_right - enc->ew_ss_nb;
+    *last = enc->ew_esi_right;
+    *nss = enc->ew_ss_nb;
+    return SWIF_STATUS_OK;
 }
 
 
@@ -403,8 +412,7 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
         fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
         return NULL;
     }
-    enc->ew_left = 0;
-    enc->ew_right = enc->ew_left;
+    enc->ew_right = enc->ew_left = 0;
     enc->ew_esi_right = INVALID_ESI;
     enc->ew_ss_nb = 0;
 
