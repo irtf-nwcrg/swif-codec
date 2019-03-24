@@ -80,7 +80,7 @@ cdef extern from "../../src/swif_full_symbol.h":
 
      void full_symbol_free(swif_full_symbol_t* swif_full_symbol);
      
-     #swif_full_symbol_t *full_symbol_clone(
-     #    swif_full_symbol_t* swif_full_symbol);
+     swif_full_symbol_t *full_symbol_clone(
+         swif_full_symbol_t* swif_full_symbol);
 
 #---------------------------------------------------------------------------

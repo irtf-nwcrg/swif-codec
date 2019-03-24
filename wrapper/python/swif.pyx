@@ -63,8 +63,7 @@ cdef class FullSymbol:
 
     cpdef from_other(self, FullSymbol other):
         self.release()
-        #self.symbol = full_symbol_clone(other.symbol) # XXX:TODO
-
+        self.symbol = full_symbol_clone(other.symbol) # XXX:TODO
 
     cpdef get_size(self):
         assert self.symbol is not NULL
@@ -95,7 +94,7 @@ cdef class FullSymbol:
             return None
         min_id = self.get_min_symbol_id()
         nb_coefs = self.count_coefs()
-        content = bytes(self.get_coef(min_id+i) for i in range(nb_coefs))
+        content = bytes([self.get_coef(min_id+i) for i in range(nb_coefs)])
         return min_id, content
 
     cpdef clone(self):
