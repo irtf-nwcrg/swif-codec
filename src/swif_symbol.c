@@ -11,7 +11,7 @@ static inline uint8_t gf256_mul(uint8_t a, uint8_t b)
  * @brief Take a symbol and add another symbol multiplied by a 
  *        coefficient, e.g. performs the equivalent of: p1 += coef * p2
  * @param[in,out] p1     First symbol (to which coef*p2 will be added)
- * @param[in]     coef2  Coefficient by which the second packet is multiplied
+ * @param[in]     coef  Coefficient by which the second packet is multiplied
  * @param[in]     p2     Second symbol
  */
 void symbol_add_scaled

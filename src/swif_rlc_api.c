@@ -62,9 +62,18 @@ swif_status_t   swif_rlc_encoder_get_parameters  (
  * Create a single repair symbol (i.e. perform an encoding).
  */
 swif_status_t   swif_rlc_build_repair_symbol (
-                                swif_encoder_t* enc,
+                                swif_encoder_t* generic_encoder,
                                 void*           new_buf)
 {
+    swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
+    if (new_buf= calloc(enc->max_coding_window_size, sizeof(enc->symbol_size)) == NULL){
+        fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory \n");
+        return SWIF_STATUS_ERROR;
+    }
+    for(uint32_t i=enc->ew_left; i< enc->ew_right; i++){
+        new_buf = symbol_add_scaled(enc->ew_tab[i], enc->cc_tab[i], enc->ew_tab[i+1], enc->symbol_size);
+            return SWIF_STATUS_OK;
+    }
 }
 
 
