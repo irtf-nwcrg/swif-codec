@@ -6,9 +6,10 @@ from Cython.Build import cythonize
 
 extensions = [
     Extension("swif", ["swif.pyx"],
-        include_dirs=["../../src"],
-        libraries=["swif"],
-        library_dirs=["../../src"]),
+        include_dirs=["../../src", "../../liblc/src"],
+        libraries=["swif", "lc"],
+        #libraries=["swif"],
+        library_dirs=["../../src", "../../liblc/src"]),
 ]
 
 module = cythonize("swif.pyx")

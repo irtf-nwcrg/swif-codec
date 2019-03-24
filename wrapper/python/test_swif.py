@@ -7,7 +7,11 @@ import swif
 SYMBOL_SIZE = 1024
 WINDOW_SIZE = 10
 
-encoder = swif.RlcEncoder(SYMBOL_SIZE, WINDOW_SIZE)
-encoder.release()
+#encoder = swif.RlcEncoder(SYMBOL_SIZE, WINDOW_SIZE)
+#encoder.release()
+
+#---------------------------------------------------------------------------
+
+symbol = swif.FullSymbol(1, b"azertyuiop")
 
 #---------------------------------------------------------------------------
