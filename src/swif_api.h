@@ -2,14 +2,14 @@
  * SWiF Codec: an open-source sliding window FEC codec in C
  * https://github.com/irtf-nwcrg/swif-codec
  */
-
+#include <stdint.h>
 #ifndef __SWIF_API_H__
 #define __SWIF_API_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -278,7 +278,7 @@ typedef struct swif_decoder {
 		struct swif_decoder*, void* const, esi_t);
 	swif_status_t   (*decode_with_new_repair_symbol) (
 		struct swif_decoder*, void* const);
-	swif_status_t   (*reset_coding_window) (swif_encoder_t*);
+	swif_status_t   (*reset_coding_window) (struct swif_decoder*);
 	swif_status_t   (*add_source_symbol_to_coding_window) (
 		struct swif_decoder*, esi_t);
 	swif_status_t   (*remove_source_symbol_from_coding_window) (
