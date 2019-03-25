@@ -35,11 +35,9 @@ cdef class RlcEncoder:
     def build_repair_symbol(self):
         assert self.encoder is not NULL
         result = bytes(self.symbol_size)
-        #cdef uint8_t *
-        #result_data = <uint8_t*>result
-        #status = swif_build_repair_symbol(self.encoder, result)
-        #<void*>result_data)
-        #check_swif_status(status, self.encoder.swif_errno)
+        cdef uint8_t *data = result
+        status = swif_build_repair_symbol(self.encoder, data)
+        check_swif_status(status, self.encoder.swif_errno)
         return result
 
     def generate_coding_coefs(self, key, add_param):
