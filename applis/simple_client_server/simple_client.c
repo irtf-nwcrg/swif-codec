@@ -103,7 +103,7 @@ main (int argc, char* argv[])
 		goto end;
 	}
 	if (ew_size > tot_src) {
-		fprintf(stderr, "Error, invalid ew_size (%ul), cannot be larger than tot_src (%ul).\n", ew_size, tot_src);
+		fprintf(stderr, "Error, invalid ew_size (%u), cannot be larger than tot_src (%u).\n", ew_size, tot_src);
 		ret = -1;
 		goto end;
 	}
@@ -142,7 +142,7 @@ main (int argc, char* argv[])
 		nss		= htons(fpi->nss);
 		esi		= htonl(fpi->esi);
 		if (esi > tot_enc) {		/* a sanity check, in case... */
-			fprintf(stderr, "Error, invalid esi=%ul received in a packet's FPI\n", esi);
+			fprintf(stderr, "Error, invalid esi=%u received in a packet's FPI\n", esi);
 			ret = -1;
 			goto end;
 		}
@@ -191,15 +191,15 @@ main (int argc, char* argv[])
 	if (done) {
 		/* finally, get a copy of the pointers to all the source symbols, those received (that we already know) and those decoded.
 		 * In case of received symbols, the library does not change the pointers (same value). */
-		printf("\nDone! All source symbols rebuilt after receiving %ul packets\n", n_received);
+		printf("\nDone! All source symbols rebuilt after receiving %u packets\n", n_received);
 		if (VERBOSITY > 1) {
 			for (esi = 0; esi < tot_src; esi++) {
-				printf("src[%ul]= ", esi);
+				printf("src[%u]= ", esi);
 				dump_buffer_32(src_symbols_tab[esi], 1);
 			}
 		}
 	} else {
-		printf("\nFailed to recover all erased source symbols even after receiving %ul packets\n", n_received);
+		printf("\nFailed to recover all erased source symbols even after receiving %u packets\n", n_received);
 	}
 
 
