@@ -6,6 +6,7 @@
 
 
 #include "coded-packet.h"
+#include "packet-set.h"
 
 #define LIBLC_GF256 3
 #define COEF_PER_HEADER ((COEF_HEADER_SIZE*BITS_PER_BYTE)>>LIBLC_GF256)
@@ -22,23 +23,58 @@ struct s_swif_full_symbol_t {
 /*---------------------------------------------------------------------------*/
 
 struct s_swif_full_symbol_set_t {
-    /* XXX:TODO */
+    packet_set_t     packet_set;
+    reduction_stat_t reduction_stat;
 };
 
 /*---------------------------------------------------------------------------*/
+
+
+/**
+ * @brief Create a full_symbol set, that will be used to do gaussian elimination
+ */
+swif_full_symbol_set_t *full_symbol_set_alloc()
+{
+    swif_full_symbol_set_t *result
+        = (swif_full_symbol_set_t *)calloc(1, sizeof(swif_full_symbol_set_t));
+    if (result == NULL) {
+        return NULL;
+    }
+
+    packet_set_init(&result->packet_set, LIBLC_GF256, NULL, NULL, NULL, NULL);
+    return result;
+}
+
+/**
+ * @brief Free a full_symbol set
+ */
+void full_symbol_set_free(swif_full_symbol_set_t *set)
+{
+    memset(&set->packet_set, 0, sizeof(packet_set_t));
+    free(set);
+}
+
 
 /**
  * @brief Add a full_symbol to a packet set.
  * 
  * Gaussian elimination can occur.
- * Teturn the pivot associated to the new full_symbol 
+ * Return the pivot associated to the new full_symbol 
  * or SWIF_FULL_SYMBOL_ID_NONE if dependent (e.g. redundant) packet
+ * 
+ * The full_symbol is not freed and also reference is not captured.
  */
-
 uint32_t swif_full_symbol_set_add
 (swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 {
-    
+    uint32_t packet_id = packet_set_add(&set->packet_set,
+                                        full_symbol->coded_packet,
+                                        &set->reduction_stat, false);
+    if (packet_id != PACKET_ID_NONE) {
+        return packet_id;
+    } else {
+        return FULL_SYMBOL_ID_NONE;
+    }
 }
 
 /*---------------------------------------------------------------------------*/

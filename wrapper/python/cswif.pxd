@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------
-# C.A. - 2019
+# swif-codec - 2019
 #---------------------------------------------------------------------------
 # Definitions of the "C" structure, functions etc.
 # of SWIF includes.
@@ -28,14 +28,41 @@ cdef extern from "../../src/swif_api.h":
         swif_codepoint_t codepoint;
         swif_errno_t     swif_errno;
 
-    swif_encoder_t* swif_encoder_create (
+    swif_encoder_t *swif_encoder_create (
         swif_codepoint_t codepoint,
         uint32_t        verbosity,
         uint32_t        symbol_size,
         uint32_t        max_coding_window_size);
 
-    swif_status_t swif_encoder_release (swif_encoder_t* enc);
+    swif_status_t swif_encoder_release(swif_encoder_t *enc);
 
+    swif_status_t swif_build_repair_symbol(swif_encoder_t *enc,
+                                           uint8_t  *new_buf);
+
+    swif_status_t swif_encoder_add_source_symbol_to_coding_window (
+        swif_encoder_t *enc, void *new_src_symbol_buf,
+        esi_t new_src_symbol_esi);
+
+    swif_status_t swif_encoder_remove_source_symbol_from_coding_window (
+        swif_encoder_t* enc,
+        esi_t old_src_symbol_esi);
+
+    swif_status_t swif_encoder_set_coding_coefs_tab (
+        swif_encoder_t* enc,
+        void* coding_coefs_tab,
+        uint32_t nb_coefs_in_tab);
+
+    swif_status_t swif_encoder_generate_coding_coefs (
+        swif_encoder_t *enc,
+        uint32_t       key,
+        uint32_t       add_param);
+
+    swif_status_t swif_encoder_get_coding_coefs_tab (
+        swif_encoder_t *enc,
+        void           **coding_coefs_tab,
+        uint32_t       *nb_coefs_in_tab);
+
+    
 #---------------------------------------------------------------------------
 
 cdef extern from "../../src/swif_rlc_cb.h":
@@ -86,7 +113,7 @@ cdef extern from "../../src/swif_full_symbol.h":
      void full_symbol_free(swif_full_symbol_t* swif_full_symbol);
      
      swif_full_symbol_t *full_symbol_clone(
-         swif_full_symbol_t* swif_full_symbol);
+         swif_full_symbol_t *swif_full_symbol);
 
      void full_symbol_get_data(
          swif_full_symbol_t *full_symbol, uint8_t *result_data);
