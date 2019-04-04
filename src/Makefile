@@ -31,9 +31,13 @@ CFLAGS += -Wall -g3 -fPIC
 
 #------------------------------
 
-SRCS = swif_api.c swif_linear-code.c swif_prng.c swif_coding_coefficients.c
+# TODO : swif_linear-code.c 
+SRCS += swif_api.c swif_prng.c swif_coding_coefficients.c swif_symbol.c swif_rlc_api.c
+SRCS += swif_full_symbol.c
+SRCS += $(EXTRA_SRCS)
 
-HEADERS = $(SRCS:.c=.h) swif_general.h swif_includes.h swif_rlc_cb.h
+HEADERS += $(SRCS:.c=.h) swif_general.h swif_includes.h swif_rlc_cb.h
+HEADERS += $(EXTRA_HEADERS)
 
 OBJS = $(SRCS:.c=.o)
 
@@ -53,7 +57,7 @@ DEPS = $(SRCS:.c=.d)
 -include $(DEPS)
 
 %.d : %.c %.h
-	$(CC) $(CCFLAGS) -MF"$@" -MG -MM -MP -MT"$@" -MT"$(<:.c=.o)" "$<"
+	$(CC) $(CFLAGS) -MF"$@" -MG -MM -MP -MT"$@" -MT"$(<:.c=.o)" "$<"
 
 #---------------------------------------------------------------------------
 # Library

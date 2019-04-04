@@ -4,13 +4,18 @@
  */
 
 
+/**
+ * Coding coefficients generator coming from RLC FEC Scheme Internet-Draft:
+ * https://datatracker.ietf.org/doc/draft-ietf-tsvwg-rlc-fec-scheme/
+ */
+
 /*
  * Fills in the table of coding coefficients (of the right size)
  * provided with the appropriate number of coding coefficients to
  * use for the repair symbol key provided.
  *
  * (in) repair_key    key associated to this repair symbol. This
- *                    parameter is ignored (useless) if m=2 and dt=15
+ *                    parameter is ignored (useless) if m=1 and dt=15
  * (in/out) cc_tab[]  pointer to a table of the right size to store
  *                    coding coefficients. All coefficients are
  *                    stored as bytes, regardless of the m parameter,
@@ -25,10 +30,12 @@
  *                    a fraction of them will be 0.
  * (in) m             Finite Field GF(2^^m) parameter. In this
  *                    document only values 1 and 8 are considered.
- * (out)              returns an error code
+ * (out)              returns 0 in case of success, an error code
+ *                    different than 0 otherwise.
  */
-int generate_coding_coefficients (uint16_t	repair_key,
-				  uint8_t	cc_tab[],
-				  uint16_t	cc_nb,
-				  uint8_t	dt,
-				  uint8_t	m);
+int swif_rlc_generate_coding_coefficients (uint16_t  repair_key,
+                                           uint8_t   cc_tab[],
+                                           uint16_t  cc_nb,
+                                           uint8_t   dt,
+                                           uint8_t   m);
+

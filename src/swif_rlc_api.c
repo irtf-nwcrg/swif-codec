@@ -1,43 +1,14 @@
-/**
- * SWiF Codec: an open-source sliding window FEC codec in C
- * https://github.com/irtf-nwcrg/swif-codec
- */
-
 #include "swif_includes.h"
-#include "swif_rlc_api.c"
-
-
-/*******************************************************************************
- * Encoder functions
- */
-
-
-/**
- * Create and initialize an encoder, providing only key parameters.
- **/
-swif_encoder_t* swif_encoder_create (
-                                swif_codepoint_t codepoint,
-                                uint32_t        verbosity,
-                                uint32_t        symbol_size,
-                                uint32_t        max_coding_window_size)
-{
-    /* initialize the encoder */
-    switch (codepoint) {
-        case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
-            return (swif_rlc_encoder_create(codepoint, verbosity, symbol_size, max_coding_window_size));
-        default:
-            fprintf(stderr, "Error, swif_encoder_create: codepoint not recognized\n");
-            return NULL;
-    }
-}
 
 
 /**
  * Release an encoder and its associated ressources.
  **/
-swif_status_t   swif_encoder_release (swif_encoder_t*        enc)
+swif_status_t   swif_rlc_encoder_release (swif_encoder_t*        enc)
 {
-    return SWIF_STATUS_OK;
+	assert(enc);
+	free(enc);
+	return SWIF_STATUS_OK;
 }
 
 
@@ -46,51 +17,70 @@ swif_status_t   swif_encoder_release (swif_encoder_t*        enc)
  * All the callback functions require an opaque context parameter, that must be
  * initialized accordingly by the application, since it is application specific.
  */
-swif_status_t   swif_encoder_set_callback_functions (
+swif_status_t   swif_rlc_encoder_set_callback_functions (
                 swif_encoder_t*        enc,
                 void (*source_symbol_removed_from_coding_window_callback) (
                                         void*   context,
                                         esi_t   old_symbol_esi),
                 void* context_4_callback)
 {
-    return (*enc->set_callback_functions)(enc, source_symbol_removed_from_coding_window_callback, context_4_callback);
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+
+    assert(enc);
+    rlc_enc->source_symbol_removed_from_coding_window_callback =
+				source_symbol_removed_from_coding_window_callback;
+    rlc_enc->context_4_callback = context_4_callback;
+	return SWIF_STATUS_OK;
 }
+
 
 /**
  * This function sets one or more FEC codec specific parameters,
  * using a type/length/value approach for maximum flexibility.
  */
-swif_status_t   swif_encoder_set_parameters  (
+swif_status_t   swif_rlc_encoder_set_parameters  (
                                 swif_encoder_t* enc,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)
 {
-    return (*enc->set_parameters)(enc, type, length, value);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 /**
  * This function gets one or more FEC codec specific parameters,
  * using a type/length/value approach for maximum flexibility.
  */
-swif_status_t   swif_encoder_get_parameters  (
-			swif_encoder_t* enc,
+swif_status_t   swif_rlc_encoder_get_parameters  (
+                                swif_encoder_t* enc,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)
 {
-    return (*enc->get_parameters)(enc, type, length, value);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
 /**
  * Create a single repair symbol (i.e. perform an encoding).
  */
-swif_status_t   swif_build_repair_symbol (
-                                swif_encoder_t* enc,
+swif_status_t   swif_rlc_build_repair_symbol (
+                                swif_encoder_t* generic_encoder,
                                 void*           new_buf)
 {
-    return (*enc->build_repair_symbol)(enc, new_buf);
+    swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
+    uint32_t	i;
+
+    if ((new_buf = calloc(1, sizeof(enc->symbol_size))) == NULL) {
+        fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
+        return SWIF_STATUS_ERROR;
+    }
+    for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
+        symbol_add_scaled(new_buf, enc->cc_tab[i % enc->max_coding_window_size], enc->ew_tab[i % enc->max_coding_window_size], enc->symbol_size);
+    }
+    return SWIF_STATUS_OK;
 }
 
 
@@ -102,23 +92,25 @@ swif_status_t   swif_build_repair_symbol (
 /**
  * Create and initialize a decoder, providing only key parameters.
  */
-swif_decoder_t* swif_decoder_create (
+swif_decoder_t* swif_rlc_decoder_create (
                                 swif_codepoint_t codepoint,
                                 uint32_t        verbosity,
                                 uint32_t        symbol_size,
                                 uint32_t        max_coding_window_size,
                                 uint32_t        max_linear_system_size)
 {
-    return NULL;
+// NOT YET
+	return NULL;
 }
 
 
 /**
  * Release a decoder and its associated ressources.
  **/
-swif_status_t   swif_decoder_release (swif_decoder_t*        dec)
+swif_status_t   swif_rlc_decoder_release (swif_decoder_t*        dec)
 {
-    return SWIF_STATUS_OK;
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -128,7 +120,7 @@ swif_status_t   swif_decoder_release (swif_decoder_t*        dec)
  * must be initialized accordingly by the application, since it is
  * application specific.
  */
-swif_status_t   swif_decoder_set_callback_functions (
+swif_status_t   swif_rlc_decoder_set_callback_functions (
                 swif_decoder_t*  dec,
                 void (*source_symbol_removed_from_linear_system_callback) (
                                         void*   context,
@@ -142,9 +134,8 @@ swif_status_t   swif_decoder_set_callback_functions (
                                         esi_t   esi),
                 void*        context_4_callback)
 {
-    return (*dec->set_callback_functions)(dec, source_symbol_removed_from_linear_system_callback,
-            decodable_source_symbol_callback, decoded_source_symbol_callback,
-            context_4_callback);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -152,13 +143,14 @@ swif_status_t   swif_decoder_set_callback_functions (
  * This function sets one or more FEC codec specific parameters,
  *        using a type/length/value approach for maximum flexibility.
  */
-swif_status_t   swif_decoder_set_parameters  (
+swif_status_t   swif_rlc_decoder_set_parameters  (
                                 swif_decoder_t* dec,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)
 {
-    return (*dec->set_parameters)(dec, type, length, value);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -166,13 +158,14 @@ swif_status_t   swif_decoder_set_parameters  (
  * This function gets one or more FEC codec specific parameters,
  * using a type/length/value approach for maximum flexibility.
  */
-swif_status_t   swif_decoder_get_parameters  (
+swif_status_t   swif_rlc_decoder_get_parameters  (
                                 swif_decoder_t* dec,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)
 {
-    return (*dec->get_parameters)(dec, type, length, value);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -181,12 +174,13 @@ swif_status_t   swif_decoder_get_parameters  (
  * For each decoded source symbol (if any), the application is informed
  * through the dedicated callback functions.
  */
-swif_status_t   swif_decoder_decode_with_new_source_symbol (
+swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
                                 swif_decoder_t* dec,
                                 void* const     new_symbol_buf,
                                 esi_t           new_symbol_esi)
 {
-    return (*dec->decode_with_new_source_symbol)(dec, new_symbol_buf, new_symbol_esi);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -195,11 +189,12 @@ swif_status_t   swif_decoder_decode_with_new_source_symbol (
  * For each decoded source symbol (if any), the application is informed
  * through the dedicated callback functions.
  */
-swif_status_t   swif_decoder_decode_with_new_repair_symbol (
+swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
                                 void* const     new_symbol_buf)
 {
-    return (*dec->decode_with_new_repair_symbol)(dec, new_symbol_buf);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -216,14 +211,16 @@ swif_status_t   swif_decoder_decode_with_new_repair_symbol (
  * Decoder:     reset the coding window under preparation associated to
  *              a repair symbol just received.
  */
-swif_status_t   swif_encoder_reset_coding_window (swif_encoder_t*  enc)
+swif_status_t   swif_rlc_encoder_reset_coding_window (swif_encoder_t*  enc)
 {
-    return (*enc->reset_coding_window)(enc);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
-swif_status_t   swif_decoder_reset_coding_window (swif_decoder_t*  dec)
+swif_status_t   swif_rlc_decoder_reset_coding_window (swif_encoder_t*  dec)
 {
-    return (*dec->reset_coding_window)(dec);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 /**
@@ -231,52 +228,86 @@ swif_status_t   swif_decoder_reset_coding_window (swif_decoder_t*  dec)
  * Encoder:     add a source symbol to the coding window.
  * Decoder:     add a source symbol to the coding window under preparation.
  */
-swif_status_t   swif_encoder_add_source_symbol_to_coding_window (
-                                swif_encoder_t* enc,
+swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
+                                swif_encoder_t* generic_enc,
                                 void*           new_src_symbol_buf,
                                 esi_t           new_src_symbol_esi)
 {
-/* ajouter un élément à la liste chainée des symboles sources
-retirer le symbole source le plus ancien si l'EW déborde. */
-    return (*enc->add_source_symbol_to_coding_window)(enc, new_src_symbol_buf, new_src_symbol_esi);
+    swif_encoder_rlc_cb_t	*enc = (swif_encoder_rlc_cb_t *) generic_enc;
+
+    if ((enc->ew_esi_right != INVALID_ESI) && (new_src_symbol_esi != enc->ew_esi_right + 1)) {
+        fprintf(stderr, "swif_rlc_encoder_add_source_symbol_to_coding_window() failed! new_src_symbol_esi (%u) is not in the right order (%u expected)\n",
+		new_src_symbol_esi, enc->ew_esi_right + 1);
+        return SWIF_STATUS_ERROR;  
+    }
+    if (enc->ew_ss_nb == enc->max_coding_window_size) {
+        if (enc->source_symbol_removed_from_coding_window_callback != NULL) {
+            enc->source_symbol_removed_from_coding_window_callback(enc->context_4_callback,
+                                                                    enc->ew_esi_right  - enc->ew_ss_nb);
+        }
+        enc->ew_tab[enc->ew_left] = new_src_symbol_buf;
+        enc->ew_right = enc->ew_left;
+        enc->ew_left = (enc->ew_left +1) % enc->max_coding_window_size;
+        enc->ew_esi_right = new_src_symbol_esi;
+    } else if (enc->ew_ss_nb == 0) {
+	assert(enc->ew_left == enc->ew_right);
+        enc->ew_tab[enc->ew_right] = new_src_symbol_buf;
+        enc->ew_esi_right = new_src_symbol_esi;
+        enc->ew_ss_nb++;
+    } else {
+        enc->ew_right = (enc->ew_right + 1) % enc->max_coding_window_size;
+        enc->ew_tab[enc->ew_right] = new_src_symbol_buf;
+        enc->ew_esi_right = new_src_symbol_esi;
+        enc->ew_ss_nb++;
+    }
+  
+    return SWIF_STATUS_OK;
 }
 
-swif_status_t   swif_decoder_add_source_symbol_to_coding_window (
+swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           new_src_symbol_esi)
 {
-    return (*dec->add_source_symbol_to_coding_window)(dec, new_src_symbol_esi);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
 /**
  * Remove this source symbol from the coding window.
  */
-swif_status_t   swif_encoder_remove_source_symbol_from_coding_window (
+swif_status_t   swif_rlc_encoder_remove_source_symbol_from_coding_window (
                                 swif_encoder_t* enc,
                                 esi_t           old_src_symbol_esi)
 {
-    return (*enc->remove_source_symbol_from_coding_window)(enc, old_src_symbol_esi);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
-swif_status_t   swif_decoder_remove_source_symbol_from_coding_window (
+swif_status_t   swif_rlc_decoder_remove_source_symbol_from_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           old_src_symbol_esi)
 {
-    return (*dec->remove_source_symbol_from_coding_window)(dec, old_src_symbol_esi);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
 /**
  * Get information on the current coding window at the encoder.
  */
-swif_status_t   swif_encoder_get_coding_window_information (
-                                swif_encoder_t* enc,
+swif_status_t   swif_rlc_encoder_get_coding_window_information (
+                                swif_encoder_t* generic_encoder,
                                 esi_t*          first,
                                 esi_t*          last,
                                 uint32_t*       nss)
 {
-    return (*enc->get_coding_window_information)(enc, first, last, nss);
+    swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
+
+    *first = enc->ew_esi_right - enc->ew_ss_nb;
+    *last = enc->ew_esi_right;
+    *nss = enc->ew_ss_nb;
+    return SWIF_STATUS_OK;
 }
 
 
@@ -292,21 +323,23 @@ swif_status_t   swif_encoder_get_coding_window_information (
  *          associated to a repair symbol and carried in the packet
  *          header.
  */
-swif_status_t   swif_encoder_set_coding_coefs_tab (
+swif_status_t   swif_rlc_encoder_set_coding_coefs_tab (
                                 swif_encoder_t* enc,
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-    return (*enc->set_coding_coefs_tab)(enc, coding_coefs_tab, nb_coefs_in_tab);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
-swif_status_t   swif_decoder_set_coding_coefs_tab (
+swif_status_t   swif_rlc_decoder_set_coding_coefs_tab (
                                 swif_decoder_t* dec,
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-    return (*dec->set_coding_coefs_tab)(dec, coding_coefs_tab, nb_coefs_in_tab);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
@@ -320,20 +353,21 @@ swif_status_t   swif_decoder_set_coding_coefs_tab (
  * coefficient or key used by the codec can be retrieved with
  * swif_encoder_get_coding_coefs_tab().
  */
-swif_status_t   swif_encoder_generate_coding_coefs (
+swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                                 swif_encoder_t* enc,
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
-    return (*enc->generate_coding_coefs)(enc, key, add_param);
+	return SWIF_STATUS_OK;
 }
 
-swif_status_t   swif_decoder_generate_coding_coefs (
+
+swif_status_t   swif_rlc_decoder_generate_coding_coefs (
                                 swif_decoder_t* dec,
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
-    return (*dec->generate_coding_coefs)(dec, key, add_param);
+	return SWIF_STATUS_OK;
 }
 
 
@@ -344,12 +378,57 @@ swif_status_t   swif_decoder_generate_coding_coefs (
  * an autonomous manner but needs to be sent in the repair packet header.
  * This function is only used by an encoder.
  */
-swif_status_t   swif_encoder_get_coding_coefs_tab (
+swif_status_t   swif_rlc_encoder_get_coding_coefs_tab (
                                 swif_encoder_t* enc,
                                 void**          coding_coefs_tab,
                                 uint32_t*       nb_coefs_in_tab)
 {
-    return (*enc->get_coding_coefs_tab)(enc, coding_coefs_tab, nb_coefs_in_tab);
+// NOT YET
+	return SWIF_STATUS_OK;
 }
 
 
+swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
+                                         uint32_t        verbosity,
+                                         uint32_t        symbol_size,
+                                         uint32_t        max_coding_window_size)
+{
+    /* initialize the encoder */
+
+    assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
+    swif_encoder_rlc_cb_t *enc = NULL;
+    if ((enc = calloc(1,sizeof(swif_encoder_rlc_cb_t))) == NULL){
+        fprintf(stderr, "swif_encoder_create() failed! No memory \n");
+        return NULL;
+    }
+    enc->generic_encoder.codepoint = codepoint;
+    enc->symbol_size = symbol_size;
+    enc->max_coding_window_size = max_coding_window_size;
+    if ((enc->cc_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
+        fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
+        return NULL;
+    }
+    if ((enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
+        fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
+        return NULL;
+    }
+    enc->ew_right = enc->ew_left = 0;
+    enc->ew_esi_right = INVALID_ESI;
+    enc->ew_ss_nb = 0;
+
+    enc->source_symbol_removed_from_coding_window_callback = NULL;
+    enc->context_4_callback = NULL;
+
+    enc->generic_encoder.generate_coding_coefs		= swif_rlc_encoder_generate_coding_coefs;
+    enc->generic_encoder.get_coding_window_information	= swif_rlc_encoder_get_coding_window_information;
+    enc->generic_encoder.get_coding_coefs_tab		= swif_rlc_encoder_get_coding_coefs_tab;
+    enc->generic_encoder.get_parameters			= swif_rlc_encoder_get_parameters;
+    enc->generic_encoder.set_parameters			= swif_rlc_encoder_set_parameters;
+    enc->generic_encoder.set_callback_functions		= swif_rlc_encoder_set_callback_functions;
+    enc->generic_encoder.set_coding_coefs_tab		= swif_rlc_encoder_set_coding_coefs_tab;
+    enc->generic_encoder.remove_source_symbol_from_coding_window	= swif_rlc_encoder_remove_source_symbol_from_coding_window;
+    enc->generic_encoder.add_source_symbol_to_coding_window		= swif_rlc_encoder_add_source_symbol_to_coding_window;
+    enc->generic_encoder.reset_coding_window		= swif_rlc_encoder_reset_coding_window;
+    enc->generic_encoder.build_repair_symbol		= swif_rlc_build_repair_symbol;
+    return (swif_encoder_t *) enc;
+}
