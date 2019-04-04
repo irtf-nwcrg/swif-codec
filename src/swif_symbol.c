@@ -1,5 +1,6 @@
 /*---------------------------------------------------------------------------*/
 
+#include <assert.h>
 #include "swif_symbol.h"
 
 /*---------------------------------------------------------------------------*/
@@ -98,7 +99,7 @@ void symbol_div(void *symbol1,  uint32_t symbol_size, uint8_t coeff, uint8_t* re
     assert(coeff != 0);
     uint8_t *data = (uint8_t *) symbol1;
     for (uint32_t i=0; i<symbol_size; i++) {
-        result[i] = gf256_div(coeff, data[i]);
+        result[i] = gf256_div(data[i], coeff);
     }
 }
 /*---------------------------------------------------------------------------*/

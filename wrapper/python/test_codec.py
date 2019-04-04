@@ -20,7 +20,7 @@ def try_encoder():
         encoder.add_source_symbol_to_coding_window(symbol, i)
     encoder.generate_coding_coefs(key=2,add_param=0)
     print(encoder.build_repair_symbol())
-
+    
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":

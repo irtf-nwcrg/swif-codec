@@ -77,9 +77,27 @@ cdef extern from "../../src/swif_rlc_cb.h":
 
 #---------------------------------------------------------------------------
 
+cdef extern from "../../src/swif_symbol.h":
+    void symbol_add_scaled(void *symbol1, uint8_t coef,
+                           void *symbol2, uint32_t symbol_size);
+
+    void symbol_add(void *symbol1, void *symbol2,
+                    uint32_t symbol_size, uint8_t* result);
+
+    void symbol_sub(void *symbol1, void *symbol2,
+                    uint32_t symbol_size, uint8_t* result);
+
+    void symbol_mul(void *symbol1, uint8_t coeff,
+                    uint32_t symbol_size, uint8_t* result);
+
+    void symbol_div(void *symbol1, uint32_t symbol_size,
+                    uint8_t coeff, uint8_t* result);
+
+
+#---------------------------------------------------------------------------
+
 cdef extern from "../../src/swif_full_symbol.h":
      cdef struct s_swif_full_symbol_t:
-         #uint32_t symbol_size
          pass
      ctypedef s_swif_full_symbol_t swif_full_symbol_t
 

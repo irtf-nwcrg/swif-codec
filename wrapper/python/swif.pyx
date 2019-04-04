@@ -7,6 +7,8 @@ cimport libc.stdio as stdio
 cimport cswif
 from cswif cimport *
 from libc.stdint cimport uint8_t, uint32_t, int64_t, bool
+from libc.stdlib cimport malloc, free
+from libc.string cimport memcpy, memset
 
 #---------------------------------------------------------------------------
 
@@ -62,6 +64,107 @@ cdef class RlcEncoder:
 class RlcDecoder:
     def __init__(self, max_window_size, symbol_size):
         self.decoder = None
+
+#---------------------------------------------------------------------------
+
+cdef class Symbol:
+    cdef public uint8_t *data
+    cdef public uint32_t size
+
+    def __cinit__(self, init_data=None):
+        self.data = NULL
+        self.size = 0
+        if init_data is not None:
+            self.set_data(init_data)
+
+    def get_data(self):
+        if self.size == 0:
+            return b""
+        result = bytes(self.size)
+        cdef uint8_t *data = result        
+        memcpy(data, self.data, self.size)
+        return result
+        
+    cpdef alloc(self, new_size):
+        if self.data is not NULL:
+            self.dealloc()
+        assert new_size>=0
+        self.data = <uint8_t*>malloc(new_size)
+        memset(self.data, 0, new_size)
+        if self.data is NULL and new_size>0:
+            self.size = 0
+            raise RuntimeError("cannot malloc", new_size)
+        self.size = new_size
+
+    cpdef dealloc(self):
+        if self.data is NULL:
+            return
+        free(self.data)
+        self.data = NULL
+        self.size = 0
+
+    def set_data(self, data):
+        self.dealloc()
+        self.alloc(len(data))
+        assert len(data) == self.size        
+        cdef uint8_t *u8_data = data
+        memcpy(self.data, u8_data, len(data))
+
+    def __dealloc__(self):
+        if self.data is not NULL:
+            free(self.data)
+            self.data = NULL
+            self.size = 0
+
+    def add(self, other):
+        assert self.size == other.size
+        result = Symbol()
+        result.alloc(self.size)
+        cdef uint8_t *other_data = other.data
+        symbol_add(self.data, other_data, self.size, result.data)
+        return result
+
+    def mul(self, coef):
+        result = Symbol()
+        result.alloc(self.size)
+        symbol_mul(self.data, coef, self.size, result.data)
+        return result
+
+    def div(self, coef):
+        result = Symbol()
+        result.alloc(self.size)
+        symbol_div(self.data, self.size, coef, result.data)
+        return result
+    
+    def sub(self, other):
+        assert self.size == other.size
+        result = Symbol()
+        result.alloc(self.size)
+        cdef uint8_t *other_data = other.data
+        symbol_sub(self.data, other_data, self.size, result.data)
+        return result
+
+    def __add__(self, other):
+        return self.add(other)
+
+    def __sub__(self, other):
+        return self.sub(other)
+
+    def __mul__(v1, v2):
+        if isinstance(v1, Symbol):
+            return v1.mul(v2)
+        else:
+            return v2.mul(v1)
+
+    def __truediv__(self, coef):
+        return self.div(coef)
+    
+    def __repr__(self):
+        #return "Symbol("+repr(self.get_data())+")"
+        return "Symbol("+repr([x for x in self.get_data()])+")"
+
+    def copy(self):
+        return Symbol(self.get_data())
 
 #---------------------------------------------------------------------------
 
