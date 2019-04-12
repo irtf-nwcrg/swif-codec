@@ -7,8 +7,7 @@ CC=gcc
 #CFLAGS += -fno-strict-aliasing -arch x86_64 -g -fwrapv \
 #          -Wall -Wstrict-prototypes
 
-CFLAGS += -DWITH_LIBLC
-
+#CFLAGS += -DWITH_LIBLC
 
 CFLAGS += -I../liblc/src
 EXTRA_SRCS += swif_full_symbol.c

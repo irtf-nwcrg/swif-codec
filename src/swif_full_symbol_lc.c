@@ -60,7 +60,7 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
  * 
  * Gaussian elimination can occur.
  * Return the pivot associated to the new full_symbol 
- * or SWIF_FULL_SYMBOL_ID_NONE if dependent (e.g. redundant) packet
+ * or SYMBOL_ID_NONE if dependent (e.g. redundant) packet
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
@@ -73,7 +73,7 @@ uint32_t swif_full_symbol_set_add
     if (packet_id != PACKET_ID_NONE) {
         return packet_id;
     } else {
-        return FULL_SYMBOL_ID_NONE;
+        return SYMBOL_ID_NONE;
     }
 }
 
@@ -177,7 +177,7 @@ uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol)
 
 /**
  * @brief get the minimum source index that appears in the symbol
- *        returns SWIF_FULL_SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
+ *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
 {
@@ -185,13 +185,13 @@ uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
     if (full_symbol->coded_packet->coef_pos_min != COEF_POS_NONE) {
         return full_symbol->coded_packet->coef_pos_min;
     } else {
-        return FULL_SYMBOL_ID_NONE;        
+        return SYMBOL_ID_NONE;        
     }
 }
 
 /**
  * @brief get the maximum source index that appears in the symbol
- *        returns SWIF_FULL_SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
+ *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
 {
@@ -199,7 +199,7 @@ uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
     if (full_symbol->coded_packet->coef_pos_max != COEF_POS_NONE) {
         return full_symbol->coded_packet->coef_pos_max;
     } else {
-        return FULL_SYMBOL_ID_NONE;        
+        return SYMBOL_ID_NONE;        
     }
 }
 

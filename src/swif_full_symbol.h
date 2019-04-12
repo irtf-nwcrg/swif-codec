@@ -30,8 +30,11 @@ typedef struct s_swif_full_symbol_set_t swif_full_symbol_set_t;
 /**
  * Used for a non-specified/non-existing value of symbol_id
  */
-#define FULL_SYMBOL_ID_NONE 0xfffffffful 
+#define SYMBOL_ID_NONE 0xfffffffful
 
+/** XXX */
+typedef uint32_t symbol_id_t;
+    
 /**
  * @brief Create a full_symbol from a source symbol
  */
@@ -53,13 +56,13 @@ uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol);
 
 /**
  * @brief get the minimum source index that appears in the symbol
- *        returns SWIF_FULL_SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
+ *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol);
 
 /**
  * @brief get the maximum source index that appears in the symbol
- *        returns SWIF_FULL_SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
+ *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol);
 
@@ -87,7 +90,7 @@ static inline uint32_t full_symbol_count_coef(swif_full_symbol_t *full_symbol)
     uint32_t min_symbol_id = full_symbol_get_min_symbol_id(full_symbol); 
     uint32_t max_symbol_id = full_symbol_get_max_symbol_id(full_symbol);
 
-    if (min_symbol_id == FULL_SYMBOL_ID_NONE) {
+    if (min_symbol_id == SYMBOL_ID_NONE) {
         return 0;
     } else {
         return max_symbol_id-min_symbol_id+1;
@@ -98,7 +101,7 @@ static inline uint32_t full_symbol_count_coef(swif_full_symbol_t *full_symbol)
  * @brief Returns whether the symbol is an empty symbol
  */
 static inline bool full_symbol_is_zero(swif_full_symbol_t *full_symbol)
-{return full_symbol_get_min_symbol_id(full_symbol) == FULL_SYMBOL_ID_NONE;}
+{return full_symbol_get_min_symbol_id(full_symbol) == SYMBOL_ID_NONE;}
     
 /**
  * @brief Release a full_symbol
@@ -120,7 +123,7 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
 /**
  * @brief Create a full_symbol set, that will be used to do gaussian elimination
  */
-swif_full_symbol_set_t *full_symbol_set_alloc();
+swif_full_symbol_set_t *full_symbol_set_alloc(void);
 
 /**
  * @brief Free a full_symbol set
@@ -138,7 +141,7 @@ void full_symbol_set_free(swif_full_symbol_set_t *set);
  * 
  * Gaussian elimination can occur.
  * Teturn the pivot associated to the new full_symbol 
- * or SWIF_FULL_SYMBOL_ID_NONE if dependent (e.g. redundant) packet
+ * or SYMBOL_ID_NONE if dependent (e.g. redundant) packet
  */
 uint32_t full_symbol_set_add
 (swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol);

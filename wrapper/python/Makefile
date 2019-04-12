@@ -9,8 +9,8 @@ all: ensure-liblc compile-libswif
 	test -e swif.so || ln -s swif.*.so swif.so
 
 ensure-liblc:
-	test -e ../../libc || make ../../liblc
-	test -e ../../libc/liblc.a || (cd ../../liblc/src && make)
+	test -e ../../liblc || make ../../liblc
+	test -e ../../liblc/liblc.a || (cd ../../liblc/src && make)
 
 ensure-libswif:
 	test -e ../../src/libswif.a || (cd ../../src && make)
@@ -23,7 +23,7 @@ compile-libswif:
 
 recompile: ensure-liblc
 	(cd ../../src && make clean && make)
-	(cd ../../lib/src && make clean && make)
+	(cd ../../liblc/src && make clean && make)
 	make clean && make
 
 clean:

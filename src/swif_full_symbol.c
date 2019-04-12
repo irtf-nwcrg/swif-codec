@@ -5,6 +5,7 @@
 
 #else /* WITH_LIBLC */
 
-int swif_full_symbol_todo = 1; /* need symbols in the .o file on MacOS */
+/* A new implementation based on swif_symbol */
+#include "swif_full_symbol_impl.c"
 
 #endif /* WITH_LIBLC */
