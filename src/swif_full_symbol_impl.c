@@ -13,8 +13,6 @@
 #include <assert.h>
 /*---------------------------------------------------------------------------*/
 
-#define COEF_POS_NONE 0xffffu
-
 
 struct s_swif_full_symbol_t {
     //coded_packet_t* coded_packet;
@@ -225,16 +223,7 @@ static inline bool full_symbol_has_sufficient_size(swif_full_symbol_t* symbol,
     assert(id1 <= id2);
     symbol_id_t symbol_id_size = full_symbol_count_coef(symbol);
     symbol_id_t requested_size = id2 - id1 + 1;
-    if (symbol_id_size >= requested_size){
-        /////////////////////////////////// XXX 
-        id1=symbol->first_id;
-        id2=id2-id1;
-        return true; 
-    }
-    else{
-        return false; 
-    }
-    
+    return (symbol_id_size >= requested_size); 
 }
 
 static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
@@ -248,8 +237,8 @@ static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
 
 static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 {
-    REQUIRE( symbol->first_id != COEF_POS_NONE
-	    && symbol->last_id != COEF_POS_NONE );
+    REQUIRE( symbol->first_id != SYMBOL_ID_NONE
+	    && symbol->last_id != SYMBOL_ID_NONE );
 
   ///////////////////////
     bool result = true;
@@ -271,8 +260,8 @@ static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 
 static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
 {
-    REQUIRE( symbol->first_id != COEF_POS_NONE
-	    && symbol->last_id != COEF_POS_NONE );
+    REQUIRE( symbol->first_id != SYMBOL_ID_NONE
+	    && symbol->last_id != SYMBOL_ID_NONE );
 
   
     bool result = true;
@@ -295,8 +284,8 @@ static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
 bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol)
 {
   bool result = true;
-  if (symbol->first_id == COEF_POS_NONE) {
-    ASSERT( symbol->last_id == COEF_POS_NONE );
+  if (symbol->first_id == SYMBOL_ID_NONE) {
+    ASSERT( symbol->last_id == SYMBOL_ID_NONE );
     result = false;
   }
   
@@ -340,11 +329,7 @@ void full_symbol_get_data
 (swif_full_symbol_t *full_symbol, uint8_t *result_data)
 {
     assert( result_data != NULL);
-    //////////
-    memcpy();
-    uint32_t i ; 
-    for (i=0; i<full_symbol->data_size; i++)
-        result_data[i] = full_symbol->data[i];
+    memcpy(result->data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
 }
 
 void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
@@ -357,7 +342,7 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
 	        full_symbol->first_nonzero_id, full_symbol->last_nonzero_id);
     fprintf(out, ", 'coef_value':[");
     uint32_t i;
-    if ( full_symbol->first_id != COEF_POS_NONE) {
+    if ( full_symbol->first_id != SYMBOL_ID_NONE) {
         for (i=full_symbol->first_id; i<=full_symbol->last_id; i++) {
             if (i > full_symbol->first_id)
                 fprintf(out, ", ");
