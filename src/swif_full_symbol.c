@@ -9,3 +9,4 @@
 #include "swif_full_symbol_impl.c"
 
 #endif /* WITH_LIBLC */
+

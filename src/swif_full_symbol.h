@@ -146,6 +146,9 @@ void full_symbol_set_free(swif_full_symbol_set_t *set);
 uint32_t full_symbol_set_add
 (swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol);
 
+static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
+                                           symbol_id_t id);
+
 /*---------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
