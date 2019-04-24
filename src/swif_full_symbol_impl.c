@@ -153,7 +153,7 @@ symbol_id_t full_symbol_get_coef_index
 swif_full_symbol_t *full_symbol_create_from_source
 (uint32_t symbol_id, uint8_t *symbol_data, uint32_t symbol_size)
 {
-    swif_full_symbol_t *full_symbol = full_symbol_alloc(symbol_id_t symbol_id, symbol_id_t symbol_id, symbol_size);
+    swif_full_symbol_t *full_symbol = full_symbol_alloc( symbol_id,  symbol_id, symbol_size);
     symbol_id_t coef_index = full_symbol_get_coef_index( full_symbol, symbol_id);
     full_symbol->coef[coef_index]=1;
     return full_symbol;
@@ -237,14 +237,30 @@ static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
 
 static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 {
-    REQUIRE( symbol->first_id != SYMBOL_ID_NONE
+    assert( symbol->first_id != SYMBOL_ID_NONE
 	    && symbol->last_id != SYMBOL_ID_NONE );
 
   ///////////////////////
+    bool result = false;
+    symbol->first_nonzero_id = SYMBOL_ID_NONE;
+    for (symbol_id_t  i=symbol->first_id ;i<=symbol->last_id; i++) {
+        if (full_symbol_get_coef(symbol, i) != 0){
+            symbol->first_nonzero_id = i;
+            result = true;
+            break;
+        }
+      
+    }
+  return result;
+    
+    
+
+
+    /*
     bool result = true;
     for (symbol_id_t  i=symbol->first_id ;i<=symbol->last_id; i++) {
         if (symbol->coef[i] != 0){
-            symbol->first_nonzero_id = symbol->coef[i];
+            symbol->first_nonzero_id = i;
             break;
         }
         else {
@@ -252,6 +268,7 @@ static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
         }
     }
   return result;
+  */
 }
 
 
@@ -260,7 +277,7 @@ static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 
 static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
 {
-    REQUIRE( symbol->first_id != SYMBOL_ID_NONE
+    assert( symbol->first_id != SYMBOL_ID_NONE
 	    && symbol->last_id != SYMBOL_ID_NONE );
 
   
@@ -268,9 +285,11 @@ static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
     for (symbol_id_t  i=symbol->last_id ;i<=symbol->first_id; i--) {
         if (symbol->coef[i] != 0){
             symbol->last_nonzero_id = symbol->coef[i];
+            result = true;
             break;
         }
         else {
+            symbol->last_nonzero_id = SYMBOL_ID_NONE;
             result = false ;
         }
     }
@@ -329,7 +348,7 @@ void full_symbol_get_data
 (swif_full_symbol_t *full_symbol, uint8_t *result_data)
 {
     assert( result_data != NULL);
-    memcpy(result->data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
+    memcpy(result_data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
 }
 
 void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
@@ -393,20 +412,49 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
     assert (full_symbol_includes_id(symbol_result, symbol2->first_nonzero_id));
     assert (full_symbol_includes_id(symbol_result, symbol2->last_nonzero_id));
 
-///////////////////////////////// 
-    for (uint32_t i = 0; i <= full_symbol_count_coef(symbol_result); i++){
-        if ( full_symbol_get_coef(symbol1, symbol1->coef[i]) && !full_symbol_get_coef(symbol2, symbol2->coef[i]) )
-            symbol_result->coef[i] = full_symbol_get_coef(symbol1, symbol1->coef[i]);
+ 
+    uint32_t first_coef_index;
+    uint32_t last_coef_index;
 
-        else if ( !full_symbol_get_coef(symbol1, symbol1->coef[i]) && full_symbol_get_coef(symbol2, symbol2->coef[i]) )
-            symbol_result->coef[i] = full_symbol_get_coef(symbol2, symbol2->coef[i]);
-
-        else 
-            symbol_result->coef[i] = full_symbol_get_coef(symbol1, symbol1->coef[i]) ^ full_symbol_get_coef(symbol2, symbol2->coef[i]);
+    if (symbol1->first_nonzero_id == SYMBOL_ID_NONE && symbol2->first_nonzero_id == SYMBOL_ID_NONE ){
+        symbol_result->first_nonzero_id = SYMBOL_ID_NONE;
+        symbol_result->last_nonzero_id = SYMBOL_ID_NONE;
+    }
+    if ( full_symbol_get_coef(symbol1, symbol1->first_nonzero_id) <= full_symbol_get_coef(symbol2, symbol2->first_nonzero_id) ){
+         first_coef_index = symbol1->first_nonzero_id ;
+    }
+    else {
+         first_coef_index = symbol2->first_nonzero_id ;
     }
 
-    for (uint32_t i = 0; i <= symbol_result->data_size; i++)
-        symbol_add((void *)symbol1->data[i], (void *)symbol2->data[i], full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data+i); //get data 
+      if ( full_symbol_get_coef(symbol1, symbol1->last_nonzero_id) >= full_symbol_get_coef(symbol2, symbol2->last_nonzero_id) ){
+         last_coef_index = symbol1->last_nonzero_id ;
+    }
+    else {
+         last_coef_index = symbol2->last_nonzero_id ;
+    }
+
+
+
+    for (uint32_t i = first_coef_index ; i <= last_coef_index; i++){
+        symbol_result->coef[i] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
+    }
+
+
+
+    // get data
+    if(symbol1->data_size >= symbol2->data_size ){
+        for (uint32_t i = 0; i < symbol2->data_size; i++)
+            symbol_add((void *)symbol1->data[i], (void *)symbol2->data[i], full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data+i); 
+        memcpy(symbol_result->data+symbol2->data_size-1 , symbol1->data+symbol2->data_size-1 , symbol1->data_size - symbol2->data_size +1);
+        memcpy(symbol_result->data+symbol1->data_size-1 , 0 , symbol_result->data_size - symbol1->data_size +1);
+    }
+    else {
+        for (uint32_t i = 0; i < symbol1->data_size; i++)
+            symbol_add((void *)symbol1->data[i], (void *)symbol2->data[i], full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data+i); 
+            memcpy(symbol_result->data+symbol1->data_size , symbol2->data+symbol1->data_size , symbol2->data_size - symbol1->data_size +1);
+            memcpy(symbol_result->data+symbol2->data_size , 0 , symbol_result->data_size - symbol1->data_size +1);
+    }
 }
 
 
