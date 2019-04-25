@@ -4,35 +4,8 @@
  *              will be replaced by a proper implementation later.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "swif_full_symbol.h" 
-#include "swif_symbol.h"
-
-#include <assert.h>
-/*---------------------------------------------------------------------------*/
-
-
-struct s_swif_full_symbol_t {
-    //coded_packet_t* coded_packet;
-    //uint32_t symbol_size;
-    uint8_t* coef;
-    symbol_id_t first_id; // coef[0] is the coefficient of first symbol_id
-    symbol_id_t last_id; // included
-
-    symbol_id_t first_nonzero_id;
-    symbol_id_t last_nonzero_id;    
-    
-    uint8_t* data;
-    uint32_t data_size;
-};
-
-/*---------------------------------------------------------------------------*/
-
-struct s_swif_full_symbol_set_t {
-    
-};
+#include "swif_full_symbol_impl.h" 
 
 /*---------------------------------------------------------------------------*/
 
@@ -309,9 +282,9 @@ bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol)
   }
   
   if (result)
-    result = full_symbol__adjust_min_coef(symbol);
+    result = full_symbol_adjust_min_coef(symbol);
   if (result)
-    result = full_symbol__adjust_max_coef(symbol);
+    result = full_symbol_adjust_max_coef(symbol);
   return result;
 }
 

@@ -45,5 +45,6 @@ def test_full_symbol_wrapper():
 
 if __name__ == "__main__":
     try_full_symbol_wrapper()
+    
 
 #---------------------------------------------------------------------------
