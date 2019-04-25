@@ -143,38 +143,43 @@ cdef extern from "../../src/swif_full_symbol.h":
 
 cdef extern from "../../src/swif_full_symbol_impl.h":
 
+     cdef struct s_swif_full_symbol_set_t:
+         pass
+     ctypedef s_swif_full_symbol_set_t swif_full_symbol_set_t
+
+     ctypedef uint32_t symbol_id_t
+
     
      void full_symbol_set_free(swif_full_symbol_set_t *set);
 
-     uint32_t swif_full_symbol_set_add
-        (swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol);
+     uint32_t swif_full_symbol_set_add(
+         swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 
-     swif_full_symbol_t *full_symbol_alloc
-        (symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) ;
+     swif_full_symbol_t *full_symbol_alloc(
+         symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) ;
 
-     swif_full_symbol_t *full_symbol_create_internal
-        (uint8_t* symbol_coef_table, uint32_t min_symbol_id, uint32_t nb_symbol_id,
-        uint8_t* symbol_data, uint32_t symbol_size);
+     swif_full_symbol_t *full_symbol_create_internal(
+         uint8_t* symbol_coef_table, uint32_t min_symbol_id, uint32_t nb_symbol_id, uint8_t* symbol_data, uint32_t symbol_size);
 
-     static inline bool full_symbol_has_sufficient_size(swif_full_symbol_t* symbol,
-                                            symbol_id_t id1, symbol_id_t id2);
-     static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
-                                            symbol_id_t symbol_id);
+     bint full_symbol_has_sufficient_size(
+         swif_full_symbol_t* symbol, symbol_id_t id1, symbol_id_t id2);
+     bint full_symbol_includes_id(
+         swif_full_symbol_t* symbol, symbol_id_t symbol_id);
 
-     static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_min_coef(swif_full_symbol_t* symbol);
 
-     static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_max_coef(swif_full_symbol_t* symbol);
 
-     bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
 
 
-     void full_symbol_add_scaled
-        (void *symbol1, uint8_t coereef, void *symbol2, uint32_t symbol_size);
+     void full_symbol_add_scaled(
+         void *symbol1, uint8_t coereef, void *symbol2, uint32_t symbol_size);
 
      void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result);
 
-     swif_full_symbol_t* full_symbol_add
-        (swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2);
+     swif_full_symbol_t* full_symbol_add(
+         swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2);
 
         
 

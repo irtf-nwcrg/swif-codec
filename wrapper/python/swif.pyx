@@ -258,4 +258,14 @@ cdef class FullSymbol:
         assert self.symbol is not NULL
         return full_symbol_dump(self.symbol, stdio.stdout)
 
+
+
+
+    #cdef swif_full_symbol_t* symbol2
+    #cdef swif_full_symbol_t* symbol3
+
+    #cpdef add_base(self):
+    #full_symbol_add_base(self.symbol, self.symbol2,  self.symbol2);
+
+
 #---------------------------------------------------------------------------

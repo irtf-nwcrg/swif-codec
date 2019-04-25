@@ -277,7 +277,7 @@ bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol)
 {
   bool result = true;
   if (symbol->first_id == SYMBOL_ID_NONE) {
-    ASSERT( symbol->last_id == SYMBOL_ID_NONE );
+    assert( symbol->last_id == SYMBOL_ID_NONE );
     result = false;
   }
   
