@@ -17,16 +17,16 @@ def try_full_symbol_wrapper():
     #symbol = swif.FullSymbol().from_source_symbol(6, b"azertyuiop")
     symbol = swif.FullSymbol().from_coefs_and_symbol(
         6, bytes([0,0,1,1,0,0]), b"azertyuiop")
-    print(symbol.is_zero())
-    print(symbol.get_info())
-    print(symbol.get_min_symbol_id())
-    print(symbol.get_max_symbol_id())
-    print(symbol.get_coefs())
-    print(symbol.get_size())
-    print(symbol.count_coefs())
-    print(symbol.get_data())
-    print(symbol.clone().get_info())    
-    symbol.dump();print(); sys.stdout.flush()
+    #print(symbol.is_zero())
+    #print(symbol.get_info())
+    ###print(symbol.get_min_symbol_id())
+    #print(symbol.get_max_symbol_id())
+    #print(symbol.get_coefs())
+    #print(symbol.get_size())
+    #print(symbol.count_coefs())
+    #print(symbol.get_data())
+    #print(symbol.clone().get_info())    
+    #symbol.dump();print(); sys.stdout.flush()
 
 #---------------------------------------------------------------------------
 
