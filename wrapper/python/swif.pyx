@@ -257,5 +257,8 @@ cdef class FullSymbol:
     cpdef dump(self):
         assert self.symbol is not NULL
         return full_symbol_dump(self.symbol, stdio.stdout)
+    
+    cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
+        return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
 
 #---------------------------------------------------------------------------

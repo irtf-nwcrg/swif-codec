@@ -384,42 +384,52 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
         symbol_result->first_nonzero_id = SYMBOL_ID_NONE;
         symbol_result->last_nonzero_id = SYMBOL_ID_NONE;
     }
-    if ( full_symbol_get_coef(symbol1, symbol1->first_nonzero_id) <= full_symbol_get_coef(symbol2, symbol2->first_nonzero_id) ){
+    if ( symbol1->first_nonzero_id <= symbol2->first_nonzero_id){
          first_coef_index = symbol1->first_nonzero_id ;
     }
     else {
          first_coef_index = symbol2->first_nonzero_id ;
     }
 
-      if ( full_symbol_get_coef(symbol1, symbol1->last_nonzero_id) >= full_symbol_get_coef(symbol2, symbol2->last_nonzero_id) ){
+    if ( symbol1->last_nonzero_id >= symbol2->last_nonzero_id){
          last_coef_index = symbol1->last_nonzero_id ;
     }
     else {
          last_coef_index = symbol2->last_nonzero_id ;
     }
 
-
+    memset(symbol_result->coef , 0 , sizeof(uint8_t)*(first_coef_index-symbol_result->first_id));
+    memset(symbol_result->coef+(last_coef_index-symbol_result->first_id+1) , 0 , sizeof(uint8_t)*(symbol_result->last_id-last_coef_index));
 
     for (uint32_t i = first_coef_index ; i <= last_coef_index; i++){
-        symbol_result->coef[i] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
+        memset(symbol_result->coef+(i-symbol_result->first_id) , full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i) , sizeof(uint8_t));
+
+        //symbol_result->coef[i] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
     }
 
 
 
     // get data
+    //symbol_add((void *)symbol1->data, (void *)symbol2->data, full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data); 
+
     if(symbol1->data_size >= symbol2->data_size ){
-        for (uint32_t i = 0; i < symbol2->data_size; i++)
-            symbol_add((void *)symbol1->data[i], (void *)symbol2->data[i], full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data+i); 
-        memcpy(symbol_result->data+symbol2->data_size-1 , symbol1->data+symbol2->data_size-1 , symbol1->data_size - symbol2->data_size +1);
-        memcpy(symbol_result->data+symbol1->data_size-1 , 0 , symbol_result->data_size - symbol1->data_size +1);
+        symbol_add((void *)symbol1->data, (void *)symbol2->data, full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data); 
+        memcpy(symbol_result->data+(symbol2->data_size) , symbol1->data+(symbol2->data_size) , symbol1->data_size - (symbol2->data_size));
+        memset(symbol_result->data+(symbol1->data_size) , 0 , symbol_result->data_size - (symbol1->data_size));
     }
     else {
-        for (uint32_t i = 0; i < symbol1->data_size; i++)
-            symbol_add((void *)symbol1->data[i], (void *)symbol2->data[i], full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data+i); 
-            memcpy(symbol_result->data+symbol1->data_size , symbol2->data+symbol1->data_size , symbol2->data_size - symbol1->data_size +1);
-            memcpy(symbol_result->data+symbol2->data_size , 0 , symbol_result->data_size - symbol1->data_size +1);
-    }
-}
+            symbol_add((void *)symbol1->data, (void *)symbol2->data, full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data); 
+            memcpy(symbol_result->data+symbol1->data_size , symbol2->data+(symbol1->data_size) , symbol2->data_size - (symbol1->data_size));
+            memset(symbol_result->data+symbol2->data_size , 0 , symbol_result->data_size - (symbol1->data_size));
+    } 
+uint32_t i;
+    if ( symbol_result->first_id != SYMBOL_ID_NONE) {
+        for (i=symbol_result->first_id; i<=symbol_result->last_id; i++) {
+            if (i > symbol_result->first_id)
+                printf(", ");
+        printf("%u", full_symbol_get_coef(symbol_result,i));
+        }
+    }}
 
 
 

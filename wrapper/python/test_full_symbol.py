@@ -43,9 +43,27 @@ def test_full_symbol_wrapper():
 
 #---------------------------------------------------------------------------
 
+def try_full_symbol_add_base():
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        6, bytes([1,0,0,1,0,0]), b"azeu")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        8, bytes([0,0,1,0]), b"aaeuyo")
+    symbol_result = swif.FullSymbol().from_coefs_and_symbol(
+        5, bytes([0,0,0,0,0,1,1,1]), b"azeyui")
+    print(symbol1.dump())
+    print(symbol2.dump())
+    #print(symbol_result.dump())
+    print(symbol_result._add_base(symbol1,symbol2))
+    print(symbol_result.dump())
+
+
+
+#---------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    try_full_symbol_wrapper()
-    test_full_symbol_wrapper()
+    #try_full_symbol_wrapper()
+    #test_full_symbol_wrapper()
+    try_full_symbol_add_base()
     
 
 #---------------------------------------------------------------------------

@@ -158,9 +158,6 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
      swif_full_symbol_t *full_symbol_alloc(
          symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) ;
 
-     swif_full_symbol_t *full_symbol_create_internal(
-         uint8_t* symbol_coef_table, uint32_t min_symbol_id, uint32_t nb_symbol_id, uint8_t* symbol_data, uint32_t symbol_size);
-
      bint full_symbol_has_sufficient_size(
          swif_full_symbol_t* symbol, symbol_id_t id1, symbol_id_t id2);
      bint full_symbol_includes_id(
