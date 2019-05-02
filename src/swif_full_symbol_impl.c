@@ -422,14 +422,8 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
             memcpy(symbol_result->data+symbol1->data_size , symbol2->data+(symbol1->data_size) , symbol2->data_size - (symbol1->data_size));
             memset(symbol_result->data+symbol2->data_size , 0 , symbol_result->data_size - (symbol1->data_size));
     } 
-uint32_t i;
-    if ( symbol_result->first_id != SYMBOL_ID_NONE) {
-        for (i=symbol_result->first_id; i<=symbol_result->last_id; i++) {
-            if (i > symbol_result->first_id)
-                printf(", ");
-        printf("%u", full_symbol_get_coef(symbol_result,i));
-        }
-    }}
+
+}
 
 
 
