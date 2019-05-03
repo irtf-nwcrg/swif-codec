@@ -50,7 +50,7 @@ uint32_t swif_full_symbol_set_add
  *        and initialize it with content '0'
  */
 swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) // data_size == symbol_size
-{ 
+{  
     symbol_id_t symbol_id_size;
     if (first_symbol_id == SYMBOL_ID_NONE) {
         symbol_id_size=0;
@@ -147,8 +147,9 @@ swif_full_symbol_t *full_symbol_create
     full_symbol->last_id = min_symbol_id+nb_symbol_id-1;
     full_symbol_adjust_min_max_coef(full_symbol);
     //full_symbol->data = symbol_data;
-    memcpy(full_symbol->data, symbol_data,  (full_symbol_count_coef(full_symbol)) * symbol_size);   
-    full_symbol->data_size = symbol_size; 
+    memcpy(full_symbol->data, symbol_data,  symbol_size);   
+    full_symbol->data_size = symbol_size;  
+
     return full_symbol;
 }
 
@@ -430,10 +431,34 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
 swif_full_symbol_t* full_symbol_add
 (swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2)
 {
-    return NULL;
+    uint32_t first_coef_index;
+    uint32_t last_coef_index;
 
-    //create result ( debut , fin)
-    //full_symbol_add_base
+   
+    if ( symbol1->first_nonzero_id <= symbol2->first_nonzero_id){
+         first_coef_index = symbol1->first_nonzero_id ;
+    }
+    else {
+         first_coef_index = symbol2->first_nonzero_id ;
+    }
+
+    if ( symbol1->last_nonzero_id >= symbol2->last_nonzero_id){
+         last_coef_index = symbol1->last_nonzero_id ;
+    }
+    else {
+         last_coef_index = symbol2->last_nonzero_id ;
+    }
+
+    uint32_t dataSize = symbol1->data_size >= symbol2->data_size ? symbol1->data_size : symbol2->data_size ;
+    uint8_t content[dataSize]; 
+    //memset( content, 0, dataSize); 
+    uint8_t coef[last_coef_index-first_coef_index+1]; 
+    //memset( coef, 0, last_coef_index-first_coef_index+1); 
+
+    swif_full_symbol_t *symbol_result= full_symbol_create(coef, first_coef_index, last_coef_index-first_coef_index+1, content, dataSize);
+    full_symbol_add_base(symbol1, symbol2, symbol_result);
+    return symbol_result; 
+
 }
 
 

@@ -261,4 +261,8 @@ cdef class FullSymbol:
     cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
         return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
 
+    cpdef _add(self, FullSymbol other):
+        full_symbol_add(self.symbol, other.symbol)
+        return self
+
 #---------------------------------------------------------------------------
