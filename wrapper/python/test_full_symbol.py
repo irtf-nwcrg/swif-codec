@@ -67,15 +67,32 @@ def try_full_symbol_add():
     print(symbol1._add(symbol2))
 
 
+#---------------------------------------------------------------------------
+
+def try_full_symbol_scale():
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        6, bytes([1,0,0,1,0,0]), b"azeu")
+    coef = 2
+    print(symbol1._scale(coef))
+
+
+#---------------------------------------------------------------------------
+
+def try_full_symbol_scale_inverted():
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        6, bytes([1,0,0,1,0,0]), b"azeu")
+    coef = 5
+    print(symbol1._scale_inv(coef))
 
 
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    try_full_symbol_wrapper()
-    test_full_symbol_wrapper()
-    try_full_symbol_add_base()
-    try_full_symbol_add()
-    
+    #try_full_symbol_wrapper()
+    #test_full_symbol_wrapper()
+    #try_full_symbol_add_base()
+    #try_full_symbol_add()
+    #try_full_symbol_scale()
+    try_full_symbol_scale_inverted()
 
 #---------------------------------------------------------------------------

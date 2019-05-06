@@ -264,5 +264,13 @@ cdef class FullSymbol:
     cpdef _add(self, FullSymbol other):
         full_symbol_add(self.symbol, other.symbol)
         return self
+        
+    cpdef _scale(self, coef):
+        full_symbol_scale(self.symbol, coef)
+        return self
+    
+    cpdef _scale_inv(self, coef):
+        full_symbol_scale(self.symbol, gf256_inv(coef))
+        return self
 
 #---------------------------------------------------------------------------

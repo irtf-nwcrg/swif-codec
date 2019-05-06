@@ -131,8 +131,8 @@ swif_full_symbol_t *full_symbol_create_from_source
     symbol_id_t coef_index = full_symbol_get_coef_index( full_symbol, symbol_id);
     full_symbol->coef[coef_index]=1;
     full_symbol_adjust_min_max_coef(full_symbol);
-    memcpy(full_symbol->data, symbol_data,  (full_symbol_count_coef(full_symbol)) * symbol_size);   
-    full_symbol->data_size = symbol_size;    
+    memcpy(full_symbol->data, symbol_data, symbol_size);  
+    full_symbol->data_size = symbol_size;   
     return full_symbol;
 }
 
@@ -348,13 +348,24 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
 
 /**
  * @brief Take a symbol and add another symbol multiplied by a 
- *        coefficient, e.g. performs the equivalent of: p1 += coef * p2
+ *        coefficient, e.g. performs the equivalent of: p1 += coef * p1
  * @param[in,out] p1     First symbol (to which coef*p2 will be added)
- * @param[in]     coef2  Coefficient by which the second packet is multiplied
- * @param[in]     p2     Second symbol
+ * @param[in]     coef  Coefficient by which the second packet is multiplied
  */
-void full_symbol_add_scaled
-(void *symbol1, uint8_t coereef, void *symbol2, uint32_t symbol_size);
+void full_symbol_scale
+( swif_full_symbol_t *symbol1, uint8_t coereef)
+{
+    uint8_t *result;
+    assert(symbol1->coef != NULL);
+    assert(symbol1->data != NULL);
+    assert(symbol1->first_nonzero_id != SYMBOL_ID_NONE && symbol1->last_nonzero_id != SYMBOL_ID_NONE);
+    // cas de mul par un inverse de coef dans les tests python
+    symbol_mul(symbol1->data, coereef, symbol1->data_size, result);
+    full_symbol_adjust_min_max_coef(symbol1);
+    swif_full_symbol_t *symbol_result = full_symbol_create(symbol1->coef, symbol1->first_nonzero_id, full_symbol_count_coef(symbol1) , result, symbol1->data_size);
+    swif_full_symbol_t *symbol2 = full_symbol_clone(symbol1);
+    full_symbol_add_base(symbol2, symbol_result ,symbol1);
+}
 
 
 /**

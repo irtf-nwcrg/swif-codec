@@ -109,13 +109,12 @@ bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
 
 /**
  * @brief Take a symbol and add another symbol multiplied by a 
- *        coefficient, e.g. performs the equivalent of: p1 += coef * p2
- * @param[in,out] p1     First symbol (to which coef*p2 will be added)
+ *        coefficient, e.g. performs the equivalent of: p1 += coef * p1
+ * @param[in,out] p1     First symbol (to which coef*p1 will be added)
  * @param[in]     coef2  Coefficient by which the second packet is multiplied
- * @param[in]     p2     Second symbol
  */
-void full_symbol_add_scaled
-(void *symbol1, uint8_t coereef, void *symbol2, uint32_t symbol_size);
+void full_symbol_scale
+( swif_full_symbol_t *symbol1, uint8_t coereef);
 
 
 /**

@@ -93,6 +93,7 @@ cdef extern from "../../src/swif_symbol.h":
     void symbol_div(void *symbol1, uint32_t symbol_size,
                     uint8_t coeff, uint8_t* result);
 
+    uint8_t gf256_inv(uint8_t a)
 
 #---------------------------------------------------------------------------
 
@@ -170,8 +171,8 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
      bint full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
 
 
-     void full_symbol_add_scaled(
-         void *symbol1, uint8_t coereef, void *symbol2, uint32_t symbol_size);
+     void full_symbol_scale(
+         void *symbol1, uint8_t coereef);
 
      void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result);
 

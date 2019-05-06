@@ -14,6 +14,14 @@ extern "C" {
 #include <string.h>
 /*---------------------------------------------------------------------------*/
 
+uint8_t gf256_inv(uint8_t a);
+
+/*---------------------------------------------------------------------------*/
+
+
+uint8_t gf256_div(uint8_t a, uint8_t b);
+/*---------------------------------------------------------------------------*/
+
 /**
  * @brief Take a symbol and add another symbol multiplied by a 
  *        coefficient, e.g. performs the equivalent of: p1 += coef * p2
