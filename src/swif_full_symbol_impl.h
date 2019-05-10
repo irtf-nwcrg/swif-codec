@@ -24,14 +24,21 @@ extern "C" {
 struct s_swif_full_symbol_t {
     //coded_packet_t* coded_packet;
     //uint32_t symbol_size;
-    uint8_t* coef;
-    symbol_id_t first_id; // coef[0] is the coefficient of first symbol_id
-    symbol_id_t last_id; // included
 
+    // first_id, last_id  relate to the memory allocation
+    // can be SYMBOL_ID_NONE (when no coefficient available)
+    uint8_t* coef; // never NULL
+    symbol_id_t first_id; // coef[0] is the coefficient of first symbol_id
+    symbol_id_t last_id; // (last included)
+
+    // first_nonzero_id, last_nonzero_id relate to the coef array
+    // they can be SYMBOL_ID_NONE if no coef is different of zero
+    // otherwise full_symbol_get_coef(i) is 0 outside of this range is always zzero o
+    // and the coefficients at these, are non-zero
     symbol_id_t first_nonzero_id;
     symbol_id_t last_nonzero_id;    
     
-    uint8_t* data;
+    uint8_t* data; // never NULL
     uint32_t data_size;
 };
 
@@ -102,6 +109,7 @@ static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol);
 
 
 // adjust full symbol min and max coef
+// Recompute the first_nonzero_id and last_nonzero_id 
 bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
 
 

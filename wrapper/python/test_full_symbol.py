@@ -28,6 +28,7 @@ def try_full_symbol_wrapper():
     print(symbol.clone().get_info())    
     symbol.dump();print(); sys.stdout.flush()
 
+
 #---------------------------------------------------------------------------
 
 def test_full_symbol_wrapper():
@@ -55,7 +56,12 @@ def try_full_symbol_add_base():
     #print(symbol_result.dump())
     print(symbol_result._add_base(symbol1,symbol2))
     print(symbol_result.dump())
-    
+    #assert symbol_result.first_nonzero_id == 10
+    #assert symbol_result.last_nonzero_id == 12
+    assert symbol_result.get_coefs() == (6, b'\x01\x00\x00\x01\x01')
+    #assert symbol_result->first_nonzero_id == 6
+    #assert symbol_result->last_nonzero_id == 10
+    assert symbol_result.get_data() == b'\x00\x1b\x00\x00yo'
 
 #---------------------------------------------------------------------------
 
@@ -65,8 +71,10 @@ def try_full_symbol_add():
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
         8, bytes([0,0,1,0]), b"aaeuyo")
     print(symbol1._add(symbol2))
-
-
+    #assert symbol1.get_coefs() == (6, b'\x01\x00\x00\x01\x01')
+    #assert symbol1.get_data() == b'\x00\x1b\x00\x00yo'
+    print(symbol1.get_coefs())
+    print(symbol1.get_data())
 #---------------------------------------------------------------------------
 
 def try_full_symbol_scale():
@@ -74,6 +82,10 @@ def try_full_symbol_scale():
         6, bytes([1,0,0,1,0,0]), b"azeu")
     coef = 2
     print(symbol1._scale(coef))
+    print(symbol1.dump())
+    assert symbol1.get_coefs() == (0, b'')
+    assert symbol1.get_data() == b'\xa3\x8e\xaf\x9f'
+
 
 
 #---------------------------------------------------------------------------
@@ -84,15 +96,15 @@ def try_full_symbol_scale_inverted():
     coef = 5
     print(symbol1._scale_inv(coef))
 
-
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    #try_full_symbol_wrapper()
-    #test_full_symbol_wrapper()
+    try_full_symbol_wrapper()
+    test_full_symbol_wrapper()
     #try_full_symbol_add_base()
-    #try_full_symbol_add()
+    #//////try_full_symbol_add()
     #try_full_symbol_scale()
-    try_full_symbol_scale_inverted()
+    #try_full_symbol_scale_inverted()
+    #try_misc()
 
 #---------------------------------------------------------------------------
