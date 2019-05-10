@@ -261,9 +261,12 @@ cdef class FullSymbol:
     cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
         return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
 
-    cpdef _add(self, FullSymbol other):
-        full_symbol_add(self.symbol, other.symbol)
-        return self
+    cpdef add(self, FullSymbol other):
+        result_symbol = full_symbol_add(self.symbol, other.symbol)
+        result = FullSymbol()
+        assert result.symbol is NULL
+        result.symbol = result_symbol
+        return result
         
     cpdef _scale(self, coef):
         full_symbol_scale(self.symbol, coef)

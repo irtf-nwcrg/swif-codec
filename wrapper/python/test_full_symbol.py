@@ -51,11 +51,11 @@ def try_full_symbol_add_base():
         8, bytes([0,0,1,0]), b"aaeuyo")
     symbol_result = swif.FullSymbol().from_coefs_and_symbol(
         5, bytes([0,0,0,0,0,1,1,1]), b"azeyui")
-    print(symbol1.dump())
-    print(symbol2.dump())
+    symbol1.dump()
+    symbol2.dump()
     #print(symbol_result.dump())
     print(symbol_result._add_base(symbol1,symbol2))
-    print(symbol_result.dump())
+    symbol_result.dump()
     #assert symbol_result.first_nonzero_id == 10
     #assert symbol_result.last_nonzero_id == 12
     assert symbol_result.get_coefs() == (6, b'\x01\x00\x00\x01\x01')
@@ -70,11 +70,12 @@ def try_full_symbol_add():
         6, bytes([1,0,0,1,0,0]), b"azeu")
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
         8, bytes([0,0,1,0]), b"aaeuyo")
-    print(symbol1._add(symbol2))
-    #assert symbol1.get_coefs() == (6, b'\x01\x00\x00\x01\x01')
-    #assert symbol1.get_data() == b'\x00\x1b\x00\x00yo'
-    print(symbol1.get_coefs())
-    print(symbol1.get_data())
+    symbol3 = symbol1.add(symbol2)        
+    print(symbol3)
+    assert symbol3.get_coefs() == (6, b'\x01\x00\x00\x01\x01')
+    assert symbol3.get_data() == b'\x00\x1b\x00\x00yo'
+    print(symbol3.get_coefs())
+    print(symbol3.get_data())
 #---------------------------------------------------------------------------
 
 def try_full_symbol_scale():
@@ -103,8 +104,8 @@ if __name__ == "__main__":
     try_full_symbol_wrapper()
     test_full_symbol_wrapper()
     try_full_symbol_add_base()
-    #//////try_full_symbol_add()
-    try_full_symbol_scale()
+    try_full_symbol_add()
+    #try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
     #try_misc()
 
