@@ -294,7 +294,6 @@ uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
 {
     full_symbol_adjust_min_max_coef(full_symbol);
     return full_symbol->first_nonzero_id; 
-        
 }
 
 /**
@@ -305,7 +304,6 @@ uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
 {
     full_symbol_adjust_min_max_coef(full_symbol);
     return full_symbol->last_nonzero_id; 
-    
 }
 
 
@@ -313,21 +311,37 @@ uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
  * @brief get the symbol 'data'. result_data should be a pointer to a
  *        a block of memory of full_symbol_get_size(full_symbol)
  */
-void full_symbol_get_data
-(swif_full_symbol_t *full_symbol, uint8_t *result_data)
+void full_symbol_get_data(swif_full_symbol_t *full_symbol, uint8_t *result_data)
 {
     assert( result_data != NULL);
     memcpy(result_data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
+}
+
+void full_symbol_dump_id(symbol_id_t symbol_id, FILE *out)
+{
+    if (symbol_id == SYMBOL_ID_NONE) {
+        fprintf(out, "null");
+    } else {
+        fprintf(out, "%u", symbol_id);
+    }
 }
 
 void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
 {
     fprintf(out, "{'size':%u, 'internal':", full_symbol->data_size);
     fprintf(out, "{ 'type':'full_symbol'");
-    fprintf(out, ", 'nb_coef':%u", full_symbol_count_coef(full_symbol));
+    fprintf(out, ", 'nb_coef':%u", full_symbol_count_allocated_coef(full_symbol));
     fprintf(out, ", 'data_size': %u", full_symbol->data_size);
-    fprintf(out, ", 'first_nonzero_id':%u, 'last_nonzero_id':%u", 
-	        full_symbol->first_nonzero_id, full_symbol->last_nonzero_id);
+
+    fprintf(out, ", 'first_id':");
+    full_symbol_dump_id(full_symbol->first_id, out);
+    fprintf(out, ", 'last_id':");
+    full_symbol_dump_id(full_symbol->last_id, out);
+    fprintf(out, ", 'first_nonzero_id':");
+    full_symbol_dump_id(full_symbol->first_nonzero_id, out);
+    fprintf(out, ", 'last_nonzero_id':");
+    full_symbol_dump_id(full_symbol->last_nonzero_id, out);
+
     fprintf(out, ", 'coef_value':[");
     uint32_t i;
     if ( full_symbol->first_id != SYMBOL_ID_NONE) {
@@ -357,20 +371,21 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
  * @param[in,out] p1     First symbol (to which coef*p2 will be added)
  * @param[in]     coef  Coefficient by which the second packet is multiplied
  */
-void full_symbol_scale
-( swif_full_symbol_t *symbol1, uint8_t coereef)
+void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
 {
     uint8_t *result;
     assert(symbol1->coef != NULL);
     assert(symbol1->data != NULL);
+    if (symbol1->first_id == SYMBOL_ID_NONE || symbol1->first_nonzero_id == SYMBOL_ID_NONE) {
+        return; /* empty/zero packet */
+    }
     assert(symbol1->first_nonzero_id != SYMBOL_ID_NONE && symbol1->last_nonzero_id != SYMBOL_ID_NONE);
-    // cas de mul par un inverse de coef dans les tests python
-    symbol_mul(symbol1->data, coereef, symbol1->data_size, result);
-    full_symbol_adjust_min_max_coef(symbol1);
-    swif_full_symbol_t *symbol_result = full_symbol_create(symbol1->coef, symbol1->first_nonzero_id, full_symbol_count_coef(symbol1) , result, symbol1->data_size);
-    swif_full_symbol_t *symbol2 = full_symbol_clone(symbol1);
-
-    full_symbol_add_base(symbol2, symbol_result ,symbol1);
+    symbol_mul(symbol1->data, coef, symbol1->data_size, symbol1->data);
+    symbol_mul(symbol1->coef, coef, full_symbol_count_allocated_coef(symbol1), symbol1->coef);
+    full_symbol_adjust_min_max_coef(symbol1); // because can be 0
+    //swif_full_symbol_t *symbol_result = full_symbol_create(symbol1->coef, symbol1->first_nonzero_id, full_symbol_count_coef(symbol1) , result, symbol1->data_size);
+    //swif_full_symbol_t *symbol2 = full_symbol_clone(symbol1);
+    //full_symbol_add_base(symbol2, symbol_result ,symbol1);
 }
 
 

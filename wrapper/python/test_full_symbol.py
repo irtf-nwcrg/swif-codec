@@ -83,8 +83,9 @@ def try_full_symbol_scale():
     coef = 2
     print(symbol1._scale(coef))
     print(symbol1.dump())
-    assert symbol1.get_coefs() == (0, b'')
-    assert symbol1.get_data() == b'\xa3\x8e\xaf\x9f'
+    print(symbol1.get_coefs())
+    assert list(bytearray(symbol1.get_coefs()[1]))== [2,0,0,2]
+    assert symbol1.get_data() == bytearray([2*x for x in b"azeu"])
 
 
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     test_full_symbol_wrapper()
     #try_full_symbol_add_base()
     #//////try_full_symbol_add()
-    #try_full_symbol_scale()
+    try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
     #try_misc()
 
