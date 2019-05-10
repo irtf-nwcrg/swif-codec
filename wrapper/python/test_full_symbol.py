@@ -102,7 +102,7 @@ def try_full_symbol_scale_inverted():
 if __name__ == "__main__":
     try_full_symbol_wrapper()
     test_full_symbol_wrapper()
-    #try_full_symbol_add_base()
+    try_full_symbol_add_base()
     #//////try_full_symbol_add()
     try_full_symbol_scale()
     #try_full_symbol_scale_inverted()

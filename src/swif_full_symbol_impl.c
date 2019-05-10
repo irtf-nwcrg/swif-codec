@@ -394,6 +394,9 @@ void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
  * @param[in] p1     First symbol (to which p2 will be added)
  * @param[in] p2     Second symbol
  * @param[in] p3     result XXX
+ * 
+ * symbol1, symbol2 should not be zero
+ * symbol_result has pre-set first_id, last_id
  */
 void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result)
 {
@@ -402,8 +405,8 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
     // assert (symbol_result->data_size >= symbol2->data_size);
     assert (symbol_result->data_size >= symbol1->data_size && symbol_result->data_size >= symbol2->data_size);
 
-    // assert (symbol2->first_nonzero_id -> inclus dans l'entete symbol_result);
-    // assert (symbol2->last_nonzero_id -> inclus dans l'entete symbol_result);
+    // assert (symbol2->first_nonzero_id -> is included in encoding header symbol_result);
+    // assert (symbol2->last_nonzero_id -> is included in encoding header symbol_result));
     assert (full_symbol_includes_id(symbol_result, symbol1->first_nonzero_id));
     assert (full_symbol_includes_id(symbol_result, symbol1->last_nonzero_id));
     assert (full_symbol_includes_id(symbol_result, symbol2->first_nonzero_id));
@@ -413,6 +416,7 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
     uint32_t first_coef_index;
     uint32_t last_coef_index;
 
+    // XXX: should not be NONE
     if (symbol1->first_nonzero_id == SYMBOL_ID_NONE && symbol2->first_nonzero_id == SYMBOL_ID_NONE ){
         symbol_result->first_nonzero_id = SYMBOL_ID_NONE;
         symbol_result->last_nonzero_id = SYMBOL_ID_NONE;
@@ -431,11 +435,14 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
          last_coef_index = symbol2->last_nonzero_id ;
     }
 
-    memset(symbol_result->coef , 0 , sizeof(uint8_t)*(first_coef_index-symbol_result->first_id));
-    memset(symbol_result->coef+(last_coef_index-symbol_result->first_id+1) , 0 , sizeof(uint8_t)*(symbol_result->last_id-last_coef_index));
+    memset(symbol_result->coef , 0, sizeof(uint8_t)*(first_coef_index-symbol_result->first_id));
+    memset(symbol_result->coef+(last_coef_index+1-symbol_result->first_id) , 0 , 
+        sizeof(uint8_t)*(symbol_result->last_id-last_coef_index));
 
-    for (uint32_t i = first_coef_index ; i <= last_coef_index; i++){
-        memset(symbol_result->coef+(i-symbol_result->first_id) , full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i) , sizeof(uint8_t));
+    for (uint32_t i = first_coef_index; i <= last_coef_index; i++){
+        //memset(symbol_result->coef+(i-symbol_result->first_id) , full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i) , sizeof(uint8_t));
+        symbol_result->coef[i-symbol_result->first_id] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
+
 
         //symbol_result->coef[i] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
     }
