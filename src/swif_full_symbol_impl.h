@@ -51,7 +51,7 @@ struct s_swif_full_symbol_set_t {
     uint32_t first_symbol_id;
     uint32_t nmbr_packets;
     swif_full_symbol_t **full_symbol_tab;
-    symbol_id_t *full_symbol_pivot;
+    //symbol_id_t *full_symbol_pivot;
     //uint8_t *full_symbol_index;
 };
 

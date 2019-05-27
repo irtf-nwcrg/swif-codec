@@ -36,6 +36,8 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
         return NULL;
     }
     result->full_symbol_tab = full_symbol_tab;
+    result->full_symbol_tab[0] = PACKET_INDEX_NONE ;
+    /*
     // allocate the table of pivots
     symbol_id_t *full_symbol_pivot = calloc(result->size, sizeof(symbol_id_t)); 
     if (full_symbol_pivot == NULL) {
@@ -46,6 +48,7 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
     
     result->full_symbol_pivot = full_symbol_pivot;
     result->full_symbol_pivot[0] = PACKET_INDEX_NONE ;
+    */
     result->first_symbol_id = SYMBOL_ID_NONE ; 
     return result; 
 }
@@ -59,9 +62,9 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
     assert(set->full_symbol_tab != NULL);
     free(set->full_symbol_tab);
     set->full_symbol_tab = NULL;
-    assert(set->full_symbol_pivot != NULL);
+    /*assert(set->full_symbol_pivot != NULL);
     free(set->full_symbol_pivot);
-    set->full_symbol_pivot = NULL;
+    set->full_symbol_pivot = NULL;*/
    
     free(set);
 
@@ -142,6 +145,14 @@ uint32_t swif_full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_
     set->nmbr_packets++;
     return full_symbol_cloned->first_nonzero_id-set->first_symbol_id ; 
 
+}
+
+/*---------------------------------------------------------------------------*/
+swif_full_symbol_set_t *full_symbol_set_get_pivot(swif_full_symbol_set_t *full_symbol_set, uint32_t symbol_set_id)
+{
+
+    return NULL; 
+    
 }
 
 /*---------------------------------------------------------------------------*/
