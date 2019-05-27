@@ -150,35 +150,37 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
 
      ctypedef uint32_t symbol_id_t
 
-    
-     void full_symbol_set_free(swif_full_symbol_set_t *set);
+     swif_full_symbol_set_t *full_symbol_set_alloc()
+
+     void full_symbol_set_free(swif_full_symbol_set_t *set)
 
      uint32_t swif_full_symbol_set_add(
          swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 
      swif_full_symbol_t *full_symbol_alloc(
-         symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) ;
+         symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size)
 
      bint full_symbol_has_sufficient_size(
-         swif_full_symbol_t* symbol, symbol_id_t id1, symbol_id_t id2);
+         swif_full_symbol_t* symbol, symbol_id_t id1, symbol_id_t id2)
      bint full_symbol_includes_id(
-         swif_full_symbol_t* symbol, symbol_id_t symbol_id);
+         swif_full_symbol_t* symbol, symbol_id_t symbol_id)
 
-     bint full_symbol_adjust_min_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 
-     bint full_symbol_adjust_max_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
 
-     bint full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol);
+     bint full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol)
 
 
      void full_symbol_scale(
-         void *symbol1, uint8_t coereef);
+         void *symbol1, uint8_t coereef)
 
-     void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result);
+     void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result)
 
      swif_full_symbol_t* full_symbol_add(
-         swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2);
+         swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2)
 
-        
+     void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
+       
 
 #---------------------------------------------------------------------------

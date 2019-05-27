@@ -83,8 +83,8 @@ def try_full_symbol_scale():
         6, bytes([1,0,0,1,0,0]), b"azeu")
     coef = 2
     print(symbol1._scale(coef))
-    print(symbol1.dump())
-    print(symbol1.get_coefs())
+    symbol1.dump()
+    symbol1.get_coefs()
     assert list(bytearray(symbol1.get_coefs()[1]))== [2,0,0,2]
     assert symbol1.get_data() == bytearray([2*x for x in b"azeu"])
 
@@ -100,13 +100,45 @@ def try_full_symbol_scale_inverted():
 
 #---------------------------------------------------------------------------
 
+def try_alloc_add_set():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        6, bytes([1,0,0,1,0,0]), b"azeu")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        7, bytes([0,0,0,0]), b"")
+    symbol3 = swif.FullSymbol().from_coefs_and_symbol(
+        6, bytes([0,0,1,0]), b"aaeuyo")
+    set1.set_add(symbol1)
+    set1.set_add(symbol2)
+    set1.set_add(symbol3)
+    set1.dump()
+    print(set1)
+#---------------------------------------------------------------------------
+def try_alloc_add_set_expl2():
+    set2 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        99, bytes([0,0,0,0]), b"dddd")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        100, bytes([1,0,0,0,3,5]), b"aaaa")
+    symbol3 = swif.FullSymbol().from_coefs_and_symbol(
+        100, bytes([0,0,0,1,1,7]), b"bbbb")
+    symbol4 = swif.FullSymbol().from_coefs_and_symbol(
+        100, bytes([0,1,0,0,4,2]), b"cccc")
+    
+    set2.set_add(symbol1)
+    set2.set_add(symbol2)
+    set2.set_add(symbol3)
+    set2.set_add(symbol4)
+    set2.dump()
+#---------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    try_full_symbol_wrapper()
-    test_full_symbol_wrapper()
-    try_full_symbol_add_base()
-    try_full_symbol_add()
+    #try_full_symbol_wrapper()
+    #test_full_symbol_wrapper()
+    #try_full_symbol_add_base()
+    #try_full_symbol_add()
     #try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
-    #try_misc()
-
+    try_alloc_add_set()
+    try_alloc_add_set_expl2()
 #---------------------------------------------------------------------------

@@ -256,7 +256,7 @@ cdef class FullSymbol:
 
     cpdef dump(self):
         assert self.symbol is not NULL
-        return full_symbol_dump(self.symbol, stdio.stdout)
+        return full_symbol_dump(self.symbol, stdio.stdout) 
     
     cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
         return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
@@ -275,5 +275,47 @@ cdef class FullSymbol:
     cpdef _scale_inv(self, coef):
         full_symbol_scale(self.symbol, gf256_inv(coef))
         return self
+
+#---------------------------------------------------------------------------
+
+
+cdef class FullSymbolSet:
+
+    cdef swif_full_symbol_set_t* symbol_set
+
+    def __init__(self):
+        self.symbol_set = NULL
+    
+    cpdef release_set(self):
+        if self.symbol_set is NULL:
+            return
+        full_symbol_set_free(self.symbol_set)
+        self.symbol_set = NULL
+
+    def __dealloc__(self):
+        if self.symbol_set is not NULL:
+            full_symbol_set_free(self.symbol_set)
+            self.symbol_set = NULL
+
+    cpdef alloc_set(self):
+        #self.release_set()
+        #self.symbol_set = full_symbol_set_alloc()
+        #return self
+
+        result_symbol = full_symbol_set_alloc()
+        result = FullSymbolSet()
+        assert result.symbol_set is NULL
+        result.symbol_set = result_symbol
+        return result
+
+    cpdef set_add(self, FullSymbol other):
+        return swif_full_symbol_set_add(self.symbol_set, other.symbol)
+    
+    cpdef dump(self):
+        assert self.symbol_set is not NULL
+        return full_symbol_set_dump(self.symbol_set, stdio.stdout) 
+    
+
+
 
 #---------------------------------------------------------------------------
