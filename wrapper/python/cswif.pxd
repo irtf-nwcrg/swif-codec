@@ -154,7 +154,7 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
 
      void full_symbol_set_free(swif_full_symbol_set_t *set)
 
-     uint32_t swif_full_symbol_set_add(
+     uint32_t full_symbol_set_add(
          swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 
      swif_full_symbol_t *full_symbol_alloc(

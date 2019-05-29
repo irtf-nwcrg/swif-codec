@@ -309,7 +309,7 @@ cdef class FullSymbolSet:
         return result
 
     cpdef set_add(self, FullSymbol other):
-        return swif_full_symbol_set_add(self.symbol_set, other.symbol)
+        return full_symbol_set_add(self.symbol_set, other.symbol)
     
     cpdef dump(self):
         assert self.symbol_set is not NULL

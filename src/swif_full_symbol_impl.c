@@ -105,7 +105,7 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
-uint32_t swif_full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
+uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 {
     // clone 
     swif_full_symbol_t * full_symbol_cloned = full_symbol_clone(full_symbol);
@@ -209,6 +209,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
     }
     full_symbol_set_add(full_symbol_set, new_symbol );
 }
+
+
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
