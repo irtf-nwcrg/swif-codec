@@ -14,7 +14,7 @@
  * @brief Create a full_symbol set, that will be used to do gaussian elimination
  */
 
-uint32_t max_size = 6; 
+uint32_t max_size = 2; 
 swif_full_symbol_set_t *full_symbol_set_alloc()
 {
 
@@ -60,14 +60,13 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
 {
     assert(set != NULL);
     assert(set->full_symbol_tab != NULL);
+    for(uint32_t i = 0 ; i<  set->size; i++){
+        if (set->full_symbol_tab[i]  != NULL )
+            full_symbol_free(set->full_symbol_tab[i]);   
+    } 
     free(set->full_symbol_tab);
     set->full_symbol_tab = NULL;
-    /*assert(set->full_symbol_pivot != NULL);
-    free(set->full_symbol_pivot);
-    set->full_symbol_pivot = NULL;*/
-   
     free(set);
-
 }
 
 
@@ -81,12 +80,12 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
     fprintf(out, "'full_symbol_tab':[");
     fprintf(out,"\n");
 
-    for (uint32_t i=0 ; i<full_symbol_set->nmbr_packets ; i++ ){
+    for (uint32_t i=0 ; i<full_symbol_set->size ; i++ ){
         if(full_symbol_set->full_symbol_tab[i] != NULL){
+            printf("full_symbol_set->full_symbol_tab[%u]: ", full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
             full_symbol_dump(full_symbol_set->full_symbol_tab[i], out);
         }
-        else
-            fprintf(out,"NUll \n");
+        
         
     }
 
@@ -123,6 +122,7 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
     if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE ){
         set->full_symbol_tab[full_symbol_cloned->first_id-set->first_symbol_id] = NULL ; 
         set->nmbr_packets++ ;
+        // free
         return SYMBOL_ID_NONE ; 
     }
     if ( full_symbol_cloned->first_nonzero_id-set->first_symbol_id < set->size ){
@@ -132,10 +132,12 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
     } else if (full_symbol_cloned->first_nonzero_id-set->first_symbol_id < (set->size *2) ){
         set->size *= 2;
     }else{
-        set->size = full_symbol_cloned->first_nonzero_id-set->first_symbol_id +1;
+        set->size = full_symbol_cloned->last_nonzero_id-set->first_symbol_id +1;
     }
     // allocate the table of pointers to full_symbol
     set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
+    memset(set->full_symbol_tab+old_size,0, sizeof(swif_full_symbol_t*)*(set->size-old_size)  );
+    
     if (set->full_symbol_tab == NULL) {
         free(set->full_symbol_tab);
         return NULL;
@@ -150,9 +152,11 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
 /*---------------------------------------------------------------------------*/
 swif_full_symbol_t *full_symbol_set_get_pivot(swif_full_symbol_set_t *full_symbol_set, symbol_id_t symbol_id)
 { 
-    if (symbol_id >= full_symbol_set->first_symbol_id && symbol_id < (full_symbol_set->size + full_symbol_set->first_symbol_id) ){
+    if (symbol_id >= full_symbol_set->first_symbol_id && symbol_id < (full_symbol_set->size + full_symbol_set->first_symbol_id) && full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id] ){
+        printf("Coef of pivot is equal to : %u \n", full_symbol_get_coef(full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id], symbol_id));
         return full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id];
     }  
+    printf("Pivot of symbol id %u is not found \n", symbol_id);
     return NULL; 
 }
 /*---------------------------------------------------------------------------*/
@@ -167,6 +171,9 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
     for (uint32_t i = new_symbol->first_nonzero_id ; i<= new_symbol->last_nonzero_id; i++)
     {
         uint8_t coef = full_symbol_get_coef(new_symbol,i);
+        //coef= full_symbol_get_coef(full_symbol_set->full_symbol_tab[i-full_symbol_set->first_symbol_id], i);
+        printf("i------------ %u \n",i);
+        printf("coef------------ %u \n",coef);
         if (coef != 0){
             if (full_symbol_set_get_pivot(full_symbol_set,coef)){
                 swif_full_symbol_t * symbol1 = full_symbol_set_get_pivot(full_symbol_set,coef);
@@ -174,7 +181,9 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
                 full_symbol_scale(symbol_cloned,coef);
                 swif_full_symbol_t * symbol2 = full_symbol_add(new_symbol,symbol_cloned);
                 //swif_full_symbol_t * old_content = new_symbol;
+                printf("fsdhjgbdjfbg \n");
                 full_symbol_free(new_symbol);
+                ////////full_symbol_create_from_source(symbol2->first_id, symbol2->data, symbol2->data_size);
                 new_symbol =  symbol2;
                 if (new_symbol->coef[i] != NULL){
                     isNull= false;
@@ -182,6 +191,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
             }else{
                 isNull= false; 
             }
+        //return new_symbol ; 
         }
         
     }
@@ -212,7 +222,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
 
 
 /*---------------------------------------------------------------------------*/
-
+void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol){
+}
 /*---------------------------------------------------------------------------*/
 /**
  * @brief Create a full_symbol from a raw packet (a set of bytes)

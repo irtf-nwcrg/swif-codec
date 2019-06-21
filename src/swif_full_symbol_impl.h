@@ -97,6 +97,10 @@ swif_full_symbol_t *full_symbol_alloc
 
 
 
+/* XXX:doc */
+void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out);
+
+
 /**
  * @brief get the size of the data
  */

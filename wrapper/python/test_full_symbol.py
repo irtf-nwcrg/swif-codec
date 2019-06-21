@@ -117,11 +117,11 @@ def try_alloc_add_set():
 def try_alloc_add_set_expl2():
     set2 = swif.FullSymbolSet().alloc_set()
     symbol1 = swif.FullSymbol().from_coefs_and_symbol(
-        99, bytes([0,0,0,0]), b"dddd")
+        9, bytes([1,0,0,0]), b"dddd")
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
-        100, bytes([1,0,0,0,3,5]), b"aaaa")
+        10, bytes([1,0,0,0,3,5]), b"aaaa")
     symbol3 = swif.FullSymbol().from_coefs_and_symbol(
-        100, bytes([0,0,0,1,1,7]), b"bbbb")
+        100, bytes([0,0,0,8,1,7]), b"bbbb")
     symbol4 = swif.FullSymbol().from_coefs_and_symbol(
         100, bytes([0,1,0,0,4,2]), b"cccc")
     
@@ -130,6 +130,21 @@ def try_alloc_add_set_expl2():
     set2.set_add(symbol3)
     set2.set_add(symbol4)
     set2.dump()
+    print(set2.get_pivot(104))
+    print(set2.get_pivot(103))
+#---------------------------------------------------------------------------
+def try_remove_each_pivot():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,1,1]), b"azerty")
+    new_symbol = swif.FullSymbol().from_coefs_and_symbol(
+        2, bytes([0,0,1,2]), b"test")
+    set1.set_add(symbol1)
+    set1.set_add(new_symbol)
+    set1.dump()
+    set1.remove_each_pivot(new_symbol)
+    set1.dump()
+    new_symbol.dump()
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -139,6 +154,7 @@ if __name__ == "__main__":
     #try_full_symbol_add()
     #try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
-    try_alloc_add_set()
-    try_alloc_add_set_expl2()
+    #try_alloc_add_set()
+    #try_alloc_add_set_expl2()
+    try_remove_each_pivot()
 #---------------------------------------------------------------------------

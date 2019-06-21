@@ -181,6 +181,12 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
          swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2)
 
      void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
-       
+    
+     swif_full_symbol_t *full_symbol_set_get_pivot(
+         swif_full_symbol_set_t *full_symbol_set, symbol_id_t symbol_id)
+
+     swif_full_symbol_t *full_symbol_set_remove_each_pivot(
+         swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol)
+
 
 #---------------------------------------------------------------------------

@@ -315,7 +315,16 @@ cdef class FullSymbolSet:
         assert self.symbol_set is not NULL
         return full_symbol_set_dump(self.symbol_set, stdio.stdout) 
     
-
+    def get_pivot(self, symbol_id):
+        assert self.symbol_set is not NULL
+        full_symbol_set_get_pivot(self.symbol_set, symbol_id) 
+        return self
+    
+    def remove_each_pivot(self,  FullSymbol new_symbol):
+        assert self.symbol_set is not NULL
+        assert new_symbol.symbol is not NULL
+        full_symbol_set_remove_each_pivot(self.symbol_set, new_symbol.symbol)
+        return self
 
 
 #---------------------------------------------------------------------------
