@@ -137,14 +137,50 @@ def try_remove_each_pivot():
     set1 = swif.FullSymbolSet().alloc_set()
     symbol1 = swif.FullSymbol().from_coefs_and_symbol(
         1, bytes([1,1,1,1]), b"azerty")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,0,1,2]), b"querty")
     new_symbol = swif.FullSymbol().from_coefs_and_symbol(
-        2, bytes([0,0,1,2]), b"test")
+        1, bytes([1,1,2,0]), b"test")
     set1.set_add(symbol1)
-    set1.set_add(new_symbol)
+    set1.set_add(symbol2)
+    #set1.set_add(new_symbol)
     set1.dump()
     set1.remove_each_pivot(new_symbol)
     set1.dump()
     new_symbol.dump()
+#---------------------------------------------------------------------------
+def test_full_symbol_get_coef():
+    symbol = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([4,3,2,1,10]), b"azerty")
+    print(symbol.get_coef(5))
+#---------------------------------------------------------------------------
+def test_add_as_pivot():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,1,1]), b"azerty")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,0,1,2]), b"querty")
+    new_symbol = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,2,0]), b"test")
+    set1.set_add(symbol1)
+    set1.set_add(symbol2)
+    set1.dump()
+    set1.add_as_pivot(new_symbol)
+    set1.dump()
+#---------------------------------------------------------------------------
+def test_add_with_elimination():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,1,1]), b"azerty")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,0,1,2]), b"querty")
+    new_symbol = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,2,0]), b"test")
+    set1.set_add(symbol1)
+    set1.set_add(symbol2)
+    set1.dump()
+    set1.add_with_elimination(new_symbol)
+    set1.dump()
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -156,5 +192,8 @@ if __name__ == "__main__":
     #try_full_symbol_scale_inverted()
     #try_alloc_add_set()
     #try_alloc_add_set_expl2()
-    try_remove_each_pivot()
+    try_remove_each_pivot() # not ok the output
+    #test_full_symbol_get_coef()
+    #test_add_as_pivot()
+    #test_add_with_elimination()
 #---------------------------------------------------------------------------

@@ -326,5 +326,16 @@ cdef class FullSymbolSet:
         full_symbol_set_remove_each_pivot(self.symbol_set, new_symbol.symbol)
         return self
 
+    def add_as_pivot(self,  FullSymbol new_symbol):
+        assert self.symbol_set is not NULL
+        assert new_symbol.symbol is not NULL
+        full_symbol_set_add_as_pivot(self.symbol_set, new_symbol.symbol)
+        return self
 
+    def add_with_elimination(self,  FullSymbol new_symbol):
+        assert self.symbol_set is not NULL
+        assert new_symbol.symbol is not NULL
+        full_symbol_add_with_elimination(self.symbol_set, new_symbol.symbol)
+        return self
+    
 #---------------------------------------------------------------------------
