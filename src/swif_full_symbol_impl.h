@@ -180,7 +180,7 @@ swif_full_symbol_t* full_symbol_add
 
 
 
-
+void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out);
 
 
 
