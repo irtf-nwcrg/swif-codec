@@ -59,17 +59,23 @@ full_symbol_create(symbol_id_table, 1, len(symbol_id_table),data1, len(data1));
 void test_add_with_elimination(void)
 {
     swif_full_symbol_set_t *set1 = full_symbol_set_alloc();
-    /* uint8_t data1[4] = {0x01, 0x00, 0x00};
+     uint8_t data1[4] = {0x01, 0x00, 0x00};
     uint8_t data2[4] = { 0x00, 0x01, 0x00};
     swif_full_symbol_t* symbol1 = full_symbol_create_from_source(1, data1, sizeof(data1));
     swif_full_symbol_t* symbol2 = full_symbol_create_from_source(3, data2, sizeof(data2));
     
-    
-    swif_full_symbol_t *v1 = full_symbol_add(symbol1,symbol2);
-    swif_full_symbol_t *v2 = full_symbol_clone(symbol2);
-*/
-   
-    //full_symbol_add_with_elimination(set1, symbol1);
+    swif_full_symbol_t *v1 = full_symbol_clone(symbol1);
+    swif_full_symbol_t *v2 = full_symbol_add(symbol1,symbol2);
+
+    full_symbol_dump(symbol1,stdout);
+    full_symbol_dump(symbol2,stdout);
+    full_symbol_dump(v1,stdout);
+    full_symbol_dump(v2,stdout);
+    full_symbol_add_with_elimination(set1, v1);
+    full_symbol_set_dump(set1,stdout);
+
+    printf("before v2 \n\n\n\n");
+    full_symbol_add_with_elimination(set1, symbol2);
     full_symbol_set_dump(set1,stdout);
 }
 int main(int argc, char **argv)

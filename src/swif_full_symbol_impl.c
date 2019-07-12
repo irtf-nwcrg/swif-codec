@@ -141,7 +141,7 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
     
     if (set->full_symbol_tab == NULL) {
         free(set->full_symbol_tab);
-        return NULL;
+        return SYMBOL_ID_NONE;
     }
 
     set->full_symbol_tab[full_symbol_cloned->first_nonzero_id-set->first_symbol_id] = full_symbol_cloned ; 
@@ -171,7 +171,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
     printf("new_symbol->last_nonzero_id**************** %u \n",new_symbol->last_nonzero_id);
     
    
-    for (uint32_t i = new_symbol->first_nonzero_id+2 ; i<= new_symbol->last_nonzero_id; i++)
+    for (uint32_t i = new_symbol->first_nonzero_id ; i<= new_symbol->last_nonzero_id; i++)
     {
         uint8_t coef = full_symbol_get_coef(new_symbol,i);
         //coef= full_symbol_get_coef(full_symbol_set->full_symbol_tab[i-full_symbol_set->first_symbol_id], i);
@@ -191,7 +191,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
                 swif_full_symbol_t * symbol2 = full_symbol_add(new_symbol,symbol1_cloned);
                 printf("symbol2->first_nonzero_id**************** %u \n",symbol2->first_nonzero_id);
                 printf("symbol2->last_nonzero_id**************** %u \n",symbol2->last_nonzero_id);
-                full_symbol_dump(symbol2, stdout);
+                //full_symbol_dump(symbol2, stdout);
                 //full_symbol_adjust_min_max_coef(symbol2);
                 
                 printf("fsdhjgbdjfbg \n");
@@ -219,6 +219,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot(swif_full_symbol_set_t *fu
     }
 
     printf("---end of the function: full_symbol_set_remove_each_pivot---- \n");
+    full_symbol_dump(new_symbol, stdout);
     return  new_symbol ; 
 }
   
@@ -233,16 +234,19 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
     symbol_id_t first_index = new_symbol->first_nonzero_id; 
     
     for(uint32_t i = 0 ; i< full_symbol_set->size; i++){
-        swif_full_symbol_t *symbol_cloned=full_symbol_clone(new_symbol);
-        full_symbol_scale(symbol_cloned, full_symbol_get_coef(full_symbol_set->full_symbol_tab+i, first_index));
+        
         if (full_symbol_set->full_symbol_tab[i]){
+            swif_full_symbol_t *symbol_cloned=full_symbol_clone(new_symbol);
+            full_symbol_scale(symbol_cloned, full_symbol_get_coef(full_symbol_set->full_symbol_tab+i, first_index));
             swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i],symbol_cloned);                  
             full_symbol_free(full_symbol_set->full_symbol_tab[i]);
             full_symbol_set->full_symbol_tab[i] = symbol2;
+            full_symbol_free(symbol_cloned);
         }
-        full_symbol_free(symbol_cloned);
     }
-    full_symbol_set_add(full_symbol_set, new_symbol );
+    full_symbol_dump(new_symbol, stdout);
+    uint32_t position = full_symbol_set_add(full_symbol_set, new_symbol );
+    printf("..................position     %u ..............\n", position);
 }
 
 

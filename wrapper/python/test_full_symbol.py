@@ -136,18 +136,18 @@ def try_alloc_add_set_expl2():
 def try_remove_each_pivot():
     set1 = swif.FullSymbolSet().alloc_set()
     symbol1 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([1,1,1,1]), b"azerty")
+        6, bytes([1,0,0,1,0,0]), b"azeu")
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([0,0,1,2]), b"querty")
-    new_symbol = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([0,0,0,0]), b"test")
+        8, bytes([0,0,1,0]), b"aaeuyo")
+    new_symbol = symbol1.add(symbol2)  
     set1.set_add(symbol1)
-    set1.set_add(symbol2)
+    #set1.set_add(symbol2)
     #set1.set_add(new_symbol)
-    set1.dump()
+    #set1.dump()
     set1.remove_each_pivot(new_symbol)
-    set1.dump()
-    new_symbol.dump()
+    #set1.dump()
+    
+    #new_symbol.dump()
 #---------------------------------------------------------------------------
 def test_full_symbol_get_coef():
     symbol = swif.FullSymbol().from_coefs_and_symbol(
@@ -176,13 +176,15 @@ def test_add_as_pivot2():
         1, bytes([0,1,0]), b"querty")
     #new_symbol = swif.FullSymbol().from_coefs_and_symbol(
     #    1, bytes([1,1,2,0]), b"test")
-    v1 = symbol1.add(symbol2)
-    v2 = symbol2.clone()
+    v1 = symbol1.clone()
+    v2 = symbol1.add(symbol2)
 
     #set1.set_add(v1)
     #set1.set_add(v2)
     #set1.dump()
     set1.add_with_elimination(v1)
+    set1.add_with_elimination(v2)
+
     set1.dump()
 #---------------------------------------------------------------------------
 
@@ -210,9 +212,9 @@ if __name__ == "__main__":
     #try_full_symbol_scale_inverted()
     #try_alloc_add_set()
     #try_alloc_add_set_expl2()
-    #try_remove_each_pivot() # not ok the output
+    try_remove_each_pivot() # not ok the output
     #test_full_symbol_get_coef()
     #test_add_as_pivot()
     #test_add_as_pivot2()
-    test_add_with_elimination()
+    #test_add_with_elimination()
 #---------------------------------------------------------------------------
