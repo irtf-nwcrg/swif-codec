@@ -82,7 +82,7 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
 
     for (uint32_t i=0 ; i<full_symbol_set->size ; i++ ){
         if(full_symbol_set->full_symbol_tab[i] != NULL){
-            printf("full_symbol_set->full_symbol_tab[%u]: ", full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
+            printf("full_symbol_set->full_symbol_tab[%u|%u]: ", i, full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
             full_symbol_dump(full_symbol_set->full_symbol_tab[i], out);
         }
         else 
@@ -114,37 +114,58 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
     // clone 
     swif_full_symbol_t * full_symbol_cloned = full_symbol_clone(full_symbol);
     assert(set != NULL);
-    
+    if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE ){
+        return SYMBOL_ID_NONE ; 
+    }
     if(set->first_symbol_id == SYMBOL_ID_NONE){// it was NULL
-        if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE)
-            set->first_symbol_id = full_symbol_cloned->first_nonzero_id; // set->first_symbol_id = PACKET_INDEX_NONE ; 
-        else
-            set->first_symbol_id = full_symbol_cloned->first_nonzero_id; 
+        set->first_symbol_id = full_symbol_cloned->first_nonzero_id; 
     }
     
     uint32_t old_size = set->size;
-    if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE ){
-        set->full_symbol_tab[full_symbol_cloned->first_id-set->first_symbol_id] = NULL ; 
-        set->nmbr_packets++ ;
-        // free
-        return SYMBOL_ID_NONE ; 
-    }
-    if ( full_symbol_cloned->first_nonzero_id < set->first_symbol_id )
-    {
-        set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
-        memset(set->full_symbol_tab+old_size,0, sizeof(swif_full_symbol_t*)*(set->size-old_size)  );
-
-        if (set->full_symbol_tab == NULL) {
-            free(set->full_symbol_tab);
-            return SYMBOL_ID_NONE;
+    /////  case : full_symbol_cloned->first_nonzero_id < set->first_symbol_id
+     if ( full_symbol_cloned->first_nonzero_id < set->first_symbol_id)
+    {   
+        if (set->first_symbol_id-full_symbol_cloned->first_nonzero_id < set->size  )
+        {
+            //set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
+            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) *set->size-set->first_symbol_id-full_symbol_cloned->first_nonzero_id);
+        //memset(set->full_symbol_tab,0, sizeof(swif_full_symbol_t*) *(set->size-set->nmbr_packets) ); //set->size-old_size
+            printf("5555555\n\n\n");
         }
-        set->full_symbol_tab[set->first_symbol_id-full_symbol_cloned->first_nonzero_id] = full_symbol_cloned ; 
-        set->nmbr_packets++;
-        set->first_symbol_id = calculate_min(set->first_symbol_id, full_symbol_cloned->first_nonzero_id) ;
-        return set->first_symbol_id-full_symbol_cloned->first_nonzero_id ; 
-    }
+        else if (set->first_symbol_id - full_symbol_cloned->first_nonzero_id < (set->size *2) ){
+            set->size *= 2;
+            set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
+            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
+        //memset(set->full_symbol_tab,0, sizeof(swif_full_symbol_t*) *(set->size-set->nmbr_packets) ); //set->size-old_size
+            printf("6666\n\n\n");
+        }else{
+            set->size = set->first_symbol_id-full_symbol_cloned->last_nonzero_id +1;
+            set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
+            printf("set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab %u", set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab);
+            printf("set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab %u \n", set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab);
+            printf ("set->size-set->first_symbol_id-full_symbol_cloned->first_nonzero_id %u \n",set->size-set->first_symbol_id-full_symbol_cloned->first_nonzero_id);
+          
+            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
+        //memset(set->full_symbol_tab,0, sizeof(swif_full_symbol_t*) *(set->size-set->nmbr_packets) ); //set->size-old_size
+            printf("7777\n\n\n");
+        }
+    full_symbol_set_dump(set, stdout);
+    printf("\n\n\n");
+    full_symbol_set_dump(set, stdout);
+            if (set->full_symbol_tab == NULL) {
+                free(set->full_symbol_tab);
+                return SYMBOL_ID_NONE;
+            }
+            set->full_symbol_tab[0] = full_symbol_cloned ; //set->first_symbol_id-full_symbol_cloned->first_nonzero_id
+            set->nmbr_packets++;
+            set->first_symbol_id = calculate_min(set->first_symbol_id, full_symbol_cloned->first_nonzero_id) ;
+            
+            return set->first_symbol_id-full_symbol_cloned->first_nonzero_id ; 
+}
 
-    if ( full_symbol_cloned->first_nonzero_id-set->first_symbol_id < set->size ){
+
+/////  case : full_symbol_cloned->first_nonzero_id > set->first_symbol_id
+    if ( full_symbol_cloned->first_nonzero_id-set->first_symbol_id < set->size  ){
         set->full_symbol_tab[full_symbol_cloned->first_nonzero_id-set->first_symbol_id] = full_symbol_cloned ;
         set->nmbr_packets++ ;
         return full_symbol_cloned->first_nonzero_id-set->first_symbol_id; 
@@ -162,9 +183,9 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
         return SYMBOL_ID_NONE;
     }
 
-    set->full_symbol_tab[full_symbol_cloned->first_nonzero_id-set->first_symbol_id] = full_symbol_cloned ; 
+    set->full_symbol_tab[(full_symbol_cloned->first_nonzero_id-set->first_symbol_id)] = full_symbol_cloned ; 
     set->nmbr_packets++;
-    return full_symbol_cloned->first_nonzero_id-set->first_symbol_id ; 
+    return (full_symbol_cloned->first_nonzero_id-set->first_symbol_id) ; 
 
 }
 
@@ -248,7 +269,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
         
         if (full_symbol_set->full_symbol_tab[i]){
             swif_full_symbol_t *symbol_cloned=full_symbol_clone(new_symbol);
-            uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], full_symbol_set->full_symbol_tab[i]->first_nonzero_id);
+            //uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], full_symbol_set->full_symbol_tab[i]->first_nonzero_id);
+            uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], first_index);
             full_symbol_scale(symbol_cloned, coef);
             swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i],symbol_cloned);                  
             full_symbol_free(full_symbol_set->full_symbol_tab[i]);

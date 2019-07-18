@@ -107,10 +107,13 @@ def try_alloc_add_set():
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
         7, bytes([0,0,0,0]), b"")
     symbol3 = swif.FullSymbol().from_coefs_and_symbol(
-        5, bytes([0,0,1,0]), b"aaeuyo")
+        3, bytes([1,0,1,0]), b"aaeuyo")
+    symbol4 = swif.FullSymbol().from_coefs_and_symbol(
+        7, bytes([9,0,1,0]), b"aaeuyo")
     set1.set_add(symbol1)
     set1.set_add(symbol2)
     set1.set_add(symbol3)
+    set1.set_add(symbol4)
     set1.dump()
     print(set1)
 #---------------------------------------------------------------------------
@@ -137,9 +140,9 @@ def try_remove_each_pivot():
 
     set2 = swif.FullSymbolSet().alloc_set()
     P1 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([1,0,0,0,0,0]), b"azeu")
+        1, bytes([1,3,0,0,0,0]), b"azeu")
     P2 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([0,1,0,0,0,0]), b"aaeuyo")
+        1, bytes([0,5,0,0,0,0]), b"aaeuyo")
     Q1 = P1.add(P2)  
     Q2 = P1.add(P2._scale(2))
     set2.add_with_elimination(Q1)
@@ -147,6 +150,34 @@ def try_remove_each_pivot():
     set2.dump()
     
     #new_symbol.dump()
+#---------------------------------------------------------------------------
+def try_elimination():
+    import random
+    random.seed(1)
+    set2 = swif.FullSymbolSet().alloc_set()
+    N = 10
+    packet_list = []
+    for i in range(N):
+        header = [0]  * (N+2)
+        header[i+1] = 1
+        P = swif.FullSymbol().from_coefs_and_symbol(
+            123, bytes(header), bytes([((i+j)**2)&0xff for j in range(10)]))
+        packet_list.append(P)
+        P.dump()
+
+    symbol_list = []
+    for i in range(N):
+        Q = swif.FullSymbol().from_coefs_and_symbol(1, bytes([0]), b"")
+        #Q = packet_list[0].clone()
+        for j in range(N):
+            P = packet_list[j].clone()
+            Q = Q.add(P._scale(random.randint(0, 255)))
+        Q.dump()
+        symbol_list.append(Q)
+
+    for i in range(N):
+        set2.add_with_elimination(symbol_list[i])
+    set2.dump()
 #---------------------------------------------------------------------------
 def test_full_symbol_get_coef():
     symbol = swif.FullSymbol().from_coefs_and_symbol(
@@ -209,11 +240,12 @@ if __name__ == "__main__":
     #try_full_symbol_add()
     #try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
-    try_alloc_add_set()
+    #try_alloc_add_set()
     #try_alloc_add_set_expl2()
-    try_remove_each_pivot() # not ok the output
+    #try_remove_each_pivot() 
     #test_full_symbol_get_coef()
     #test_add_as_pivot()
     #test_add_as_pivot2()
     #test_add_with_elimination()
+    try_elimination()
 #---------------------------------------------------------------------------
