@@ -1,6 +1,11 @@
 #include "swif_includes.h"
 
 
+/*******************************************************************************
+ * Encoder functions
+ */
+
+
 /**
  * Release an encoder and its associated ressources.
  **/
@@ -87,21 +92,6 @@ swif_status_t   swif_rlc_build_repair_symbol (
 /*******************************************************************************
  * Decoder functions
  */
-
-
-/**
- * Create and initialize a decoder, providing only key parameters.
- */
-swif_decoder_t* swif_rlc_decoder_create (
-                                swif_codepoint_t codepoint,
-                                uint32_t        verbosity,
-                                uint32_t        symbol_size,
-                                uint32_t        max_coding_window_size,
-                                uint32_t        max_linear_system_size)
-{
-// NOT YET
-	return NULL;
-}
 
 
 /**
@@ -264,6 +254,7 @@ swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
     return SWIF_STATUS_OK;
 }
 
+
 swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           new_src_symbol_esi)
@@ -388,13 +379,20 @@ swif_status_t   swif_rlc_encoder_get_coding_coefs_tab (
 }
 
 
+/*******************************************************************************
+ * Session creation functions (last position to avoid compilation errors for
+ * codec specific functions and avoid the need to add prototypes in header).
+ */
+
+/**
+ * Create and initialize an encoder, providing only key parameters.
+ **/
 swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
                                          uint32_t        verbosity,
                                          uint32_t        symbol_size,
                                          uint32_t        max_coding_window_size)
 {
     /* initialize the encoder */
-
     assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
     swif_encoder_rlc_cb_t *enc = NULL;
     if ((enc = calloc(1,sizeof(swif_encoder_rlc_cb_t))) == NULL){
@@ -432,3 +430,19 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->generic_encoder.build_repair_symbol		= swif_rlc_build_repair_symbol;
     return (swif_encoder_t *) enc;
 }
+
+
+/**
+ * Create and initialize a decoder, providing only key parameters.
+ */
+swif_decoder_t* swif_rlc_decoder_create (
+                                swif_codepoint_t codepoint,
+                                uint32_t        verbosity,
+                                uint32_t        symbol_size,
+                                uint32_t        max_coding_window_size,
+                                uint32_t        max_linear_system_size)
+{
+// NOT YET
+	return NULL;
+}
+
