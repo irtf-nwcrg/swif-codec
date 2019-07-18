@@ -105,6 +105,10 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
+symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
+{
+    return (index1 <= index2 ? index1 : index2) ;
+}
 uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
 {
     // clone 
@@ -115,10 +119,9 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
         if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE)
             set->first_symbol_id = full_symbol_cloned->first_nonzero_id; // set->first_symbol_id = PACKET_INDEX_NONE ; 
         else
-            set->first_symbol_id = full_symbol_cloned->first_nonzero_id ; 
-
+            set->first_symbol_id = full_symbol_cloned->first_nonzero_id; 
     }
-   
+    
     uint32_t old_size = set->size;
     if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE ){
         set->full_symbol_tab[full_symbol_cloned->first_id-set->first_symbol_id] = NULL ; 
@@ -126,6 +129,21 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* fu
         // free
         return SYMBOL_ID_NONE ; 
     }
+    if ( full_symbol_cloned->first_nonzero_id < set->first_symbol_id )
+    {
+        set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
+        memset(set->full_symbol_tab+old_size,0, sizeof(swif_full_symbol_t*)*(set->size-old_size)  );
+
+        if (set->full_symbol_tab == NULL) {
+            free(set->full_symbol_tab);
+            return SYMBOL_ID_NONE;
+        }
+        set->full_symbol_tab[set->first_symbol_id-full_symbol_cloned->first_nonzero_id] = full_symbol_cloned ; 
+        set->nmbr_packets++;
+        set->first_symbol_id = calculate_min(set->first_symbol_id, full_symbol_cloned->first_nonzero_id) ;
+        return set->first_symbol_id-full_symbol_cloned->first_nonzero_id ; 
+    }
+
     if ( full_symbol_cloned->first_nonzero_id-set->first_symbol_id < set->size ){
         set->full_symbol_tab[full_symbol_cloned->first_nonzero_id-set->first_symbol_id] = full_symbol_cloned ;
         set->nmbr_packets++ ;

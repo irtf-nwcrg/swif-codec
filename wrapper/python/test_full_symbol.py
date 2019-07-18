@@ -107,7 +107,7 @@ def try_alloc_add_set():
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
         7, bytes([0,0,0,0]), b"")
     symbol3 = swif.FullSymbol().from_coefs_and_symbol(
-        6, bytes([0,0,1,0]), b"aaeuyo")
+        5, bytes([0,0,1,0]), b"aaeuyo")
     set1.set_add(symbol1)
     set1.set_add(symbol2)
     set1.set_add(symbol3)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     #try_full_symbol_add()
     #try_full_symbol_scale()
     #try_full_symbol_scale_inverted()
-    #try_alloc_add_set()
+    try_alloc_add_set()
     #try_alloc_add_set_expl2()
     try_remove_each_pivot() # not ok the output
     #test_full_symbol_get_coef()
