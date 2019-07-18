@@ -1,11 +1,12 @@
 #---------------------------------------------------------------------------
-# C.A. - 2019
+# swif-codec - 2019
 #---------------------------------------------------------------------------
 
-cimport stdio
+cimport libc.stdio as stdio
 
 cimport cswif
 from cswif cimport *
+from libc.stdint cimport uint8_t, uint32_t, int64_t, bool
 
 #---------------------------------------------------------------------------
 
@@ -14,14 +15,35 @@ cdef check_swif_status(swif_status, swif_errno):
         raise RuntimeError("SWIF Error", swif_errno) #XXX
 
 cdef class RlcEncoder:
-    cdef cswif.swif_encoder_t* encoder
+    cdef cswif.swif_encoder_t *encoder
+    cdef symbol_size # XXX: replicated for convenience
 
     def __cinit__(self, symbol_size, max_coding_window_size):
         self.encoder = swif_encoder_create(
             SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC,
             0, symbol_size, max_coding_window_size)
-        if self.encoder == NULL:
+        self.symbol_size = symbol_size
+        if self.encoder is NULL:
             raise RuntimeError("SWIF Error", "encoder_create returned NULL")#XXX
+
+    def add_source_symbol_to_coding_window(self, uint8_t *symbol, symbol_id):
+        assert self.encoder is not NULL
+        status = swif_encoder_add_source_symbol_to_coding_window(
+            self.encoder, symbol, symbol_id)
+        check_swif_status(status, self.encoder.swif_errno)
+
+    def build_repair_symbol(self):
+        assert self.encoder is not NULL
+        result = bytes(self.symbol_size)
+        cdef uint8_t *data = result
+        status = swif_build_repair_symbol(self.encoder, data)
+        check_swif_status(status, self.encoder.swif_errno)
+        return result
+
+    def generate_coding_coefs(self, key, add_param):
+        status = swif_encoder_generate_coding_coefs(
+            self.encoder, key, add_param)
+        check_swif_status(status, self.encoder.swif_errno)        
 
     cpdef release(self):
         if self.encoder is NULL:
@@ -101,7 +123,7 @@ cdef class FullSymbol:
         return min_id, content
 
     cpdef get_data(self):
-        assert self.symbol is not NULL    
+        assert self.symbol is not NULL
         symbol_size = self.get_size()
         result = bytes(symbol_size)
         full_symbol_get_data(self.symbol, result)

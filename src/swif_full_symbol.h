@@ -113,14 +113,25 @@ swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t *swif_full_symbol);
 /**
  * @brief Dump a full symbol on a FILE
  */    
-    void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
+void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
     
 /*---------------------------------------------------------------------------*/
+
+/**
+ * @brief Create a full_symbol set, that will be used to do gaussian elimination
+ */
+swif_full_symbol_set_t *full_symbol_set_alloc();
+
+/**
+ * @brief Free a full_symbol set
+ */
+void full_symbol_set_free(swif_full_symbol_set_t *set);
+    
     
 /**
  * @brief Packet set
  */
-swif_status_t full_symbol_set_init(swif_full_symbol_set_t* set);
+//swif_status_t full_symbol_set_init(swif_full_symbol_set_t* set);
 
 /**
  * @brief Add a full_symbol to a packet set.
