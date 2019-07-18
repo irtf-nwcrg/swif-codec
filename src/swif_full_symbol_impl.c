@@ -230,7 +230,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
         
         if (full_symbol_set->full_symbol_tab[i]){
             swif_full_symbol_t *symbol_cloned=full_symbol_clone(new_symbol);
-            full_symbol_scale(symbol_cloned, full_symbol_get_coef(full_symbol_set->full_symbol_tab+i, first_index));
+            uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], full_symbol_set->full_symbol_tab[i]->first_nonzero_id);
+            full_symbol_scale(symbol_cloned, coef);
             swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i],symbol_cloned);                  
             full_symbol_free(full_symbol_set->full_symbol_tab[i]);
             full_symbol_set->full_symbol_tab[i] = symbol2;
