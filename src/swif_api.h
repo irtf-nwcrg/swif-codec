@@ -180,7 +180,7 @@ swif_status_t   swif_encoder_release (swif_encoder_t*        enc);
  * @return
  */
 swif_status_t   swif_encoder_set_callback_functions (
-                swif_encoder_t*        enc,
+                swif_encoder_t*         enc,
                 void (*source_symbol_removed_from_coding_window_callback) (
                                         void*   context,
                                         esi_t   old_symbol_esi),
