@@ -134,18 +134,17 @@ def try_alloc_add_set_expl2():
     print(set2.get_pivot(103))
 #---------------------------------------------------------------------------
 def try_remove_each_pivot():
-    set1 = swif.FullSymbolSet().alloc_set()
-    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
-        6, bytes([1,0,0,1,0,0]), b"azeu")
-    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
-        8, bytes([0,0,1,0]), b"aaeuyo")
-    new_symbol = symbol1.add(symbol2)  
-    set1.set_add(symbol1)
-    #set1.set_add(symbol2)
-    #set1.set_add(new_symbol)
-    #set1.dump()
-    set1.remove_each_pivot(new_symbol)
-    #set1.dump()
+
+    set2 = swif.FullSymbolSet().alloc_set()
+    P1 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,0,0,0,0,0]), b"azeu")
+    P2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,1,0,0,0,0]), b"aaeuyo")
+    Q1 = P1.add(P2)  
+    Q2 = P1.add(P2._scale(2))
+    set2.add_with_elimination(Q1)
+    set2.add_with_elimination(Q2)
+    set2.dump()
     
     #new_symbol.dump()
 #---------------------------------------------------------------------------
