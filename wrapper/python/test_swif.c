@@ -75,8 +75,14 @@ void test_add_with_elimination(void)
     full_symbol_set_dump(set1,stdout);
 
     printf("before v2 \n\n\n\n");
-    full_symbol_add_with_elimination(set1, symbol2);
+    full_symbol_add_with_elimination(set1, v2);
     full_symbol_set_dump(set1,stdout);
+    full_symbol_free(symbol1);
+    full_symbol_free(symbol2);
+    full_symbol_free(v1);
+    full_symbol_free(v2);
+    full_symbol_set_free(set1);
+
 }
 int main(int argc, char **argv)
 {
