@@ -3,15 +3,15 @@ This software has been developed in the context of the SWiF Codec IETF Hackathon
 Contact: Vincent Roca (vincent.roca@inria.fr)
 
 ---
-Main authors (alphabetical order)
+Main contributors/developers (alphabetical order)
 
 Cedric Adjih (Inria, France)
 Francois Michel (UC Louvain, Belgium)
 Vincent Roca (Inria, France)
 
 ---
-Additional authors (alphabetical order)
+Additional contributors (alphabetical order)
 
-Marie-Jose Montpetit (Research Affiliate, MIT Media Laboratory, USA)
 Oumaima Attia (Inria, France)
+Marie-Jose Montpetit (Research Affiliate, MIT Media Laboratory, USA)
 
