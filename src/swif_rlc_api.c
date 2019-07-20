@@ -325,7 +325,9 @@ swif_status_t   swif_rlc_encoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-// NOT YET
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    assert(nb_coefs_in_tab <= rlc_enc->max_coding_window_size);
+    memcpy(rlc_enc->cc_tab, coding_coefs_tab, nb_coefs_in_tab*sizeof(uint8_t));
 	return SWIF_STATUS_OK;
 }
 
