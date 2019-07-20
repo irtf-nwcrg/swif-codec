@@ -15,22 +15,22 @@ void test_swif_rlc_encoder(void){
 
 	swif_encoder_t *generic_enc = swif_rlc_encoder_create (codepoint, VERBOSITY, SYMBOL_SIZE, max_coding_window_size);
 	swif_encoder_rlc_cb_t *enc = (swif_encoder_rlc_cb_t *) generic_enc;	
-
-   CU_ASSERT_EQUAL(enc->ew_left, 0);
-	CU_ASSERT_EQUAL(enc->ew_right, enc->ew_left);
-	CU_ASSERT_EQUAL(enc->ew_esi_right, 0);
-	CU_ASSERT_EQUAL(enc->ew_ss_nb , 0);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(enc)
+    CU_ASSERT_EQUAL(enc->ew_left, 0)
+	CU_ASSERT_EQUAL(enc->ew_right, enc->ew_left)
+	CU_ASSERT_EQUAL(enc->ew_esi_right, INVALID_ESI)
+	CU_ASSERT_EQUAL(enc->ew_ss_nb , 0)
 
 	void* new_src_symbol_buf = "A";
 	swif_status_t add_source_symbol_status = swif_rlc_encoder_add_source_symbol_to_coding_window( generic_enc, new_src_symbol_buf,1);
 
-   CU_ASSERT_PTR_NOT_NULL(enc->cc_tab);
-	CU_ASSERT_PTR_NOT_NULL(enc->ew_tab);
-	CU_ASSERT_EQUAL(enc->ew_right , 1);
-	CU_ASSERT_EQUAL(enc->ew_ss_nb , 1);
-	CU_ASSERT_EQUAL(enc->ew_tab[enc->ew_right] , new_src_symbol_buf);
-	CU_ASSERT_EQUAL(enc->ew_esi_right , 1);
-	CU_ASSERT_EQUAL(add_source_symbol_status , SWIF_STATUS_OK);
+    CU_ASSERT_EQUAL(add_source_symbol_status , SWIF_STATUS_OK)
+    CU_ASSERT_PTR_NOT_NULL(enc->cc_tab)
+	CU_ASSERT_PTR_NOT_NULL(enc->ew_tab)
+	CU_ASSERT_EQUAL(enc->ew_right , 0)
+	CU_ASSERT_EQUAL(enc->ew_ss_nb , 1)
+	CU_ASSERT_EQUAL(enc->ew_tab[enc->ew_right] , new_src_symbol_buf)
+	CU_ASSERT_EQUAL(enc->ew_esi_right , 1)
 /*
 	void* new_buf = NULL;
    
@@ -41,7 +41,7 @@ void test_swif_rlc_encoder(void){
 */
 	swif_status_t encoder_release_status = swif_encoder_release(generic_enc);
    
-	CU_ASSERT_EQUAL(encoder_release_status , SWIF_STATUS_OK);
+	CU_ASSERT_EQUAL(encoder_release_status , SWIF_STATUS_OK)
 
 }
 
