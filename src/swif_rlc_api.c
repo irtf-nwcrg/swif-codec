@@ -12,7 +12,12 @@
 swif_status_t   swif_rlc_encoder_release (swif_encoder_t*        enc)
 {
 	assert(enc);
-	free(enc);
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    if (rlc_enc->cc_tab)
+        free(rlc_enc->cc_tab);
+    if (rlc_enc->ew_tab)
+        free(enc);
+    free(enc);
 	return SWIF_STATUS_OK;
 }
 
