@@ -402,7 +402,7 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->generic_encoder.codepoint = codepoint;
     enc->symbol_size = symbol_size;
     enc->max_coding_window_size = max_coding_window_size;
-    if ((enc->cc_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
+    if ((enc->cc_tab = calloc(max_coding_window_size, sizeof(uint8_t))) == NULL){
         fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
         return NULL;
     }
