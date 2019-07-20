@@ -1,0 +1,4 @@
+# ignore all compilation artifacts in all sub-directories
+*.o
+*.d
+*.a
