@@ -6,7 +6,7 @@ Contact: Vincent Roca (vincent.roca@inria.fr)
 Main authors (alphabetical order)
 
 Cedric Adjih (Inria, France)
-Francois Michel (UC Louvain, Belgium)
+Francois Michel (UCLouvain, Belgium)
 Vincent Roca (Inria, France)
 
 ---
