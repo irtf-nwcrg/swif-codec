@@ -6,12 +6,12 @@ Contact: Vincent Roca (vincent.roca@inria.fr)
 Main contributors/developers (alphabetical order)
 
 Cedric Adjih (Inria, France)
+Oumaima Attia (Inria, France)
 Francois Michel (UCLouvain, Belgium)
 Vincent Roca (Inria, France)
 
 ---
 Additional contributors (alphabetical order)
 
-Oumaima Attia (Inria, France)
 Marie-Jose Montpetit (Research Affiliate, MIT Media Laboratory, USA)
 

@@ -222,7 +222,7 @@ swif_status_t   swif_rlc_encoder_reset_coding_window (swif_encoder_t*  enc)
 	return SWIF_STATUS_OK;
 }
 
-swif_status_t   swif_rlc_decoder_reset_coding_window (swif_encoder_t*  dec)
+swif_status_t   swif_rlc_decoder_reset_coding_window (swif_decoder_t*  dec)
 {
 // NOT YET
 	return SWIF_STATUS_OK;
@@ -366,11 +366,11 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
+        /* XXX: check why uint32_t key */
+        
         swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
         
-        /* XXX: need to init tabs to 0 */
         if (enc->cc_tab == NULL) {
-                /* XXX: need to set window size before calling this function */
                 /* XXX: need to use allocation functions */
                 enc->cc_tab = (uint8_t*) malloc(
                     enc->max_coding_window_size*sizeof(uint8_t) );
@@ -380,13 +380,13 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                         return SWIF_STATUS_ERROR;
                 }
         }
-        
-        /* XXX: check why uint32_t key */
+
+        assert(enc->ew_ss_nb <= enc->max_window_size);
         swif_rlc_generate_coding_coefficients (
-            (uint16_t)key, enc->cc_tab, 
-            /* XXX: how to compute: cc_nb */ XXX ZZZ ???,
-            /* density dt [0-15] XXX dt=1*/ 1,
-            /* GF(2^^m) m=*/ 8);
+            (uint16_t)key, enc->cc_tab,
+            enc->ew_ss_nb, /* upper bound: enc->max_window_size */,
+            15 /* density dt [0-15] XXX dt=1*/,
+            8 /*=m - GF(2^^m) */);
 	return SWIF_STATUS_OK;
 }
 
@@ -431,9 +431,10 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
                                          uint32_t        symbol_size,
                                          uint32_t        max_coding_window_size)
 {
+    swif_encoder_rlc_cb_t*	enc = NULL;
+
     /* initialize the encoder */
     assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
-    swif_encoder_rlc_cb_t *enc = NULL;
     if ((enc = calloc(1,sizeof(swif_encoder_rlc_cb_t))) == NULL){
         fprintf(stderr, "swif_encoder_create() failed! No memory \n");
         return NULL;
@@ -456,17 +457,17 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->source_symbol_removed_from_coding_window_callback = NULL;
     enc->context_4_callback = NULL;
 
-    enc->generic_encoder.generate_coding_coefs		= swif_rlc_encoder_generate_coding_coefs;
-    enc->generic_encoder.get_coding_window_information	= swif_rlc_encoder_get_coding_window_information;
-    enc->generic_encoder.get_coding_coefs_tab		= swif_rlc_encoder_get_coding_coefs_tab;
-    enc->generic_encoder.get_parameters			= swif_rlc_encoder_get_parameters;
-    enc->generic_encoder.set_parameters			= swif_rlc_encoder_set_parameters;
     enc->generic_encoder.set_callback_functions		= swif_rlc_encoder_set_callback_functions;
-    enc->generic_encoder.set_coding_coefs_tab		= swif_rlc_encoder_set_coding_coefs_tab;
-    enc->generic_encoder.remove_source_symbol_from_coding_window	= swif_rlc_encoder_remove_source_symbol_from_coding_window;
-    enc->generic_encoder.add_source_symbol_to_coding_window		= swif_rlc_encoder_add_source_symbol_to_coding_window;
-    enc->generic_encoder.reset_coding_window		= swif_rlc_encoder_reset_coding_window;
+    enc->generic_encoder.set_parameters			= swif_rlc_encoder_set_parameters;
+    enc->generic_encoder.get_parameters			= swif_rlc_encoder_get_parameters;
     enc->generic_encoder.build_repair_symbol		= swif_rlc_build_repair_symbol;
+    enc->generic_encoder.reset_coding_window		= swif_rlc_encoder_reset_coding_window;
+    enc->generic_encoder.add_source_symbol_to_coding_window		= swif_rlc_encoder_add_source_symbol_to_coding_window;
+    enc->generic_encoder.remove_source_symbol_from_coding_window	= swif_rlc_encoder_remove_source_symbol_from_coding_window;
+    enc->generic_encoder.get_coding_window_information	= swif_rlc_encoder_get_coding_window_information;
+    enc->generic_encoder.set_coding_coefs_tab		= swif_rlc_encoder_set_coding_coefs_tab;
+    enc->generic_encoder.generate_coding_coefs		= swif_rlc_encoder_generate_coding_coefs;
+    enc->generic_encoder.get_coding_coefs_tab		= swif_rlc_encoder_get_coding_coefs_tab;
     return (swif_encoder_t *) enc;
 }
 
@@ -481,7 +482,39 @@ swif_decoder_t* swif_rlc_decoder_create (
                                 uint32_t        max_coding_window_size,
                                 uint32_t        max_linear_system_size)
 {
-// NOT YET
-	return NULL;
+    swif_decoder_rlc_cb_t*	dec = NULL;
+
+    /* initialize the decoder */
+    assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
+    if ((dec = calloc(1,sizeof(swif_decoder_rlc_cb_t))) == NULL){
+        fprintf(stderr, "swif_decoder_create() failed! No memory \n");
+        return NULL;
+    }
+    dec->generic_decoder.codepoint = codepoint;
+    dec->symbol_size = symbol_size;
+    dec->max_coding_window_size = max_coding_window_size;
+    dec->max_linear_system_size = max_linear_system_size;
+#if 0
+    dec->ew_right = dec->ew_left = 0;
+    dec->ew_esi_right = INVALID_ESI;
+    dec->ew_ss_nb = 0;
+#endif
+
+    dec->source_symbol_removed_from_linear_system_callback = NULL;
+    dec->decodable_source_symbol_callback = NULL;
+    dec->decoded_source_symbol_callback = NULL;
+    dec->context_4_callback = NULL;
+
+    dec->generic_decoder.set_callback_functions		= swif_rlc_decoder_set_callback_functions;
+    dec->generic_decoder.set_parameters			= swif_rlc_decoder_set_parameters;
+    dec->generic_decoder.get_parameters			= swif_rlc_decoder_get_parameters;
+    dec->generic_decoder.decode_with_new_source_symbol	= swif_rlc_decoder_decode_with_new_source_symbol;
+    dec->generic_decoder.decode_with_new_repair_symbol	= swif_rlc_decoder_decode_with_new_repair_symbol;
+    dec->generic_decoder.reset_coding_window		= swif_rlc_decoder_reset_coding_window;
+    dec->generic_decoder.add_source_symbol_to_coding_window		= swif_rlc_decoder_add_source_symbol_to_coding_window;
+    dec->generic_decoder.remove_source_symbol_from_coding_window	= swif_rlc_decoder_remove_source_symbol_from_coding_window;
+    dec->generic_decoder.set_coding_coefs_tab		= swif_rlc_decoder_set_coding_coefs_tab;
+    dec->generic_decoder.generate_coding_coefs		= swif_rlc_decoder_generate_coding_coefs;
+    return (swif_decoder_t *) dec;
 }
 

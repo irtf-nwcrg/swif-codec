@@ -145,7 +145,7 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
  */
 swif_status_t   swif_rlc_encoder_reset_coding_window (swif_encoder_t*  enc);
 
-swif_status_t   swif_rlc_decoder_reset_coding_window (swif_encoder_t*  dec);
+swif_status_t   swif_rlc_decoder_reset_coding_window (swif_decoder_t*  dec);
 
 /**
  * Add this source symbol to the coding window.
@@ -156,7 +156,6 @@ swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
                                 swif_encoder_t* generic_enc,
                                 void*           new_src_symbol_buf,
                                 esi_t           new_src_symbol_esi);
-
 
 swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
                                 swif_decoder_t* dec,
