@@ -53,7 +53,7 @@ uint32_t tinymt32_generate_uint32 (tinymt32_t * s);
  * @param s     pointer to tinymt internal state.
  * @return      unsigned integer between 0 and 15 inclusive.
  */
-inline uint32_t tinymt32_rand16(tinymt32_t *s)
+static inline uint32_t tinymt32_rand16(tinymt32_t *s)
 {
     return (tinymt32_generate_uint32(s) & 0xF);
 }
@@ -67,7 +67,7 @@ inline uint32_t tinymt32_rand16(tinymt32_t *s)
  * @param s     pointer to tinymt internal state.
  * @return      unsigned integer between 0 and 255 inclusive.
  */
-inline uint32_t tinymt32_rand256(tinymt32_t *s)
+static inline uint32_t tinymt32_rand256(tinymt32_t *s)
 {
     return (tinymt32_generate_uint32(s) & 0xFF);
 }
