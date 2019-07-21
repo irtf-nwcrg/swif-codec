@@ -3,6 +3,7 @@
  * https://github.com/irtf-nwcrg/swif-codec
  */
 
+#include "swif_full_symbol.h"
 
 /**
  * Control block for an RLC encoder.
@@ -84,5 +85,8 @@ typedef struct swif_decoder_rlc_cb {
 	/* exact size (in bytes) of any source or repair symbol */
 	uint32_t		symbol_size;
 
+	/* set of packets being decoded through gaussian elimination */
+        swif_full_symbol_set_t *symbol_set;
+    
 	/* add whatever may be needed hereafter... */
 } swif_decoder_rlc_cb_t;

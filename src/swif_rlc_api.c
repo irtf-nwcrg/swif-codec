@@ -175,7 +175,11 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
                                 void* const     new_symbol_buf,
                                 esi_t           new_symbol_esi)
 {
-// NOT YET
+        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+        swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
+                 new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
+        fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
 
@@ -189,7 +193,12 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
                                 void* const     new_symbol_buf)
 {
-// NOT YET
+        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+        //XXX;
+        swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
+                 new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
+        fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
 
@@ -357,6 +366,27 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
+        swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+        
+        /* XXX: need to init tabs to 0 */
+        if (enc->cc_tab == NULL) {
+                /* XXX: need to set window size before calling this function */
+                /* XXX: need to use allocation functions */
+                enc->cc_tab = (uint8_t*) malloc(
+                    enc->max_coding_window_size*sizeof(uint8_t) );
+                if (enc->cc_tab == NULL) {
+                        fprintf(stderr, "Error, swif_rlc_encoder_generate_"
+                                "coding_coefs: malloc failed\n");
+                        return SWIF_STATUS_ERROR;
+                }
+        }
+        
+        /* XXX: check why uint32_t key */
+        swif_rlc_generate_coding_coefficients (
+            (uint16_t)key, enc->cc_tab, 
+            /* XXX: how to compute: cc_nb */ XXX ZZZ ???,
+            /* density dt [0-15] XXX dt=1*/ 1,
+            /* GF(2^^m) m=*/ 8);
 	return SWIF_STATUS_OK;
 }
 
@@ -366,6 +396,7 @@ swif_status_t   swif_rlc_decoder_generate_coding_coefs (
                                 uint32_t        key,
                                 uint32_t        add_param)
 {
+        // repair keys
 	return SWIF_STATUS_OK;
 }
 
