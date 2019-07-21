@@ -317,7 +317,7 @@ swif_status_t   swif_rlc_encoder_get_coding_window_information (
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
 
-    *first = enc->ew_esi_right - enc->ew_ss_nb;
+    *first = enc->ew_esi_right - enc->ew_ss_nb + 1;
     *last = enc->ew_esi_right;
     *nss = enc->ew_ss_nb;
     return SWIF_STATUS_OK;
@@ -438,7 +438,7 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
                                          uint32_t        symbol_size,
                                          uint32_t        max_coding_window_size)
 {
-    swif_encoder_rlc_cb_t*	enc = NULL;
+    swif_encoder_rlc_cb_t*	enc;
 
     /* initialize the encoder */
     assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
@@ -489,11 +489,11 @@ swif_decoder_t* swif_rlc_decoder_create (
                                 uint32_t        max_coding_window_size,
                                 uint32_t        max_linear_system_size)
 {
-    swif_decoder_rlc_cb_t*	dec = NULL;
+    swif_decoder_rlc_cb_t*	dec;
 
     /* initialize the decoder */
     assert(codepoint == SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC);
-    if ((dec = calloc(1,sizeof(swif_decoder_rlc_cb_t))) == NULL){
+    if ((dec = calloc(1,sizeof(swif_decoder_rlc_cb_t))) == NULL) {
         fprintf(stderr, "swif_decoder_create() failed! No memory \n");
         return NULL;
     }
