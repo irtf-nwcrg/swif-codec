@@ -88,7 +88,7 @@ main (int argc, char* argv[])
 	tot_src		= ntohl(fec_oti->tot_src);
 	tot_enc		= ntohl(fec_oti->tot_enc);
 
-	printf("\nReceiving packets from %s/%d: codepoint %u, ew_size=%u, tot_src=%u, tot_enc=%u\n", DEST_IP, DEST_PORT, codepoint, ew_size, tot_src, tot_enc);
+	printf("FEC_OTI: Receiving packets from %s/%d: codepoint %u, ew_size=%u, tot_src=%u, tot_enc=%u\n", DEST_IP, DEST_PORT, codepoint, ew_size, tot_src, tot_enc);
 
 	/* and check the correctness of data received */
 	if (tot_src > tot_enc || tot_src > 100000 || tot_enc > 100000) {
@@ -113,7 +113,7 @@ main (int argc, char* argv[])
 		goto end;
 	}
 
-	printf( "\nDecoding in progress. Waiting for new packets...\n" );
+	printf( "Reception/decoding in progress...\n" );
 
 	/* allocate a table for the received encoding symbol buffers. We'll update it progressively */
 	if (((recvd_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL) ||
@@ -140,7 +140,6 @@ main (int argc, char* argv[])
 		repair_key	= ntohs(fpi->repair_key);
 		nss		= ntohs(fpi->nss);
 		esi		= ntohl(fpi->esi);
-printf("is_source=%u, key=%u, nss=%u, esi=%u\n", is_source, repair_key, nss, esi);
 		if (esi > tot_enc) {		/* a sanity check, in case... */
 			fprintf(stderr, "Error, invalid esi=%u received in a packet's FPI\n", esi);
 			ret = -1;
@@ -152,7 +151,7 @@ printf("is_source=%u, key=%u, nss=%u, esi=%u\n", is_source, repair_key, nss, esi
 			goto end;
 		}
 		recvd_symbols_tab[esi] = pkt_with_fpi + sizeof(fpi_t);	/* remember */
-		printf("%05d => receiving symbol esi=%u (%s)\n", n_received, esi, (is_source) ? "src" : "repair");
+		printf("%05d => receiving symbol esi=%u (%s), key=%u, nss=%u\n", n_received, esi, (is_source) ? "src" : "repair", repair_key, nss);
 		if (is_source) {
 			if (swif_decoder_decode_with_new_source_symbol(ses, (char*)pkt_with_fpi + sizeof(fpi_t), esi) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_source_symbol() failed\n");
@@ -162,13 +161,11 @@ printf("is_source=%u, key=%u, nss=%u, esi=%u\n", is_source, repair_key, nss, esi
 		} else {
 			/* a bit more complex, it's a repair symbol: specify the coding window, generate the coding coefficients,
 			 * then submit the repair symbol  */
-printf("before swif_decoder_reset_coding_window\n");
 			if (swif_decoder_reset_coding_window(ses) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
 				ret = -1;
 				goto end;
 			}
-printf("before swif_decoder_add_source_symbol_to_coding_window\n");
 			for (i = esi; i < esi + nss; i++) {
 				if (swif_decoder_add_source_symbol_to_coding_window(ses, i) != SWIF_STATUS_OK) {
 					fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
@@ -176,13 +173,11 @@ printf("before swif_decoder_add_source_symbol_to_coding_window\n");
 					goto end;
 				}
 			}
-printf("before swif_generate_coding_coefs\n");
 			if (swif_decoder_generate_coding_coefs(ses, repair_key, 0) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed\n");
 				ret = -1;
 				goto end;
 			}
-printf("before swif_decoder_decode_with_new_repair_symbol\n");
 			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t)) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
 				ret = -1;
