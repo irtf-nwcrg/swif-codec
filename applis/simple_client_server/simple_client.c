@@ -45,16 +45,15 @@ int
 main (int argc, char* argv[])
 {
 	swif_codepoint_t codepoint;				/* identifier of the codec to use */
-	swif_decoder_t	*ses		= NULL;
+	swif_decoder_t*	ses		= NULL;
 	uint32_t	ew_size;				/* encoding window size */
 	uint32_t	tot_src;				/* total number of source symbols */
-	uint32_t	tot_enc;					/* total number of encoding symbols (i.e. source + repair) in the session */
+	uint32_t	tot_enc;				/* total number of encoding symbols (i.e. source + repair) in the session */
 	esi_t		esi;					/* source symbol id */
-	//uint32_t	idx;					/* index in the source+repair table */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
-	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
-	fec_oti_t	*fec_oti	= NULL;			/* FEC Object Transmission Information as sent to the client */
-	fpi_t		*fpi;					/* header (FEC Payload Information) for source and repair symbols */
+	char*		pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
+	fec_oti_t*	fec_oti		= NULL;			/* FEC Object Transmission Information as sent to the client */
+	fpi_t*		fpi;					/* header (FEC Payload Information) for source and repair symbols */
 	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
 	uint32_t	ret		= -1;
 	void**		recvd_symbols_tab= NULL;		/* table containing pointers to received symbols (no FPI here).
@@ -89,7 +88,7 @@ main (int argc, char* argv[])
 	tot_src		= ntohl(fec_oti->tot_src);
 	tot_enc		= ntohl(fec_oti->tot_enc);
 
-	printf("\nReceiving packets from %s/%d\n", DEST_IP, DEST_PORT);
+	printf("\nReceiving packets from %s/%d: codepoint %u, ew_size=%u, tot_src=%u, tot_enc=%u\n", DEST_IP, DEST_PORT, codepoint, ew_size, tot_src, tot_enc);
 
 	/* and check the correctness of data received */
 	if (tot_src > tot_enc || tot_src > 100000 || tot_enc > 100000) {
@@ -109,7 +108,7 @@ main (int argc, char* argv[])
 	}
 	/* Open and initialize the openfec decoding session now that we know the various parameters used by the sender/encoder... */
 	if ((ses = swif_decoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size, 2 * ew_size)) == NULL) {
-		fprintf(stderr, "Error, of_create_codec_instance() failed\n");
+		fprintf(stderr, "Error, swif_decoder_create() failed\n");
 		ret = -1;
 		goto end;
 	}
@@ -123,7 +122,7 @@ main (int argc, char* argv[])
 		ret = -1;
 		goto end;
 	}
-	len = SYMBOL_SIZE + 4;	/* size of the expected packet */
+	len = SYMBOL_SIZE + sizeof(fpi_t);	/* size of the expected packet */
 	/*
 	 * submit each fresh symbol to the library ASAP, upon reception.
 	 */
@@ -146,10 +145,15 @@ main (int argc, char* argv[])
 			ret = -1;
 			goto end;
 		}
-		recvd_symbols_tab[esi] = (char*)pkt_with_fpi + 4;	/* remember */
+		if (is_source != 0 && is_source != 1) {
+			fprintf(stderr, "Error, bad is_source (%u) value\n", is_source);
+			ret = -1;
+			goto end;
+		}
+		recvd_symbols_tab[esi] = pkt_with_fpi + sizeof(fpi_t);	/* remember */
 		printf("%05d => receiving symbol esi=%u (%s)\n", n_received, esi, (is_source) ? "src" : "repair");
 		if (is_source) {
-			if (swif_decoder_decode_with_new_source_symbol(ses, (char*)pkt_with_fpi + 4, esi) != SWIF_STATUS_OK) {
+			if (swif_decoder_decode_with_new_source_symbol(ses, (char*)pkt_with_fpi + sizeof(fpi_t), esi) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_source_symbol() failed\n");
 				ret = -1;
 				goto end;
@@ -174,7 +178,7 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-			if (swif_decoder_decode_with_new_repair_symbol(ses, (char*)pkt_with_fpi + 4) != SWIF_STATUS_OK) {
+			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t)) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
 				ret = -1;
 				goto end;
@@ -186,7 +190,7 @@ main (int argc, char* argv[])
 			done = true;
 			break;
 		}
-		len = SYMBOL_SIZE + 4;	/* make sure len contains the size of the expected packet */
+		len = SYMBOL_SIZE + sizeof(fpi_t);	/* make sure len contains the size of the expected packet */
 	}
 	if (done) {
 		/* finally, get a copy of the pointers to all the source symbols, those received (that we already know) and those decoded.
