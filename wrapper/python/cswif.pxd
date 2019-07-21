@@ -62,7 +62,19 @@ cdef extern from "../../src/swif_api.h":
         void           **coding_coefs_tab,
         uint32_t       *nb_coefs_in_tab);
 
-    
+
+    ctypedef struct swif_decoder_t:
+        swif_codepoint_t codepoint;
+        swif_errno_t     swif_errno;
+
+    swif_decoder_t *swif_decoder_create (
+        swif_codepoint_t codepoint,
+        uint32_t        verbosity,
+        uint32_t        symbol_size,
+        uint32_t        max_coding_window_size,
+        uint32_t        max_linear_system_size);
+
+
 #---------------------------------------------------------------------------
 
 cdef extern from "../../src/swif_rlc_cb.h":

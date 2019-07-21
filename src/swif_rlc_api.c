@@ -1,6 +1,8 @@
+#define DEBUG 1
+
 #include "swif_includes.h"
 #include "swif_rlc_api.h"
-
+#include "swif_coding_coefficients.h"
 
 /*******************************************************************************
  * Encoder functions
@@ -88,9 +90,13 @@ swif_status_t   swif_rlc_build_repair_symbol (
         fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
         return SWIF_STATUS_ERROR;
     }
+    DEBUG_PRINT("build-repair: \n");
     for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
-        symbol_add_scaled(new_buf, enc->cc_tab[i % enc->max_coding_window_size], enc->ew_tab[i % enc->max_coding_window_size], enc->symbol_size);
+        uint32_t idx = i % enc->max_coding_window_size;
+        DEBUG_PRINT(" +%u.P[%u->%u]", enc->cc_tab[idx], i, idx);
+        symbol_add_scaled(new_buf, enc->cc_tab[idx], enc->ew_tab[idx], enc->symbol_size);
     }
+    DEBUG_PRINT("\n");
     return SWIF_STATUS_OK;
 }
 
@@ -195,8 +201,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
 {
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
         //XXX;
-        swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
-                 new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        swif_full_symbol_t *full_symbol = NULL;
+        //XXX: TODO: full_symbol_create_from_source(
+        //new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
         full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
         fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
@@ -367,24 +374,24 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                                 uint32_t        add_param)
 {
         /* XXX: check why uint32_t key */
-        
+        DEBUG_PRINT("generate coding coefs\n");
         swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
         
-        if (enc->cc_tab == NULL) {
+        if (rlc_enc->cc_tab == NULL) {
                 /* XXX: need to use allocation functions */
-                enc->cc_tab = (uint8_t*) malloc(
-                    enc->max_coding_window_size*sizeof(uint8_t) );
-                if (enc->cc_tab == NULL) {
+                rlc_enc->cc_tab = (uint8_t*) malloc(
+                    rlc_enc->max_coding_window_size*sizeof(uint8_t) );
+                if (rlc_enc->cc_tab == NULL) {
                         fprintf(stderr, "Error, swif_rlc_encoder_generate_"
                                 "coding_coefs: malloc failed\n");
                         return SWIF_STATUS_ERROR;
                 }
         }
 
-        assert(enc->ew_ss_nb <= enc->max_window_size);
+        assert(rlc_enc->ew_ss_nb <= rlc_enc->max_coding_window_size);
         swif_rlc_generate_coding_coefficients (
-            (uint16_t)key, enc->cc_tab,
-            enc->ew_ss_nb, /* upper bound: enc->max_window_size */,
+            (uint16_t)key, rlc_enc->cc_tab,
+            rlc_enc->ew_ss_nb, /* upper bound: enc->max_window_size */
             15 /* density dt [0-15] XXX dt=1*/,
             8 /*=m - GF(2^^m) */);
 	return SWIF_STATUS_OK;

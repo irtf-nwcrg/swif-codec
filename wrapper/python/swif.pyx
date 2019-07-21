@@ -3,6 +3,7 @@
 #---------------------------------------------------------------------------
 
 cimport libc.stdio as stdio
+from libc.stdlib cimport malloc, free
 
 cimport cswif
 from cswif cimport *
@@ -16,6 +17,11 @@ cdef check_swif_status(swif_status, swif_errno):
     if swif_status == SWIF_STATUS_ERROR:
         raise RuntimeError("SWIF Error", swif_errno) #XXX
 
+cdef uint8_t* memclone(uint8_t* data, int data_size):
+    cdef uint8_t* result = <uint8_t*> malloc(data_size)
+    memcpy(result, data, data_size)
+    return result
+    
 cdef class RlcEncoder:
     cdef cswif.swif_encoder_t *encoder
     cdef symbol_size # XXX: replicated for convenience
@@ -30,8 +36,9 @@ cdef class RlcEncoder:
 
     def add_source_symbol_to_coding_window(self, uint8_t *symbol, symbol_id):
         assert self.encoder is not NULL
+        cdef uint8_t* cloned_symbol = memclone(symbol, self.symbol_size)
         status = swif_encoder_add_source_symbol_to_coding_window(
-            self.encoder, symbol, symbol_id)
+            self.encoder, cloned_symbol, symbol_id)
         check_swif_status(status, self.encoder.swif_errno)
 
     def build_repair_symbol(self):
@@ -62,8 +69,16 @@ cdef class RlcEncoder:
 #---------------------------------------------------------------------------
 
 class RlcDecoder:
-    def __init__(self, max_window_size, symbol_size):
-        self.decoder = None
+    cdef cswif.swif_decoder_t *decoder
+    cdef symbol_size # XXX: replicated for convenience
+
+    def __cinit__(self, symbol_size, max_coding_window_size):
+        self.decoder = swif_decoder_create(
+            SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC,
+            0, symbol_size, max_coding_window_size)
+        self.symbol_size = symbol_size
+        if self.decoder is NULL:
+            raise RuntimeError("SWIF Error", "encoder_create returned NULL")#XXX
 
 #---------------------------------------------------------------------------
 
