@@ -37,7 +37,14 @@ swif_encoder_t* swif_encoder_create (
  **/
 swif_status_t   swif_encoder_release (swif_encoder_t*        enc)
 {
-    return SWIF_STATUS_OK;
+    /* initialize the encoder */
+    switch (enc->codepoint) {
+        case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
+            return (swif_rlc_encoder_release(enc));
+        default:
+            fprintf(stderr, "Error, swif_encoder_release: codepoint not recognized\n");
+            return SWIF_STATUS_ERROR;
+    }
 }
 
 
