@@ -95,7 +95,7 @@ swif_status_t   swif_encoder_get_parameters  (
  */
 swif_status_t   swif_build_repair_symbol (
                                 swif_encoder_t* enc,
-                                void*           new_buf)
+                                void**          new_buf)
 {
     return (*enc->build_repair_symbol)(enc, new_buf);
 }
