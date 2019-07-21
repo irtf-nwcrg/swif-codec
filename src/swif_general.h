@@ -83,6 +83,19 @@ static inline uint16_t max_except(uint16_t v1, uint16_t v2, uint16_t ignored)
   return MAX(v1, v2);
 }
 
+/*---------------------------------------------------------------------------*/
+
+#ifdef DEBUG
+#define DEBUG_PRINT(...) do { fprintf( stderr, __VA_ARGS__ ); } while(0)
+#else
+#define DEBUG_PRINT(...) do {} while(0)
+#endif
+
+static inline void DEBUG_DUMP(void *data, unsigned int data_size)
+{
+        for (unsigned int j=0; j<data_size; j++)
+                DEBUG_PRINT(" %02x", ((uint8_t *)(data))[j]);
+}
 
 /*---------------------------------------------------------------------------*/
 
