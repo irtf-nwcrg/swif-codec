@@ -301,7 +301,7 @@ swif_status_t   swif_rlc_encoder_get_coding_window_information (
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
 
-    *first = enc->ew_esi_right - enc->ew_ss_nb;
+    *first = enc->ew_esi_right - enc->ew_ss_nb + 1;
     *last = enc->ew_esi_right;
     *nss = enc->ew_ss_nb;
     return SWIF_STATUS_OK;
