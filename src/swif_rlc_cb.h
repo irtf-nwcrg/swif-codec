@@ -26,10 +26,10 @@ typedef struct swif_encoder_rlc_cb {
 	uint32_t		symbol_size;
 
 	/* coding coefficients table. To be initialized before building a new repair symbol */
-	uint8_t			*cc_tab;
+	uint8_t*		cc_tab;
 	
 	/* pointer to the table containing source symbols */
-	void			**ew_tab;
+	void**			ew_tab;
 
 	/* the index of the firt source symbol (included) */
 	uint32_t 		ew_left;
@@ -50,8 +50,8 @@ typedef struct swif_encoder_rlc_cb {
 	void (*source_symbol_removed_from_coding_window_callback) (
                                         void*   context,
                                         esi_t   old_symbol_esi);
-	
-	void 			*context_4_callback;
+
+	void*			context_4_callback;
 	/* add whatever may be needed hereafter... */
 } swif_encoder_rlc_cb_t;
 
@@ -84,5 +84,17 @@ typedef struct swif_decoder_rlc_cb {
 	/* exact size (in bytes) of any source or repair symbol */
 	uint32_t		symbol_size;
 
+	void (*source_symbol_removed_from_linear_system_callback) (
+					void*   context,
+					esi_t   old_symbol_esi);
+	void* (*decodable_source_symbol_callback) (
+					void    *context,
+					esi_t   esi);
+	void* (*decoded_source_symbol_callback) (
+					void    *context,
+					void    *new_symbol_buf,
+					esi_t   esi);
+
+	void*			context_4_callback;
 	/* add whatever may be needed hereafter... */
 } swif_decoder_rlc_cb_t;
