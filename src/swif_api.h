@@ -236,15 +236,17 @@ enum {
 /**
  * Create a single repair symbol (i.e. perform an encoding).
  *
- * @param new_buf       (IN) The pointer to the buffer for the repair
- *                      symbol to build can either point to a buffer
- *                      allocated by the application, or let to NULL
- *                      meaning that this function will allocate memory.
+ * @param new_buf       (IN/OUT) Address of a pointer to the buffer for
+ *			the repair symbol to build. The pointer can
+ *			either point to a buffer allocated by the
+ *			application, or be set to NULL meaning that
+ *			this function will allocate memory and initialize
+ *			this pointer accordingly.
  * @return
  */
 swif_status_t   swif_build_repair_symbol (
                                 swif_encoder_t* enc,
-                                void*           new_buf);
+                                void**          new_buf);
 
 
 /*******************************************************************************

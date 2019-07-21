@@ -226,7 +226,7 @@ swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
     swif_encoder_rlc_cb_t	*enc = (swif_encoder_rlc_cb_t *) generic_enc;
 
     if ((enc->ew_esi_right != INVALID_ESI) && (new_src_symbol_esi != enc->ew_esi_right + 1)) {
-        fprintf(stderr, "swif_rlc_encoder_add_source_symbol_to_coding_window() failed! new_src_symbol_esi (%u) is not in the right order (%u expected)\n",
+        fprintf(stderr, "swif_rlc_encoder_add_source_symbol_to_coding_window() failed! new_src_symbol_esi (%u) is not the expected value (%u)\n",
 		new_src_symbol_esi, enc->ew_esi_right + 1);
         return SWIF_STATUS_ERROR;  
     }
