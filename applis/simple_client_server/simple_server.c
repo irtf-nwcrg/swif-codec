@@ -35,7 +35,7 @@ static void	source_symbol_removed_from_coding_window_callback (void*   context,
 
 
 int
-main(int argc, char* argv[])
+main (int argc, char* argv[])
 {
 	swif_codepoint_t codepoint;				/* identifier of the codec to use */
 	swif_encoder_t	*ses		= NULL;
@@ -91,7 +91,7 @@ main(int argc, char* argv[])
 		goto end;
 	}
 	/* allocate a buffer where we'll copy each symbol plus its simplified FPI.
-	 * This buffer will be reused during the whose session */
+	 * This buffer will be reused during the whole session */
 	if ((pkt_with_fpi = malloc(sizeof(fpi_t) + SYMBOL_SIZE)) == NULL) {
 		fprintf(stderr, "no memory (malloc failed for pkt_with_fpi)\n");
 		ret = -1;

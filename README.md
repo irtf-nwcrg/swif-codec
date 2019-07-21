@@ -26,7 +26,7 @@ However a given application may use several threads, each of them creating their
 
 [GitHub current API Internet-draft](https://github.com/vincent-grenoble/generic_fec_api) - to be prefered to have the latest under-progress version
 
-[API Slides (ietf102 nwcrg meeting)](https://github.com/irtf-nwcrg/rg-materials/blob/master/ietf102-2018-07/03_roca_generic_fec_api.pdf)
+[API Slides (ietf102 nwcrg meeting)](https://github.com/irtf-nwcrg/rg-materials/blob/master/ietf102-2018-07_montreal/03_roca_generic_fec_api.pdf)
 
 This dradft and associated slides discuss two things:
 - what mechanisms should be in the SWiF Codec versus in the caller?
