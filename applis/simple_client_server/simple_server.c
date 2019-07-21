@@ -38,7 +38,7 @@ int
 main (int argc, char* argv[])
 {
 	swif_codepoint_t codepoint;				/* identifier of the codec to use */
-	swif_encoder_t	*ses		= NULL;
+	swif_encoder_t*	ses		= NULL;
 	void**		enc_symbols_tab	= NULL;			/* table containing pointers to the encoding (i.e. source + repair) symbols buffers */
 	uint32_t	ew_size;				/* encoding window size */
 	uint32_t	tot_src;				/* total number of source symbols */
@@ -47,9 +47,9 @@ main (int argc, char* argv[])
 	uint32_t	idx;					/* index in the source+repair table */
 	uint32_t	interval_between_repairs;		/* number of source symbols between two repair symbols, in line with the code rate */
 	SOCKET		so		= INVALID_SOCKET;	/* UDP socket for server => client communications */
-	char		*pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
+	char*		pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t	fec_oti;				/* FEC Object Transmission Information as sent to the client */
-	fpi_t		*fpi;					/* header (FEC Payload Information) for source and repair symbols */
+	fpi_t*		fpi;					/* header (FEC Payload Information) for source and repair symbols */
 	SOCKADDR_IN	dst_host;
 	uint32_t	ret		= -1;
 
@@ -181,10 +181,6 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-			if (VERBOSITY > 1) {
-				printf("repair[%03d]= ", esi);
-				dump_buffer_32(enc_symbols_tab[idx], 4);
-			}
 			/* prepend a header in network byte order */
 			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_encoder_get_coding_window_information() failed for repair_key=%u\n", idx);
@@ -192,18 +188,23 @@ main (int argc, char* argv[])
 				goto end;
 			}
 			/* in our simple case, there is no ESI loop back to zero, so check consistency */
-			if (nss != last - first) {
+			if (nss != last - first + 1) {
 				fprintf(stderr, "Error, nss (%u) != last (%u) - first (%u) + 1, it should be equal\n", nss, last, first);
 				ret = -1;
 				goto end;
 			}
 			fpi = (fpi_t*)pkt_with_fpi;
-			fpi->is_source = htons(0);
-			fpi->repair_key = htons(idx);
-			fpi->nss = htons(nss);
-			fpi->esi = htonl(first);
+			fpi->is_source	= htons(0);
+			fpi->repair_key	= htons(idx);
+			fpi->nss	= htons(nss);
+			fpi->esi	= htonl(first);
 			memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-			printf(" => sending src symbol %u\n", esi);
+			if (VERBOSITY > 1) {
+				printf("repair[%03d]= ", first);
+				dump_buffer_32(pkt_with_fpi, 8);
+			} else {
+				printf(" => sending repair symbol %u\n", first);
+			}
 			if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
 				fprintf(stderr, "Error, sendto() failed!\n");
 				ret = -1;

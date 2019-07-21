@@ -136,17 +136,18 @@ main (int argc, char* argv[])
 		/* OK, new packet received... */
 		n_received++;
 		fpi		= (fpi_t*)pkt_with_fpi;
-		is_source	= htons(fpi->is_source);
-		repair_key	= htons(fpi->repair_key);
-		nss		= htons(fpi->nss);
-		esi		= htonl(fpi->esi);
+		is_source	= ntohs(fpi->is_source);
+		repair_key	= ntohs(fpi->repair_key);
+		nss		= ntohs(fpi->nss);
+		esi		= ntohl(fpi->esi);
+printf("is_source=%u, key=%u, nss=%u, esi=%u\n", is_source, repair_key, nss, esi);
 		if (esi > tot_enc) {		/* a sanity check, in case... */
 			fprintf(stderr, "Error, invalid esi=%u received in a packet's FPI\n", esi);
 			ret = -1;
 			goto end;
 		}
 		if (is_source != 0 && is_source != 1) {
-			fprintf(stderr, "Error, bad is_source (%u) value\n", is_source);
+			fprintf(stderr, "Error, bad is_source=%u received in the packet's FPI\n", is_source);
 			ret = -1;
 			goto end;
 		}
@@ -161,23 +162,27 @@ main (int argc, char* argv[])
 		} else {
 			/* a bit more complex, it's a repair symbol: specify the coding window, generate the coding coefficients,
 			 * then submit the repair symbol  */
+printf("before swif_decoder_reset_coding_window\n");
 			if (swif_decoder_reset_coding_window(ses) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
 				ret = -1;
 				goto end;
 			}
+printf("before swif_decoder_add_source_symbol_to_coding_window\n");
 			for (i = esi; i < esi + nss; i++) {
-				if (swif_decoder_add_source_symbol_to_coding_window (ses, i) != SWIF_STATUS_OK) {
+				if (swif_decoder_add_source_symbol_to_coding_window(ses, i) != SWIF_STATUS_OK) {
 					fprintf(stderr, "Error, swif_decoder_reset_coding_window() failed\n");
 					ret = -1;
 					goto end;
 				}
 			}
-			if (swif_decoder_generate_coding_coefs (ses, repair_key, 0) != SWIF_STATUS_OK) {
+printf("before swif_generate_coding_coefs\n");
+			if (swif_decoder_generate_coding_coefs(ses, repair_key, 0) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed\n");
 				ret = -1;
 				goto end;
 			}
+printf("before swif_decoder_decode_with_new_repair_symbol\n");
 			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t)) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
 				ret = -1;
