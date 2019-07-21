@@ -21,7 +21,9 @@ cdef uint8_t* memclone(uint8_t* data, int data_size):
     cdef uint8_t* result = <uint8_t*> malloc(data_size)
     memcpy(result, data, data_size)
     return result
-    
+
+VERBOSITY = 2
+
 cdef class RlcEncoder:
     cdef cswif.swif_encoder_t *encoder
     cdef symbol_size # XXX: replicated for convenience
@@ -29,17 +31,18 @@ cdef class RlcEncoder:
     def __cinit__(self, symbol_size, max_coding_window_size):
         self.encoder = swif_encoder_create(
             SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC,
-            0, symbol_size, max_coding_window_size)
+            VERBOSITY, symbol_size, max_coding_window_size)
         self.symbol_size = symbol_size
         if self.encoder is NULL:
             raise RuntimeError("SWIF Error", "encoder_create returned NULL")#XXX
+	#if (swif_encoder_set_callback_functions(ses, source_symbol_removed_from_coding_window_callback, NULL) != SWIF_STATUS_OK) {
 
     def add_source_symbol_to_coding_window(self, uint8_t *symbol, symbol_id):
         assert self.encoder is not NULL
         cdef uint8_t* cloned_symbol = memclone(symbol, self.symbol_size)
         status = swif_encoder_add_source_symbol_to_coding_window(
             self.encoder, cloned_symbol, symbol_id)
-        check_swif_status(status, self.encoder.swif_errno)
+        check_swif_status(status, self.encoder.swif_errno)        
 
     def build_repair_symbol(self):
         assert self.encoder is not NULL
@@ -68,14 +71,14 @@ cdef class RlcEncoder:
 
 #---------------------------------------------------------------------------
 
-class RlcDecoder:
+cdef class RlcDecoder:
     cdef cswif.swif_decoder_t *decoder
     cdef symbol_size # XXX: replicated for convenience
 
     def __cinit__(self, symbol_size, max_coding_window_size):
         self.decoder = swif_decoder_create(
             SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC,
-            0, symbol_size, max_coding_window_size)
+            0, symbol_size, max_coding_window_size, 2*max_coding_window_size)
         self.symbol_size = symbol_size
         if self.decoder is NULL:
             raise RuntimeError("SWIF Error", "encoder_create returned NULL")#XXX

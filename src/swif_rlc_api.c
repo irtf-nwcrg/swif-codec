@@ -374,7 +374,7 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
                                 uint32_t        add_param)
 {
         /* XXX: check why uint32_t key */
-        DEBUG_PRINT("generate coding coefs\n");
+        DEBUG_PRINT("generate coding coefs: ");
         swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
         
         if (rlc_enc->cc_tab == NULL) {
@@ -394,6 +394,7 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
             rlc_enc->ew_ss_nb, /* upper bound: enc->max_window_size */
             15 /* density dt [0-15] XXX dt=1*/,
             8 /*=m - GF(2^^m) */);
+        DEBUG_DUMP(rlc_enc->cc_tab, rlc_enc->ew_ss_nb);
 	return SWIF_STATUS_OK;
 }
 
