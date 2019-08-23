@@ -5,7 +5,7 @@
 
 
 #include "swif_full_symbol_impl.h" 
-#define PACKET_INDEX_NONE 0xffffffff
+#define PACKET_INDEX_NONE 0xfffffffful
 
 /*---------------------------------------------------------------------------*/
 
@@ -95,7 +95,7 @@ static inline symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
  * @brief Add a full_symbol to a packet set.
  * 
  * Gaussian elimination can occur.
- * Return the pivotremove_each_pivot associated to the new full_symbol 
+ * Return the pivot [remove_each_pivot associated to the new full_symbol]
  * or SYMBOL_ID_NONE if dependent (e.g. redundant) packet
  * 
  * The full_symbol is not freed and also reference is not captured.
@@ -105,14 +105,14 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
 {
     assert(set != NULL);
     if (full_symbol_is_zero(full_symbol)) {
-        return SYMBOL_ID_NONE;
+        return PACKET_INDEX_NONE;
     }
 
     /* the added symbol is not modified: we first clone it */
     swif_full_symbol_t *full_symbol_cloned = full_symbol_clone(full_symbol);
     if (full_symbol_cloned == NULL) {
-        /* XXX: warning "cannot allocate memory for full_symbol cloning" */
-        return SYMBOL_ID_NONE;
+        WARNING_PRINT("cannot allocate memory for full_symbol cloning");
+        return PACKET_INDEX_NONE;
     }
     if (set->first_symbol_id == SYMBOL_ID_NONE) {
         set->first_symbol_id = full_symbol_cloned->first_nonzero_id;
@@ -120,10 +120,10 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
     
     uint32_t old_size = set->size;
     symbol_id_t new_i0 = full_symbol_cloned->first_nonzero_id;
+    symbol_id_t set_i0 = set->first_symbol_id;
 
     /* The added symbol has first nonzero index which is outside the current set */
-    if (new_i0 < set->first_symbol_id) {   
-        symbol_id_t set_i0 = set->first_symbol_id;   
+    if (new_i0 < set_i0) {   
         DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id < set->first_symbol_id \n");
         if (set_i0 - new_i0 < set->size) { /*XXX: add test*/
             memmove(set->full_symbol_tab+(set_i0-new_i0), set->full_symbol_tab, 
@@ -139,37 +139,50 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
         }
         IF_DEBUG(full_symbol_set_dump(set, stdout));
         if (set->full_symbol_tab == NULL) {
+            WARNING_PRINT("failed to reallocate full_symbol_tab");
+            full_symbol_free(full_symbol_cloned);
             free(set->full_symbol_tab);
-            return SYMBOL_ID_NONE;
+            return PACKET_INDEX_NONE;
         }
-        set->full_symbol_tab[0] = full_symbol_cloned ; //set->first_symbol_id-full_symbol_cloned->first_nonzero_id
+        set->full_symbol_tab[0] = full_symbol_cloned;
         set->nmbr_packets++;
-        set->first_symbol_id = calculate_min(set->first_symbol_id, full_symbol_cloned->first_nonzero_id) ;
-        return set->first_symbol_id-full_symbol_cloned->first_nonzero_id ; 
+        set->first_symbol_id = calculate_min(set_i0, new_i0); /* actually should be new_i0 */
+        set_i0 = set->first_symbol_id;
+        return new_i0 - set_i0; /* should be 0 */
     }
 
     DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id > set->first_symbol_id \n");
-    if ( full_symbol_cloned->first_nonzero_id-set->first_symbol_id < set->size  ){
-        set->full_symbol_tab[full_symbol_cloned->first_nonzero_id-set->first_symbol_id] = full_symbol_cloned ;
-        set->nmbr_packets++ ;
-        return full_symbol_cloned->first_nonzero_id-set->first_symbol_id; 
-    }else if (full_symbol_cloned->first_nonzero_id-set->first_symbol_id < (set->size *2) ){
+    uint32_t idx_pos = new_i0 - set_i0;
+    if (idx_pos < set->size) {
+        if (set->full_symbol_tab[idx_pos] != NULL) {
+            WARNING_PRINT("overwriting one full_symbol in set");
+            full_symbol_free(set->full_symbol_tab[idx_pos]);
+        }
+        set->full_symbol_tab[idx_pos] = full_symbol_cloned;
+        set->nmbr_packets++;
+        return idx_pos; 
+    } else if (idx_pos < (set->size *2) ){
         set->size *= 2;
-    }else{
-        set->size = full_symbol_cloned->last_nonzero_id-set->first_symbol_id +1;
+    } else { /* new_i0-set_i0 >= set->size*2 */
+        set->size = idx_pos +1; /* hence: new set->size >= old_size *2 + 1 */
     }
-    // allocate the table of pointers to full_symbol
-    set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
-    memset(set->full_symbol_tab+old_size,0, sizeof(swif_full_symbol_t*)*(set->size-old_size)  );
+    assert(idx_pos < set->size);
+
+    /* reallocate memory for the table of pointers in full_symbol */
+    set->full_symbol_tab =realloc(
+        set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *)); 
+    memset(set->full_symbol_tab+old_size, 0, sizeof(swif_full_symbol_t*)*(set->size-old_size));
 
     if (set->full_symbol_tab == NULL) {
+        WARNING_PRINT("failed to reallocate full_symbol_tab");
+        full_symbol_free(full_symbol_cloned);
         free(set->full_symbol_tab);
         return SYMBOL_ID_NONE;
     }
 
-    set->full_symbol_tab[(full_symbol_cloned->first_nonzero_id-set->first_symbol_id)] = full_symbol_cloned ; 
+    set->full_symbol_tab[idx_pos] = full_symbol_cloned ; 
     set->nmbr_packets++;
-    return (full_symbol_cloned->first_nonzero_id-set->first_symbol_id) ; 
+    return idx_pos; 
 }
 
 /*---------------------------------------------------------------------------*/

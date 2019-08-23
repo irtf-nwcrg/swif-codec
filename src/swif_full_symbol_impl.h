@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 /* XXX: move in more general header file */
+#define WARNING_PRINT(fmt, args...) fprintf(stderr, "WARNING: %s: %d: %s(): " fmt, \
+    __FILE__, __LINE__, __func__, ##args)
 #define WITH_DEBUG
 #ifdef WITH_DEBUG
 #define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s: %d: %s(): " fmt, \
@@ -92,7 +94,7 @@ void full_symbol_set_free(swif_full_symbol_set_t *set);
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
-uint32_t swif_full_symbol_set_add
+symbol_id_t swif_full_symbol_set_add
 (swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol);
 
 /*---------------------------------------------------------------------------*/
