@@ -10,8 +10,7 @@ extern "C" {
 
 /*---------------------------------------------------------------------------*/
 /**
- * @brief       For now this is an hackish adaptation on top of liblc,
- *              will be replaced by a proper implementation later.
+ * @brief       Implementation of full symbol operations.
  */
 
 #include <stdio.h>

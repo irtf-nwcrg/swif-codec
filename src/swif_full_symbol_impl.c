@@ -1,12 +1,12 @@
 
 /**
- * @brief       For now this is an hackish adaptation on top of liblc,
- *              will be replaced by a proper implementation later.
+ * @brief       For now this is an independant implementation from liblc,
  */
 
 
 #include "swif_full_symbol_impl.h" 
 #define PACKET_INDEX_NONE 0xffffffff
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -17,7 +17,7 @@
  *  It is used to do automatically Gaussian elimination when a coded packet is added
  */
 
-const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 2;
+const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 2; /*XXX:switch to 16*/
 
 swif_full_symbol_set_t *full_symbol_set_alloc()
 {
@@ -86,6 +86,11 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
     fprintf(out, "}\n");
 }
 
+static inline symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
+{
+    return (index1 <= index2 ? index1 : index2) ;
+}
+
 /**
  * @brief Add a full_symbol to a packet set.
  * 
@@ -95,25 +100,23 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
-symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
+
+uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol)
 {
-    return (index1 <= index2 ? index1 : index2) ;
-}
-uint32_t full_symbol_set_add(swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol)
-{
-    // clone 
-    swif_full_symbol_t * full_symbol_cloned = full_symbol_clone(full_symbol);
     assert(set != NULL);
-    if(full_symbol_cloned->first_nonzero_id == SYMBOL_ID_NONE ){
+    if (full_symbol_is_zero(full_symbol)) {
         return SYMBOL_ID_NONE ; 
     }
-    if(set->first_symbol_id == SYMBOL_ID_NONE){// it was NULL
+
+    /* the added symbol is not modified: we first clone it */
+    swif_full_symbol_t *full_symbol_cloned = full_symbol_clone(full_symbol);
+    if (set->first_symbol_id == SYMBOL_ID_NONE) {// it was NULL
         set->first_symbol_id = full_symbol_cloned->first_nonzero_id; 
     }
     
     uint32_t old_size = set->size;
     /////  case : full_symbol_cloned->first_nonzero_id < set->first_symbol_id
-     if ( full_symbol_cloned->first_nonzero_id < set->first_symbol_id)
+     if (full_symbol_cloned->first_nonzero_id < set->first_symbol_id)
     {   
         DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id < set->first_symbol_id \n");
         if (set->first_symbol_id-full_symbol_cloned->first_nonzero_id < set->size  )
@@ -381,19 +384,27 @@ void full_symbol_free(swif_full_symbol_t* full_symbol)
 
 /**
  * @brief Create a new (unlinked) copy of a full_symbol
+ *    (can return NULL if memory allocation fails)
  */
 swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t* full_symbol)
 {
-    //allouer et copier
-    swif_full_symbol_t *result = full_symbol_alloc( full_symbol->first_nonzero_id,  full_symbol->last_nonzero_id , full_symbol->data_size);
+    swif_full_symbol_t *result = full_symbol_alloc(full_symbol->first_nonzero_id, 
+       full_symbol->last_nonzero_id, full_symbol->data_size);
+    if (result == NULL) {
+        return NULL;
+    }
 
-    memcpy(result->coef, full_symbol->coef, (full_symbol->last_id - full_symbol->first_id +1 ) * sizeof(uint8_t));
     result->first_id = full_symbol->first_id;
     result->last_id = full_symbol->last_id;
     result->first_nonzero_id = full_symbol->first_nonzero_id;
     result->last_nonzero_id = full_symbol->last_nonzero_id;
     result->data_size = full_symbol->data_size;
-    memcpy(result->data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
+
+    if (! full_symbol_is_zero(full_symbol)) {
+        memcpy(result->coef, full_symbol->coef, (full_symbol->last_id - full_symbol->first_id +1 ) * sizeof(uint8_t));
+        memcpy(result->data, full_symbol->data, full_symbol->data_size * sizeof(uint8_t));
+    }
+
     return result;
 }
 
@@ -406,10 +417,8 @@ uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol)
 }
 
 
-
-
-static inline bool full_symbol_has_sufficient_size(swif_full_symbol_t* symbol,
-                                           symbol_id_t id1, symbol_id_t id2)
+static inline bool full_symbol_has_sufficient_size
+(swif_full_symbol_t* symbol, symbol_id_t id1, symbol_id_t id2)
 { 
     assert(id1 <= id2);
     symbol_id_t symbol_id_size = full_symbol_count_coef(symbol);
