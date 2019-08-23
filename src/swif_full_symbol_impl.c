@@ -11,15 +11,17 @@
 
 
 /**
- * @brief Create a full_symbol set, that will be used to do gaussian elimination
+ * @brief Create a swif_full_symbol set:
+ *  A swif_full_symbol_set is a data structure that contains "full symbols", e.g.
+ * coded symbols with the encoding header.
+ *  It is used to do automatically Gaussian elimination when a coded packet is added
  */
 
-uint32_t max_size = 2; 
+const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 2;
+
 swif_full_symbol_set_t *full_symbol_set_alloc()
 {
-
-    
-    //allocate the struct 
+    /* allocate the struct */
     swif_full_symbol_set_t *result
         = (swif_full_symbol_set_t *)calloc(1, sizeof(swif_full_symbol_set_t));
 
@@ -27,29 +29,17 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
         return NULL;
     }
 
-    result->size = max_size ; 
-    result->nmbr_packets = 0 ;
-    // allocate the table of pointers to full_symbol
+    /* allocate the table of pointers to full_symbol */
+    result->size = FULL_SYMBOL_SET_INITIAL_SIZE;
+    result->nmbr_packets = 0;
+
     swif_full_symbol_t **full_symbol_tab = calloc(result->size, sizeof(swif_full_symbol_t *)); 
     if (full_symbol_tab == NULL) {
         free(full_symbol_tab);
         return NULL;
     }
     result->full_symbol_tab = full_symbol_tab;
-    ////result->full_symbol_tab[0] = PACKET_INDEX_NONE ;
-    /*
-    // allocate the table of pivots
-    symbol_id_t *full_symbol_pivot = calloc(result->size, sizeof(symbol_id_t)); 
-    if (full_symbol_pivot == NULL) {
-        free(result->full_symbol_tab);
-        free(full_symbol_pivot);
-        return NULL;
-    }
-    
-    result->full_symbol_pivot = full_symbol_pivot;
-    result->full_symbol_pivot[0] = PACKET_INDEX_NONE ;
-    */
-    result->first_symbol_id = SYMBOL_ID_NONE ; 
+    result->first_symbol_id = SYMBOL_ID_NONE ;
     return result; 
 }
 
@@ -60,8 +50,8 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
 {
     assert(set != NULL);
     assert(set->full_symbol_tab != NULL);
-    for(uint32_t i = 0 ; i<  set->size; i++){
-        if (set->full_symbol_tab[i]  != NULL )
+    for(uint32_t i = 0; i < set->size; i++){
+        if (set->full_symbol_tab[i] != NULL)
             full_symbol_free(set->full_symbol_tab[i]);   
     } 
     free(set->full_symbol_tab);
@@ -69,38 +59,38 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
     free(set);
 }
 
-
+/**
+ * @brief Dump a full symbol set (python/json-like representation)
+ */
 void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
 {
-    fprintf(out, "'full_symbol_set size':%u", full_symbol_set->size);
-    fprintf(out,"\n"); 
+    fprintf(out, "{'size':%u, ", full_symbol_set->size);
+    fprintf(out, "'first_symbol_id':%u,", full_symbol_set->first_symbol_id);
+    fprintf(out, "'set':{");
 
-    fprintf(out, "'full_symbol_set first_symbol_id':%u", full_symbol_set->first_symbol_id);
-    fprintf(out,"\n");
-    fprintf(out, "'full_symbol_tab':[");
-    fprintf(out,"\n");
-
-    for (uint32_t i=0 ; i<full_symbol_set->size ; i++ ){
-        if(full_symbol_set->full_symbol_tab[i] != NULL){
-            printf("full_symbol_set->full_symbol_tab[%u|%u]: ", i, full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
+    bool is_first = true;
+    for (uint32_t i = 0; i < full_symbol_set->size; i++) {
+        if (full_symbol_set->full_symbol_tab[i] != NULL) {
+            if (!is_first) {
+                fprintf(out, ",");
+            } else {
+                is_first = false;
+            }
+            fprintf(out, "%u:(%u, ", i,
+                full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
             full_symbol_dump(full_symbol_set->full_symbol_tab[i], out);
+            fprintf(out, ")");
         }
-        else 
-            printf("full_symbol_set->full_symbol_tab[%u] is NULL \n ", i);
-        
     }
-
-    fprintf(out, "]"); 
-    fprintf(out,"\n");
-    
-
+    fprintf(out, "}"); 
+    fprintf(out, "}\n");
 }
 
 /**
  * @brief Add a full_symbol to a packet set.
  * 
  * Gaussian elimination can occur.
- * Return the pivot associated to the new full_symbol 
+ * Return the pivotremove_each_pivot associated to the new full_symbol 
  * or SYMBOL_ID_NONE if dependent (e.g. redundant) packet
  * 
  * The full_symbol is not freed and also reference is not captured.

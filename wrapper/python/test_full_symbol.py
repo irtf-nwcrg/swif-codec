@@ -233,19 +233,24 @@ def test_add_with_elimination():
     set1.dump()
 #---------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    #try_full_symbol_wrapper()
-    #test_full_symbol_wrapper()
-    #try_full_symbol_add_base()
-    #try_full_symbol_add()
-    #try_full_symbol_scale()
-    #try_full_symbol_scale_inverted()
-    #try_alloc_add_set()
-    #try_alloc_add_set_expl2()
-    #try_remove_each_pivot() 
-    #test_full_symbol_get_coef()
-    #test_add_as_pivot()
-    #test_add_as_pivot2()
-    #test_add_with_elimination()
+def test_all():
+    try_full_symbol_wrapper()
+    test_full_symbol_wrapper()
+    try_full_symbol_add_base()
+    try_full_symbol_add()
+    try_full_symbol_scale()
+    try_full_symbol_scale_inverted()
+    try_alloc_add_set()
+    try_alloc_add_set_expl2()
+    try_remove_each_pivot() 
+    test_full_symbol_get_coef()
+    test_add_as_pivot()
+    test_add_as_pivot2()
+    test_add_with_elimination()
     try_elimination()
+
+if __name__ == "__main__":
+    #test_all()
+    try_elimination()
+
 #---------------------------------------------------------------------------
