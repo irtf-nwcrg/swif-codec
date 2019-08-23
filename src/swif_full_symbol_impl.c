@@ -105,36 +105,39 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
 {
     assert(set != NULL);
     if (full_symbol_is_zero(full_symbol)) {
-        return SYMBOL_ID_NONE ; 
+        return SYMBOL_ID_NONE;
     }
 
     /* the added symbol is not modified: we first clone it */
     swif_full_symbol_t *full_symbol_cloned = full_symbol_clone(full_symbol);
-    if (set->first_symbol_id == SYMBOL_ID_NONE) {// it was NULL
-        set->first_symbol_id = full_symbol_cloned->first_nonzero_id; 
+    if (full_symbol_cloned == NULL) {
+        /* XXX: warning "cannot allocate memory for full_symbol cloning" */
+        return SYMBOL_ID_NONE;
+    }
+    if (set->first_symbol_id == SYMBOL_ID_NONE) {
+        set->first_symbol_id = full_symbol_cloned->first_nonzero_id;
     }
     
     uint32_t old_size = set->size;
-    /////  case : full_symbol_cloned->first_nonzero_id < set->first_symbol_id
-     if (full_symbol_cloned->first_nonzero_id < set->first_symbol_id)
-    {   
+    symbol_id_t new_i0 = full_symbol_cloned->first_nonzero_id;
+
+    /* The added symbol has first nonzero index which is outside the current set */
+    if (new_i0 < set->first_symbol_id) {   
+        symbol_id_t set_i0 = set->first_symbol_id;   
         DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id < set->first_symbol_id \n");
-        if (set->first_symbol_id-full_symbol_cloned->first_nonzero_id < set->size  )
-        {
-            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) *set->size-set->first_symbol_id-full_symbol_cloned->first_nonzero_id);
+        if (set_i0 - new_i0 < set->size) { /*XXX: add test*/
+            memmove(set->full_symbol_tab+(set_i0-new_i0), set->full_symbol_tab, 
+                    sizeof(swif_full_symbol_t *) * (set->size - (set_i0-new_i0)));
+        } else { 
+            if (set_i0 - new_i0 < (set->size * 2)) {
+                set->size *= 2;
+            } else {
+                set->size = set_i0-new_i0 +1;
+            }
+            set->full_symbol_tab = realloc(set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
+            memmove(set->full_symbol_tab + (set_i0-new_i0), set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
         }
-        else if (set->first_symbol_id - full_symbol_cloned->first_nonzero_id < (set->size *2) ){
-            set->size *= 2;
-            set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
-            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
-        }else{
-            set->size = set->first_symbol_id-full_symbol_cloned->last_nonzero_id +1;
-            set->full_symbol_tab =realloc(set->full_symbol_tab , set->size * sizeof(swif_full_symbol_t *)); 
-          
-            memmove(set->full_symbol_tab+set->first_symbol_id-full_symbol_cloned->first_nonzero_id,set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
-        }
-        full_symbol_set_dump(set, stdout);
-        full_symbol_set_dump(set, stdout);
+        IF_DEBUG(full_symbol_set_dump(set, stdout));
         if (set->full_symbol_tab == NULL) {
             free(set->full_symbol_tab);
             return SYMBOL_ID_NONE;
