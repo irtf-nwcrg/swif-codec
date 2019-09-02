@@ -233,6 +233,20 @@ def test_add_with_elimination():
     set1.dump()
 #---------------------------------------------------------------------------
 
+def test_full_symbol_set_add_previous_id():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        10, bytes([1,1,1,1]), b"azerty")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,0,1,2]), b"querty")
+    symbol3 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,2,0]), b"test")
+    set1.set_add(symbol1)
+    set1.set_add(symbol2)
+    set1.set_add(symbol3)
+    set1.dump()
+#---------------------------------------------------------------------------
+
 def test_all():
     try_full_symbol_wrapper()
     test_full_symbol_wrapper()
@@ -248,9 +262,11 @@ def test_all():
     test_add_as_pivot2()
     test_add_with_elimination()
     try_elimination()
+    test_full_symbol_set_add_previous_id
 
 if __name__ == "__main__":
-    test_all()
-    try_elimination()
+    #test_all()
+    #try_elimination()
+    test_full_symbol_set_add_previous_id()
 
 #---------------------------------------------------------------------------
