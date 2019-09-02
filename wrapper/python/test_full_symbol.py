@@ -250,7 +250,7 @@ def test_all():
     try_elimination()
 
 if __name__ == "__main__":
-    #test_all()
+    test_all()
     try_elimination()
 
 #---------------------------------------------------------------------------

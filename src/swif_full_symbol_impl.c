@@ -17,7 +17,7 @@
  *  It is used to do automatically Gaussian elimination when a coded packet is added
  */
 
-const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 2; /*XXX:switch to 16*/
+const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 16; /*XXX:switch to 16*/
 
 swif_full_symbol_set_t *full_symbol_set_alloc()
 {
@@ -230,6 +230,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                 if (new_symbol->coef[i] != NULL){
                     isNull= false;
                 }
+                full_symbol_free(symbol1_cloned);
             } else {
                 isNull= false; 
             }
@@ -272,6 +273,7 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, s
     swif_full_symbol_t *fss_remove_pivot= full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
     if(fss_remove_pivot)
         full_symbol_set_add_as_pivot(full_symbol_set, fss_remove_pivot);
+    full_symbol_free(fss_remove_pivot);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -298,7 +300,7 @@ swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t l
     }
     /* allocate coef and data */
      uint8_t *coef
-        = (swif_full_symbol_t *)calloc(symbol_id_size , sizeof(uint8_t));
+        = (uint8_t *)calloc(symbol_id_size , sizeof(uint8_t));
     if (coef == NULL) {
         /* free the structure in case of problem */
         free(result);
@@ -398,8 +400,8 @@ void full_symbol_free(swif_full_symbol_t* full_symbol)
  */
 swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t* full_symbol)
 {
-    swif_full_symbol_t *result = full_symbol_alloc(full_symbol->first_nonzero_id, 
-       full_symbol->last_nonzero_id, full_symbol->data_size);
+    swif_full_symbol_t *result = full_symbol_alloc(full_symbol->first_id, 
+       full_symbol->last_id, full_symbol->data_size);
     if (result == NULL) {
         return NULL;
     }

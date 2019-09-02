@@ -84,10 +84,20 @@ void test_add_with_elimination(void)
     full_symbol_set_free(set1);
 
 }
+void test_clone(void)
+{
+     uint8_t data1[4] = {0x01, 0x00, 0x00};
+    swif_full_symbol_t* symbol1 = full_symbol_create_from_source(1, data1, sizeof(data1));
+    swif_full_symbol_t *v1 = full_symbol_clone(symbol1);
+    full_symbol_free(v1);
+    full_symbol_free(symbol1);
+
+}
 int main(int argc, char **argv)
 {
     //test_set();
     //test_set2();
     test_add_with_elimination();
+    //test_clone();
     exit(0);
 }
