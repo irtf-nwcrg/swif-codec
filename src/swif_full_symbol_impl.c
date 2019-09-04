@@ -125,7 +125,7 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
     /* The added symbol has first nonzero index which is outside the current set */
     if (new_i0 < set_i0) {   
         DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id < set->first_symbol_id \n");
-        if (set_i0 - new_i0 < set->size) { /*XXX: add test*/
+        if (set_i0 - new_i0 < set->size) {
             memmove(set->full_symbol_tab+(set_i0-new_i0), set->full_symbol_tab, 
                     sizeof(swif_full_symbol_t *) * (set->size - (set_i0-new_i0)));
         } else { 
@@ -466,8 +466,8 @@ static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
 
 static inline uint32_t full_symbol_count_allocated_coef(swif_full_symbol_t *full_symbol)
 {
-    if (full_symbol->first_nonzero_id == SYMBOL_ID_NONE) { //  first_id
-        assert(full_symbol->last_nonzero_id == SYMBOL_ID_NONE); // last_id
+    if (full_symbol->first_nonzero_id == SYMBOL_ID_NONE) { 
+        assert(full_symbol->last_nonzero_id == SYMBOL_ID_NONE); 
         return 0;
     } else {
         assert(full_symbol->first_id <= full_symbol->last_id);
@@ -522,9 +522,6 @@ bool full_symbol_adjust_min_max_coef(swif_full_symbol_t* symbol)
  */
 uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
 {
-    //uint32_t result = full_symbol->first_nonzero_id;
-    //full_symbol_adjust_min_max_coef(full_symbol);
-    //assert( result == full_symbol->first_nonzero_id );
     return full_symbol->first_nonzero_id; 
 }
 
@@ -534,7 +531,6 @@ uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol)
  */
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol)
 {
-    //full_symbol_adjust_min_max_coef(full_symbol);
     return full_symbol->last_nonzero_id; 
 }
 
@@ -613,7 +609,7 @@ void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
     assert(symbol1->first_nonzero_id != SYMBOL_ID_NONE && symbol1->last_nonzero_id != SYMBOL_ID_NONE);
     symbol_mul(symbol1->data, coef, symbol1->data_size, symbol1->data);
     symbol_mul(symbol1->coef, coef, full_symbol_count_allocated_coef(symbol1), symbol1->coef);
-    full_symbol_adjust_min_max_coef(symbol1); // because can be 0
+    full_symbol_adjust_min_max_coef(symbol1); // because after adjust some coeffs could be 0
 }
 
 
