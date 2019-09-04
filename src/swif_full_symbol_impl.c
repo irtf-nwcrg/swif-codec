@@ -244,7 +244,8 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 }
   
 /*---------------------------------------------------------------------------*/
-void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) {
+void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
+{
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE){
         return ;
@@ -269,7 +270,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
 
 
 /*---------------------------------------------------------------------------*/
-void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) {
+void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
+{
     swif_full_symbol_t *fss_remove_pivot= full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
     if(fss_remove_pivot)
         full_symbol_set_add_as_pivot(full_symbol_set, fss_remove_pivot);
@@ -280,7 +282,7 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, s
  * @brief Create a full_symbol from a raw packet (a set of bytes)
  *        and initialize it with content '0'
  */
-swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) // data_size == symbol_size
+swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) 
 { 
     symbol_id_t symbol_id_size;
     if (first_symbol_id == SYMBOL_ID_NONE) {
@@ -315,7 +317,6 @@ swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t l
         free(result->coef);
         free(result);
         return NULL;
-
     }
     result->data = data ;
     result->first_id = first_symbol_id;
@@ -324,7 +325,6 @@ swif_full_symbol_t *full_symbol_alloc(symbol_id_t first_symbol_id, symbol_id_t l
     full_symbol_adjust_min_max_coef(result);
 
     return result;
-
 }
 
 
@@ -614,9 +614,6 @@ void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
     symbol_mul(symbol1->data, coef, symbol1->data_size, symbol1->data);
     symbol_mul(symbol1->coef, coef, full_symbol_count_allocated_coef(symbol1), symbol1->coef);
     full_symbol_adjust_min_max_coef(symbol1); // because can be 0
-    //swif_full_symbol_t *symbol_result = full_symbol_create(symbol1->coef, symbol1->first_nonzero_id, full_symbol_count_coef(symbol1) , result, symbol1->data_size);
-    //swif_full_symbol_t *symbol2 = full_symbol_clone(symbol1);
-    //full_symbol_add_base(symbol2, symbol_result ,symbol1);
 }
 
 
@@ -631,13 +628,8 @@ void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
  */
 void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2, swif_full_symbol_t *symbol_result)
 {
-    // assert (symbol1->data != NULL && symbol2->data != NULL .... )
     assert (symbol1->data != NULL && symbol2->data != NULL && symbol_result->data != NULL);
-    // assert (symbol_result->data_size >= symbol2->data_size);
     assert (symbol_result->data_size >= symbol1->data_size && symbol_result->data_size >= symbol2->data_size);
-
-    // assert (symbol2->first_nonzero_id -> is included in encoding header symbol_result);
-    // assert (symbol2->last_nonzero_id -> is included in encoding header symbol_result));
     assert (full_symbol_includes_id(symbol_result, symbol1->first_nonzero_id));
     assert (full_symbol_includes_id(symbol_result, symbol1->last_nonzero_id));
     assert (full_symbol_includes_id(symbol_result, symbol2->first_nonzero_id));
@@ -670,15 +662,10 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
         sizeof(uint8_t)*(symbol_result->last_id-last_coef_index));
 
     for (uint32_t i = first_coef_index; i <= last_coef_index; i++){
-        //memset(symbol_result->coef+(i-symbol_result->first_id) , full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i) , sizeof(uint8_t));
         symbol_result->coef[i-symbol_result->first_id] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
-        //symbol_result->coef[i] = full_symbol_get_coef(symbol1, i) ^ full_symbol_get_coef(symbol2, i);
     }
 
     full_symbol_adjust_min_max_coef(symbol_result);
-
-    // get data
-    //symbol_add((void *)symbol1->data, (void *)symbol2->data, full_symbol_get_size(symbol_result), (uint8_t * )symbol_result->data); 
 
     if(symbol1->data_size >= symbol2->data_size ){
         symbol_add((void *)symbol1->data, (void *)symbol2->data, symbol2->data_size, (uint8_t * )symbol_result->data); 
@@ -692,8 +679,12 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
     }
 }
 
-
-
+/**
+ * @brief Take a symbol and add another symbol to it, e.g. performs the equivalent of: p1 + p2
+ * @param[in] p1     First symbol (to which p2 will be added)
+ * @param[in] p2     Second symbol
+ * A new symbol is created to put the result of the addition 
+ */
 swif_full_symbol_t* full_symbol_add(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2)
 {
     uint32_t first_coef_index;
@@ -724,13 +715,7 @@ swif_full_symbol_t* full_symbol_add(swif_full_symbol_t *symbol1, swif_full_symbo
 
     uint32_t data_size = (symbol1->data_size >= symbol2->data_size) 
                         ? symbol1->data_size : symbol2->data_size;
-    //uint8_t content[data_size]; 
-    //memset( content, 0, dataSize); 
-    //uint8_t coef[last_coef_index-first_coef_index+1]; 
-    //memset( coef, 0, last_coef_index-first_coef_index+1); 
-
-    //swif_full_symbol_t *symbol_result = full_symbol_create(coef, first_coef_index, last_coef_index-first_coef_index+1, content, dataSize);
-
+   
     swif_full_symbol_t *symbol_result = full_symbol_alloc(first_coef_index, last_coef_index,
         data_size);
 
