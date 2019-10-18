@@ -128,7 +128,8 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
  */
 swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
-                                void* const     new_symbol_buf);
+                                void* const     new_symbol_buf,
+                                esi_t           new_symbol_esi);
 
 /*******************************************************************************
  * Coding Window Functions at an Encoder and Decoder
