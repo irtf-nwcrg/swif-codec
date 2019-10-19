@@ -164,6 +164,9 @@ main (int argc, char* argv[])
 			esi_t		last;
 			uint32_t	nss;
 
+            if (idx >= tot_enc) {
+                break;
+            }
 			/* it's time to produce repair packets. They are regularly spaced and we add a last one at the end of session */
 			if ((enc_symbols_tab[idx] = calloc(SYMBOL_SIZE, 1)) == NULL) {
 				fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
