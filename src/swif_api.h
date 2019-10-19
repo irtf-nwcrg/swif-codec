@@ -112,7 +112,7 @@ typedef struct swif_encoder {
 	swif_status_t   (*get_parameters)  (
 		struct swif_encoder*, uint32_t, uint32_t, void*);
 	swif_status_t   (*build_repair_symbol) (
-		struct swif_encoder*, void*);
+		struct swif_encoder*, void**);
 	swif_status_t   (*reset_coding_window) (struct swif_encoder*);
 	swif_status_t   (*add_source_symbol_to_coding_window) (
 		struct swif_encoder*, void*, esi_t);

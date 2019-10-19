@@ -167,23 +167,21 @@ main (int argc, char* argv[])
             if (idx >= tot_enc) {
                 break;
             }
-			/* it's time to produce repair packets. They are regularly spaced and we add a last one at the end of session */
-			if ((enc_symbols_tab[idx] = calloc(SYMBOL_SIZE, 1)) == NULL) {
-				fprintf(stderr, "Error, no memory (calloc failed for enc_symbols_tab[%d])\n", esi);
-				ret = -1;
-				goto end;
-			}
+
 			/* the index is the repair_key */
 			if (swif_encoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
-			if (swif_build_repair_symbol(ses, enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
+            
+            //enc_symbols_tab[idx] memory alloc inside
+			if (swif_build_repair_symbol(ses, &enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_build_repair_symbol() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
+            
 			/* prepend a header in network byte order */
 			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_encoder_get_coding_window_information() failed for repair_key=%u\n", idx);
