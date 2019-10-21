@@ -85,6 +85,32 @@ cdef class RlcDecoder:
 
 #---------------------------------------------------------------------------
 
+cdef class GF256Elem:
+    cdef public uint8_t value
+
+    def __cinit__(self, value=0):
+        self.value = value
+
+    def __add__(self, other):
+        return GF256Elem(gf256_add(self.value, other.value))
+
+    def __sub__(self, other):
+        return GF256Elem(gf256_sub(self.value, other.value))
+
+    def __mul__(self, other):
+        return GF256Elem(gf256_mul(self.value, other.value))
+
+    def __truediv__(self, other):
+        return GF256Elem(gf256_div(self.value, other.value))
+
+    def inverse(self):
+        return GF256Elem(gf256_inv(self.value))
+
+    def __repr__(self):
+        return "GF256Elem("+repr(self.value)+")"
+
+#---------------------------------------------------------------------------
+
 cdef class Symbol:
     """`Symbol' is a wrapper around the low level api functions
         symbol_add_scaled, symbol_add, symbol_sub, symbol_mul, symbol_div
@@ -181,7 +207,6 @@ cdef class Symbol:
         return self.div(coef)
 
     def __repr__(self):
-        #return "Symbol("+repr(self.get_data())+")"
         return "Symbol("+repr([x for x in self.get_data()])+")"
 
     def copy(self):
