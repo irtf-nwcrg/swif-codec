@@ -14,7 +14,12 @@ extern "C" {
 #include <stdbool.h>
     
 #include "swif_api.h"
-    
+
+/* There were initially two designed implementations of the full_symbol
+ * - one reimplemented in swif_full_symbol_impl.c (DEFAULT ONE)
+ * - one as wrapper on top of liblc (NO LONGER USED, fixed size, no malloc)
+ */
+  
 /*---------------------------------------------------------------------------*/
 
 /**
@@ -32,7 +37,9 @@ typedef struct s_swif_full_symbol_set_t swif_full_symbol_set_t;
  */
 #define SYMBOL_ID_NONE 0xfffffffful
 
-/** XXX */
+/**
+ * An identifier for a source symbol (source symbol index)
+ */
 typedef uint32_t symbol_id_t;
     
 /**
@@ -50,36 +57,36 @@ swif_full_symbol_t *full_symbol_create
  uint8_t *symbol_data, uint32_t symbol_size);
 
 /**
- * @brief get the size of the data
+ * @brief Get the size of the data
  */
 uint32_t full_symbol_get_size(swif_full_symbol_t *full_symbol);
 
 /**
- * @brief get the minimum source index that appears in the symbol
+ * @brief Get the minimum source index that appears in the symbol
  *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_min_symbol_id(swif_full_symbol_t *full_symbol);
 
 /**
- * @brief get the maximum source index that appears in the symbol
+ * @brief Get the maximum source index that appears in the symbol
  *        returns SYMBOL_ID_NONE if there is none (e.g. symbol is 0)
  */
 uint32_t full_symbol_get_max_symbol_id(swif_full_symbol_t *full_symbol);
 
 /**
- * @brief get the symbol 'data'. result_data should be a pointer to a
- *        a block of memory of full_symbol_get_size(full_symbol)
+ * @brief Get the symbol 'data'. result_data should be a pointer to a
+ *        a block of memory of size at least full_symbol_get_size(full_symbol)
  */
 void full_symbol_get_data
 (swif_full_symbol_t *full_symbol, uint8_t *result_data);
 
-    
+
 /**
- * @brief get the coefficient corresponding to the specified symbol identifier
+ * @brief Get the coefficient corresponding to the specified symbol identifier
  */
 uint8_t full_symbol_get_coef
 (swif_full_symbol_t *full_symbol, uint32_t symbol_id);
-    
+
 /**
  * @brief Return the number of coefficients present in the symbol
  *        (max symbol id - min symbol id)+1;
@@ -102,7 +109,7 @@ static inline uint32_t full_symbol_count_coef(swif_full_symbol_t *full_symbol)
  */
 static inline bool full_symbol_is_zero(swif_full_symbol_t *full_symbol)
 {return full_symbol_get_min_symbol_id(full_symbol) == SYMBOL_ID_NONE;}
-    
+
 /**
  * @brief Release a full_symbol
  */
@@ -117,7 +124,7 @@ swif_full_symbol_t *full_symbol_clone(swif_full_symbol_t *swif_full_symbol);
  * @brief Dump a full symbol on a FILE
  */    
 void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
-    
+
 /*---------------------------------------------------------------------------*/
 
 /**
@@ -129,12 +136,7 @@ swif_full_symbol_set_t *full_symbol_set_alloc(void);
  * @brief Free a full_symbol set
  */
 void full_symbol_set_free(swif_full_symbol_set_t *set);
-    
-    
-/**
- * @brief Packet set
- */
-//swif_status_t full_symbol_set_init(swif_full_symbol_set_t* set);
+
 
 /**
  * @brief Add a full_symbol to a packet set.
@@ -145,9 +147,6 @@ void full_symbol_set_free(swif_full_symbol_set_t *set);
  */
 uint32_t full_symbol_set_add
 (swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol);
-
-
-
 
 static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
                                            symbol_id_t id);

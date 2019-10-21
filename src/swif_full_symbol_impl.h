@@ -32,50 +32,53 @@ extern "C" {
 
 /*---------------------------------------------------------------------------*/
 
-
+/* The implementation of full_symbol_t, a linear combination of source packets.
+ * - `coef' represents the encoding header (coefficients) of the combination
+ * - `coef[0]' corresponds to the source symbol of index `first_id'
+ * - `last_id' (included) is the last possible source symbol included in the
+ * array `coef', and thus defines the array size
+ * - `first_nonzero_id' and `last_nonzero_id' correspond the first and last
+ * source symbol indices that have non zero coefficients. SYMBOL_ID_NONE is
+ * used when the full_symbol_t corresponds to zero, and these values are 
+ * maintained after each operation on a packet.
+ * - `data' is the coded symbol itself
+ * - `data_size' is the size of the coded symbol.
+ */
 struct s_swif_full_symbol_t {
-    //coded_packet_t* coded_packet;
-    //uint32_t symbol_size;
+    /* first_id, last_id  relate to the memory allocation
+       can be SYMBOL_ID_NONE (when no coefficient available) */
+    uint8_t* coef; /* never NULL */
+    symbol_id_t first_id; /* coef[0] is the coefficient of first symbol_id */
+    symbol_id_t last_id;  /* (last included) */
 
-    // first_id, last_id  relate to the memory allocation
-    // can be SYMBOL_ID_NONE (when no coefficient available)
-    uint8_t* coef; // never NULL
-    symbol_id_t first_id; // coef[0] is the coefficient of first symbol_id
-    symbol_id_t last_id; // (last included)
-
-    // first_nonzero_id, last_nonzero_id relate to the coef array
-    // they can be SYMBOL_ID_NONE if no coef is different of zero
-    // otherwise full_symbol_get_coef(i) is 0 outside of this range is always zzero o
-    // and the coefficients at these, are non-zero
+    /* first_nonzero_id, last_nonzero_id relate to the coef array
+       they can be SYMBOL_ID_NONE if no coef is different of zero
+       otherwise the coefficients at these, are always non-zero
+       note: full_symbol_get_coef(i) is 0 outside of this range */
     symbol_id_t first_nonzero_id;
     symbol_id_t last_nonzero_id;    
     
-    uint8_t* data; // never NULL
-    uint32_t data_size;
+    uint8_t* data; /* the coded symbol itself (the data) - never NULL */
+    uint32_t data_size; /* size of the coded symbol */
 };
 
 /*---------------------------------------------------------------------------*/
 
 struct s_swif_full_symbol_set_t {
-    // size of the table containing pointers to full symbol
-    uint32_t size; 
-    uint32_t first_symbol_id;
+    uint32_t size; /* size of the table containing pointers to full_symbol */
+    uint32_t first_symbol_id; /* the index of full_symbol_tab */
     uint32_t nmbr_packets;
     swif_full_symbol_t **full_symbol_tab;
-    //symbol_id_t *full_symbol_pivot;
-    //uint8_t *full_symbol_index;
 };
 
+/* The following constant is used to declare that an entry is not used */
+#define ENTRY_INDEX_NONE 0xfffffffful 
+    
 /*---------------------------------------------------------------------------*/
-
-
-typedef struct s_swif_pivot_coefs_t swif_pivot_coefs_t;
-
-/*---------------------------------------------------------------------------*/
-
 
 /**
- * @brief Create a full_symbol set, that will be used to do gaussian elimination
+ * @brief Create a set of full_symbol_t
+ * Initially it is empty.
  */
 swif_full_symbol_set_t *full_symbol_set_alloc();
 
@@ -84,33 +87,30 @@ swif_full_symbol_set_t *full_symbol_set_alloc();
  */
 void full_symbol_set_free(swif_full_symbol_set_t *set);
 
-
 /**
  * @brief Add a full_symbol to a packet set.
  * 
- * Gaussian elimination can occur.
- * Return the pivot associated to the new full_symbol 
- * or SYMBOL_ID_NONE if dependent (e.g. redundant) packet
+ * Online Gaussian elimination is performed.
+ * Return the pivot associated to the new full_symbol (as source symbol index)
+ * or ENTRY_INDEX_NONE if dependent (e.g. redundant) packet
  * 
  * The full_symbol is not freed and also reference is not captured.
  */
 symbol_id_t swif_full_symbol_set_add
 (swif_full_symbol_set_t* set, swif_full_symbol_t* full_symbol);
 
-/*---------------------------------------------------------------------------*/
-
 /**
  * @brief Create a full_symbol from a raw packet (a set of bytes)
  *        and initialize it with content '0'
  */
 swif_full_symbol_t *full_symbol_alloc
-(symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size) ;
+(symbol_id_t first_symbol_id, symbol_id_t last_symbol_id, uint32_t symbol_size);
 
-
-
-/* XXX:doc */
+/**
+ * @brief Dump the content of a full_symbol set for debugging purposes
+ *        
+ */
 void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out);
-
 
 /**
  * @brief get the size of the data
@@ -120,6 +120,7 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out);
 
 static inline bool full_symbol_has_sufficient_size(swif_full_symbol_t* symbol,
                                            symbol_id_t id1, symbol_id_t id2);
+
 static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
                                            symbol_id_t symbol_id);
 // adjust full symbol min coef

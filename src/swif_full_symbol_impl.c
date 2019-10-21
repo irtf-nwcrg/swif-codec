@@ -1,14 +1,14 @@
-
 /**
- * @brief       For now this is an independant implementation from liblc,
+ * @brief A library implementing network coding 
+ * @author Oumaima Attia
+ * 
+ * A "full symbol" is a linear combination of sources symbol along with the
+ * encoding header specifying this linear combination.
  */
 
-
 #include "swif_full_symbol_impl.h" 
-#define PACKET_INDEX_NONE 0xfffffffful
 
 /*---------------------------------------------------------------------------*/
-
 
 /**
  * @brief Create a swif_full_symbol set:
@@ -17,7 +17,7 @@
  *  It is used to do automatically Gaussian elimination when a coded packet is added
  */
 
-const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 16; /*XXX:switch to 16*/
+const uint32_t FULL_SYMBOL_SET_INITIAL_SIZE = 16;
 
 swif_full_symbol_set_t *full_symbol_set_alloc()
 {
@@ -33,7 +33,8 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
     result->size = FULL_SYMBOL_SET_INITIAL_SIZE;
     result->nmbr_packets = 0;
 
-    swif_full_symbol_t **full_symbol_tab = calloc(result->size, sizeof(swif_full_symbol_t *)); 
+    swif_full_symbol_t **full_symbol_tab
+      = calloc(result->size, sizeof(swif_full_symbol_t *)); 
     if (full_symbol_tab == NULL) {
         free(full_symbol_tab);
         return NULL;
@@ -50,7 +51,7 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
 {
     assert(set != NULL);
     assert(set->full_symbol_tab != NULL);
-    for(uint32_t i = 0; i < set->size; i++){
+    for(uint32_t i = 0; i < set->size; i++) {
         if (set->full_symbol_tab[i] != NULL)
             full_symbol_free(set->full_symbol_tab[i]);   
     } 
@@ -65,7 +66,7 @@ void full_symbol_set_free(swif_full_symbol_set_t *set)
 void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
 {
     fprintf(out, "{'size':%u, ", full_symbol_set->size);
-    fprintf(out, "'first_symbol_id':%u,", full_symbol_set->first_symbol_id);
+    fprintf(out, "'first_symbol_id':%u, ", full_symbol_set->first_symbol_id);
     fprintf(out, "'set':{");
 
     bool is_first = true;
@@ -82,7 +83,7 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
             fprintf(out, ")");
         }
     }
-    fprintf(out, "}"); 
+    fprintf(out, "}");
     fprintf(out, "}\n");
 }
 
@@ -101,18 +102,19 @@ static inline symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
  * The full_symbol is not freed and also reference is not captured.
  */
 
-uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol)
+uint32_t full_symbol_set_add
+(swif_full_symbol_set_t *set, swif_full_symbol_t *full_symbol)
 {
     assert(set != NULL);
     if (full_symbol_is_zero(full_symbol)) {
-        return PACKET_INDEX_NONE;
+        return ENTRY_INDEX_NONE;
     }
 
     /* the added symbol is not modified: we first clone it */
     swif_full_symbol_t *full_symbol_cloned = full_symbol_clone(full_symbol);
     if (full_symbol_cloned == NULL) {
         WARNING_PRINT("cannot allocate memory for full_symbol cloning");
-        return PACKET_INDEX_NONE;
+        return ENTRY_INDEX_NONE;
     }
     if (set->first_symbol_id == SYMBOL_ID_NONE) {
         set->first_symbol_id = full_symbol_cloned->first_nonzero_id;
@@ -122,12 +124,12 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
     symbol_id_t new_i0 = full_symbol_cloned->first_nonzero_id;
     symbol_id_t set_i0 = set->first_symbol_id;
 
-    /* The added symbol has first nonzero index which is outside the current set */
+    /* The added symbol has first nonzero index outside the current set */
     if (new_i0 < set_i0) {   
         DEBUG_PRINT("Debugging is enabled. Case: full_symbol_cloned->first_nonzero_id < set->first_symbol_id \n");
         if (set_i0 - new_i0 < set->size) {
             memmove(set->full_symbol_tab+(set_i0-new_i0), set->full_symbol_tab, 
-                    sizeof(swif_full_symbol_t *) * (set->size - (set_i0-new_i0)));
+                    sizeof(swif_full_symbol_t *) * (set->size-(set_i0-new_i0)));
         } else { 
             if (set_i0 - new_i0 < (set->size * 2)) {
                 set->size *= 2;
@@ -142,7 +144,7 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
             WARNING_PRINT("failed to reallocate full_symbol_tab");
             full_symbol_free(full_symbol_cloned);
             free(set->full_symbol_tab);
-            return PACKET_INDEX_NONE;
+            return ENTRY_INDEX_NONE;
         }
         set->full_symbol_tab[0] = full_symbol_cloned;
         set->nmbr_packets++;
@@ -187,26 +189,28 @@ uint32_t full_symbol_set_add(swif_full_symbol_set_t *set, swif_full_symbol_t *fu
 
 /*---------------------------------------------------------------------------*/
 swif_full_symbol_t *full_symbol_set_get_pivot
-(swif_full_symbol_set_t *full_symbol_set, symbol_id_t symbol_id)
+(swif_full_symbol_set_t *set, symbol_id_t symbol_id)
 { 
-    IF_DEBUG(full_symbol_set_dump(full_symbol_set, stdout));
-    if (symbol_id >= full_symbol_set->first_symbol_id 
-        && symbol_id < (full_symbol_set->size + full_symbol_set->first_symbol_id) 
-        && full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id] ){
-        DEBUG_PRINT("Coef of pivot is equal to : %u \n", full_symbol_get_coef(full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id], symbol_id));
-        return full_symbol_set->full_symbol_tab[symbol_id-full_symbol_set->first_symbol_id];
+    IF_DEBUG(full_symbol_set_dump(set, stdout));
+    if (symbol_id >= set->first_symbol_id 
+        && symbol_id < (set->size + set->first_symbol_id) 
+        && set->full_symbol_tab[symbol_id-set->first_symbol_id] ){
+        DEBUG_PRINT("Coef of pivot is equal to : %u \n",
+	    full_symbol_get_coef(set->full_symbol_tab[symbol_id-set->first_symbol_id], symbol_id));
+        return set->full_symbol_tab[symbol_id-set->first_symbol_id];
     }  
     DEBUG_PRINT("Pivot of symbol id %u is not found \n", symbol_id);
     return NULL; 
 }
+
 /*---------------------------------------------------------------------------*/
 swif_full_symbol_t *full_symbol_set_remove_each_pivot
 (swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol1)
 {   
     /* only copies of symbol are stored, so first clone it */
     swif_full_symbol_t *new_symbol = full_symbol_clone(new_symbol1);
-    /* isNull variable is used to check if all the symbol coefs are NULL */
-    bool isNull = true;
+    /* is_null variable is used to check if all the symbol coefs are NULL */
+    bool is_null = true;
     full_symbol_adjust_min_max_coef(new_symbol);
     if(new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
         return SYMBOL_ID_NONE; 
@@ -228,15 +232,15 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                     new_symbol =  symbol2;
                 }
                 if (new_symbol->coef[i] != NULL){
-                    isNull= false;
+                    is_null= false;
                 }
                 full_symbol_free(symbol1_cloned);
             } else {
-                isNull= false; 
+                is_null= false; 
             }
         }
     }
-    if (isNull) {
+    if (is_null) {
         full_symbol_free(new_symbol);
         return NULL; 
     }

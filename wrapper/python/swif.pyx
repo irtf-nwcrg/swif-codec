@@ -86,6 +86,9 @@ cdef class RlcDecoder:
 #---------------------------------------------------------------------------
 
 cdef class Symbol:
+    """`Symbol' is a wrapper around the low level api functions
+        symbol_add_scaled, symbol_add, symbol_sub, symbol_mul, symbol_div
+    """
     cdef public uint8_t *data
     cdef public uint32_t size
 
@@ -102,7 +105,7 @@ cdef class Symbol:
         cdef uint8_t *data = result        
         memcpy(data, self.data, self.size)
         return result
-        
+
     cpdef alloc(self, new_size):
         if self.data is not NULL:
             self.dealloc()
@@ -153,7 +156,7 @@ cdef class Symbol:
         result.alloc(self.size)
         symbol_div(self.data, self.size, coef, result.data)
         return result
-    
+
     def sub(self, other):
         assert self.size == other.size
         result = Symbol()
@@ -176,7 +179,7 @@ cdef class Symbol:
 
     def __truediv__(self, coef):
         return self.div(coef)
-    
+
     def __repr__(self):
         #return "Symbol("+repr(self.get_data())+")"
         return "Symbol("+repr([x for x in self.get_data()])+")"
