@@ -53,7 +53,7 @@ swif_status_t   swif_rlc_encoder_get_parameters  (
  */
 swif_status_t   swif_rlc_build_repair_symbol (
                                 swif_encoder_t* generic_encoder,
-                                void*           new_buf);
+                                void**           new_buf);
 
 
 /*******************************************************************************
