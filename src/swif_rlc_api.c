@@ -85,11 +85,12 @@ swif_status_t   swif_rlc_build_repair_symbol (
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
     uint32_t	i;
-
+/*
     if ((new_buf = calloc(1, sizeof(enc->symbol_size))) == NULL) {
         fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
         return SWIF_STATUS_ERROR;
     }
+  */
     DEBUG_PRINT("build-repair: \n");
     for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
         uint32_t idx = i % enc->max_coding_window_size;
