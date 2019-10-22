@@ -112,7 +112,7 @@ typedef struct swif_encoder {
 	swif_status_t   (*get_parameters)  (
 		struct swif_encoder*, uint32_t, uint32_t, void*);
 	swif_status_t   (*build_repair_symbol) (
-		struct swif_encoder*, void*);
+		struct swif_encoder*, void**);
 	swif_status_t   (*reset_coding_window) (struct swif_encoder*);
 	swif_status_t   (*add_source_symbol_to_coding_window) (
 		struct swif_encoder*, void*, esi_t);
@@ -282,7 +282,7 @@ typedef struct swif_decoder {
 	swif_status_t   (*decode_with_new_source_symbol) (
 		struct swif_decoder*, void* const, esi_t);
 	swif_status_t   (*decode_with_new_repair_symbol) (
-		struct swif_decoder*, void* const);
+		struct swif_decoder*, void* const, esi_t);
 	swif_status_t   (*reset_coding_window) (struct swif_decoder*);
 	swif_status_t   (*add_source_symbol_to_coding_window) (
 		struct swif_decoder*, esi_t);
@@ -487,7 +487,8 @@ swif_status_t   swif_decoder_decode_with_new_source_symbol (
  */
 swif_status_t   swif_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
-                                void* const     new_symbol_buf);
+                                void* const     new_symbol_buf,
+                                esi_t           new_src_symbol_esi);
 
 
 /*******************************************************************************

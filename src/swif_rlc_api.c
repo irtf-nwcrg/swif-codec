@@ -81,20 +81,21 @@ swif_status_t   swif_rlc_encoder_get_parameters  (
  */
 swif_status_t   swif_rlc_build_repair_symbol (
                                 swif_encoder_t* generic_encoder,
-                                void*           new_buf)
+                                void**           new_buf)
 {
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
     uint32_t	i;
 
-    if ((new_buf = calloc(1, sizeof(enc->symbol_size))) == NULL) {
+    if ((*new_buf = calloc(1, enc->symbol_size)) == NULL) {
         fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
         return SWIF_STATUS_ERROR;
     }
-    DEBUG_PRINT("build-repair: \n");
+
+    DEBUG_PRINT("\nbuild-repair: \n");
     for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
         uint32_t idx = i % enc->max_coding_window_size;
         DEBUG_PRINT(" +%u.P[%u->%u]", enc->cc_tab[idx], i, idx);
-        symbol_add_scaled(new_buf, enc->cc_tab[idx], enc->ew_tab[idx], enc->symbol_size);
+        symbol_add_scaled(*new_buf, enc->cc_tab[idx], enc->ew_tab[idx], enc->symbol_size);
     }
     DEBUG_PRINT("\n");
     return SWIF_STATUS_OK;
@@ -197,13 +198,13 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
  */
 swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
-                                void* const     new_symbol_buf)
+                                void* const     new_symbol_buf,
+                                esi_t           new_symbol_esi)
 {
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
         //XXX;
         swif_full_symbol_t *full_symbol = NULL;
-        //XXX: TODO: full_symbol_create_from_source(
-        //new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        full_symbol = full_symbol_create_from_source(new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
         full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
         fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
@@ -454,6 +455,7 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
         fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
         return NULL;
     }
+
     if ((enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
         fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
         return NULL;
@@ -502,6 +504,7 @@ swif_decoder_t* swif_rlc_decoder_create (
     dec->symbol_size = symbol_size;
     dec->max_coding_window_size = max_coding_window_size;
     dec->max_linear_system_size = max_linear_system_size;
+    dec->symbol_set = full_symbol_set_alloc();
 #if 0
     dec->ew_right = dec->ew_left = 0;
     dec->ew_esi_right = INVALID_ESI;

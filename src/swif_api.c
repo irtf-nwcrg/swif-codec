@@ -212,9 +212,10 @@ swif_status_t   swif_decoder_decode_with_new_source_symbol (
  */
 swif_status_t   swif_decoder_decode_with_new_repair_symbol (
                                 swif_decoder_t* dec,
-                                void* const     new_symbol_buf)
+                                void* const     new_symbol_buf,
+                                esi_t           new_src_symbol_esi)
 {
-    return (*dec->decode_with_new_repair_symbol)(dec, new_symbol_buf);
+    return (*dec->decode_with_new_repair_symbol)(dec, new_symbol_buf, new_src_symbol_esi);
 }
 
 
