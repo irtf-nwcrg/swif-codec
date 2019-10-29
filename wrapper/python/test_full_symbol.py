@@ -233,19 +233,40 @@ def test_add_with_elimination():
     set1.dump()
 #---------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    #try_full_symbol_wrapper()
-    #test_full_symbol_wrapper()
-    #try_full_symbol_add_base()
-    #try_full_symbol_add()
-    #try_full_symbol_scale()
-    #try_full_symbol_scale_inverted()
-    #try_alloc_add_set()
-    #try_alloc_add_set_expl2()
-    #try_remove_each_pivot() 
-    #test_full_symbol_get_coef()
-    #test_add_as_pivot()
-    #test_add_as_pivot2()
-    #test_add_with_elimination()
+def test_full_symbol_set_add_previous_id():
+    set1 = swif.FullSymbolSet().alloc_set()
+    symbol1 = swif.FullSymbol().from_coefs_and_symbol(
+        10, bytes([1,1,1,1]), b"azerty")
+    symbol2 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([0,0,1,2]), b"querty")
+    symbol3 = swif.FullSymbol().from_coefs_and_symbol(
+        1, bytes([1,1,2,0]), b"test")
+    set1.set_add(symbol1)
+    set1.set_add(symbol2)
+    set1.set_add(symbol3)
+    set1.dump()
+#---------------------------------------------------------------------------
+
+def test_all():
+    try_full_symbol_wrapper()
+    test_full_symbol_wrapper()
+    try_full_symbol_add_base()
+    try_full_symbol_add()
+    try_full_symbol_scale()
+    try_full_symbol_scale_inverted()
+    try_alloc_add_set()
+    try_alloc_add_set_expl2()
+    try_remove_each_pivot() 
+    test_full_symbol_get_coef()
+    test_add_as_pivot()
+    test_add_as_pivot2()
+    test_add_with_elimination()
     try_elimination()
+    test_full_symbol_set_add_previous_id
+
+if __name__ == "__main__":
+    #test_all()
+    #try_elimination()
+    test_full_symbol_set_add_previous_id()
+
 #---------------------------------------------------------------------------

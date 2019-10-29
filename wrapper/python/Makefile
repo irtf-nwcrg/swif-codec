@@ -37,4 +37,8 @@ test-swif:
 	gcc -g3 -o test_swif test_swif.c -I../../src -L../../src -L../../liblc/src -lswif
 	./test_swif
 
+cmp-test:
+	python test_full_symbol.py >test.log 2>&1
+	diff test.log test-ref.log || true
+
 #---------------------------------------------------------------------------
