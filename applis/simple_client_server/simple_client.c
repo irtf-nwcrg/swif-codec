@@ -178,7 +178,7 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t)) != SWIF_STATUS_OK) {
+			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t), esi) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
 				ret = -1;
 				goto end;
@@ -222,7 +222,7 @@ end:
 		for (esi = 0; esi < tot_enc; esi++) {
 			if (recvd_symbols_tab[esi]) {
 				/* this is a symbol received from the network, without its FPI that starts 4 bytes before */
-				free((char*)recvd_symbols_tab[esi] - 4);
+				free((char*)recvd_symbols_tab[esi] - sizeof(fpi_t));
 			} //else if (esi < k && src_symbols_tab[esi]) {
 			//	/* this is a source symbol decoded by the openfec codec, so free it */
 			//	ASSERT(recvd_symbols_tab[esi] == NULL);

@@ -27,7 +27,7 @@
 
 #--------------------------------------------------
 
-CFLAGS += -Wall -g3 -fPIC
+CFLAGS += -Wall -g -fPIC
 
 #------------------------------
 
@@ -44,7 +44,7 @@ OBJS = $(SRCS:.c=.o)
 all: simple_client simple_server
 
 simple_server: simple_server.o ../../src/libswif.a
-	${CC} ${CFLAGS} -o $@ $< -lswif -L. -L../../src/
+	${CC} ${CFLAGS} -o $@ $< -lswif -lm -L. -L../../src/
 
 simple_client: simple_client.o ../../src/libswif.a
 	${CC} ${CFLAGS} -o $@ $< -lswif -L. -L../../src/
@@ -67,8 +67,10 @@ DEPS = $(SRCS:.c=.d)
 
 clean:
 	rm -f *.a *.so *.o *.d *~
+	rm -f simple_server
+	rm -f simple_client
 
 really-clean: clean
 	rm -f simple_server
-
+	rm -f simple_client
 #---------------------------------------------------------------------------
