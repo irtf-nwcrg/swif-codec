@@ -1,8 +1,6 @@
 
 import swif
 
-
-
 def test_create():
     p1 = swif.Symbol()
     assert p1.size == 0

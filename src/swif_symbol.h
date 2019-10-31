@@ -24,7 +24,7 @@ extern "C" {
 static inline uint8_t gf256_add(uint8_t a, uint8_t b)
 { return a^b; }
 
-/* Substract two numbers in a GF(2^8) finite field: a-b */
+/* Subtract two numbers in a GF(2^8) finite field: a-b */
 static inline uint8_t gf256_sub(uint8_t a, uint8_t b)
 { return gf256_add(a,b); }
 

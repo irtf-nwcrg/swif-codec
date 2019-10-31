@@ -10,6 +10,7 @@ from cswif cimport *
 from libc.stdint cimport uint8_t, uint32_t, int64_t, bool
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy, memset
+from cpython.object cimport Py_EQ, Py_NE
 
 #---------------------------------------------------------------------------
 
@@ -109,19 +110,38 @@ cdef class GF256Elem:
     def __repr__(self):
         return "GF256Elem("+repr(self.value)+")"
 
+    def __richcmp__(self, other, int op):
+        if op != Py_EQ and op != Py_NE:
+            raise ValueError("Impossible comparison operation", op)
+        if isinstance(other, GF256Elem):
+            eq = (self.value == other.value)
+        else:
+            eq = (self.value == other)
+        if op == Py_EQ:
+            return eq
+        else:
+            assert op == Py_NE
+            return not eq
+
+    def __hash__(self):
+        return hash(self.value)
+
 #---------------------------------------------------------------------------
 
 cdef class Symbol:
-    """`Symbol' is a wrapper around the low level api functions
-        symbol_add_scaled, symbol_add, symbol_sub, symbol_mul, symbol_div
+    """
+    `Symbol' is a wrapper around the low level api functions:
+      symbol_add_scaled, symbol_add, symbol_sub, symbol_mul, symbol_div
+    The `Symbol' is a sequence of bytes, stored in `data' and of length `size'.
+    GF(256) operations are performed.
     """
     cdef public uint8_t *data
     cdef public uint32_t size
 
-    def __cinit__(self, init_data=None):
+    def __cinit__(self, uint8_t *init_data=NULL):
         self.data = NULL
         self.size = 0
-        if init_data is not None:
+        if init_data is not NULL:
             self.set_data(init_data)
 
     def get_data(self):
@@ -135,10 +155,10 @@ cdef class Symbol:
     cpdef alloc(self, new_size):
         if self.data is not NULL:
             self.dealloc()
-        assert new_size>=0
+        assert new_size >= 0
         self.data = <uint8_t*>malloc(new_size)
         memset(self.data, 0, new_size)
-        if self.data is NULL and new_size>0:
+        if self.data is NULL and new_size > 0:
             self.size = 0
             raise RuntimeError("cannot malloc", new_size)
         self.size = new_size
@@ -303,7 +323,7 @@ cdef class FullSymbol:
     cpdef dump(self):
         assert self.symbol is not NULL
         return full_symbol_dump(self.symbol, stdio.stdout) 
-    
+
     cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
         return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
 
@@ -313,17 +333,16 @@ cdef class FullSymbol:
         assert result.symbol is NULL
         result.symbol = result_symbol
         return result
-        
+
     cpdef _scale(self, coef):
         full_symbol_scale(self.symbol, coef)
         return self
-    
+
     cpdef _scale_inv(self, coef):
         full_symbol_scale(self.symbol, gf256_inv(coef))
         return self
 
 #---------------------------------------------------------------------------
-
 
 cdef class FullSymbolSet:
 
@@ -344,10 +363,6 @@ cdef class FullSymbolSet:
             self.symbol_set = NULL
 
     cpdef alloc_set(self):
-        #self.release_set()
-        #self.symbol_set = full_symbol_set_alloc()
-        #return self
-
         result_symbol = full_symbol_set_alloc()
         result = FullSymbolSet()
         assert result.symbol_set is NULL
@@ -356,16 +371,16 @@ cdef class FullSymbolSet:
 
     cpdef set_add(self, FullSymbol other):
         return full_symbol_set_add(self.symbol_set, other.symbol)
-    
+
     cpdef dump(self):
         assert self.symbol_set is not NULL
         return full_symbol_set_dump(self.symbol_set, stdio.stdout) 
-    
+
     def get_pivot(self, symbol_id):
         assert self.symbol_set is not NULL
         full_symbol_set_get_pivot(self.symbol_set, symbol_id) 
         return self
-    
+
     def remove_each_pivot(self,  FullSymbol new_symbol):
         assert self.symbol_set is not NULL
         assert new_symbol.symbol is not NULL
@@ -383,5 +398,5 @@ cdef class FullSymbolSet:
         assert new_symbol.symbol is not NULL
         full_symbol_add_with_elimination(self.symbol_set, new_symbol.symbol)
         return self
-    
+
 #---------------------------------------------------------------------------
