@@ -161,7 +161,11 @@ cdef extern from "../../src/swif_full_symbol.h":
 cdef extern from "../../src/swif_full_symbol_impl.h":
 
      cdef struct s_swif_full_symbol_set_t:
-         pass
+         uint32_t size
+         uint32_t first_symbol_id
+         uint32_t nmbr_packets
+         swif_full_symbol_t **full_symbol_tab
+     
      ctypedef s_swif_full_symbol_set_t swif_full_symbol_set_t
 
      ctypedef uint32_t symbol_id_t

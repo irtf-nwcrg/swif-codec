@@ -268,7 +268,7 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
             full_symbol_free(symbol_cloned);
         }
     }
-    full_symbol_dump(new_symbol, stdout);
+    IF_DEBUG(full_symbol_dump(new_symbol, stdout));
     full_symbol_set_add(full_symbol_set, new_symbol );
 }
 

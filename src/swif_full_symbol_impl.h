@@ -8,7 +8,7 @@ extern "C" {
 /* XXX: move in more general header file */
 #define WARNING_PRINT(fmt, args...) fprintf(stderr, "WARNING: %s: %d: %s(): " fmt, \
     __FILE__, __LINE__, __func__, ##args)
-#define WITH_DEBUG
+//#define WITH_DEBUG
 #ifdef WITH_DEBUG
 #define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s: %d: %s(): " fmt, \
     __FILE__, __LINE__, __func__, ##args)

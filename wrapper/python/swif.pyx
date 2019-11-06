@@ -259,6 +259,10 @@ cdef class FullSymbol:
         self.symbol = full_symbol_clone(other.symbol)
         return self
 
+    cdef from_other_c(self, swif_full_symbol_t *other_symbol):
+        self.release()
+        self.symbol = full_symbol_clone(other_symbol)
+    
     cpdef is_zero(self):
         assert self.symbol is not NULL    
         return full_symbol_is_zero(self.symbol)
@@ -350,7 +354,7 @@ cdef class FullSymbolSet:
 
     def __init__(self):
         self.symbol_set = NULL
-    
+
     cpdef release_set(self):
         if self.symbol_set is NULL:
             return
@@ -378,8 +382,14 @@ cdef class FullSymbolSet:
 
     def get_pivot(self, symbol_id):
         assert self.symbol_set is not NULL
-        full_symbol_set_get_pivot(self.symbol_set, symbol_id) 
-        return self
+        cdef swif_full_symbol_t *full_symbol = full_symbol_set_get_pivot(
+            self.symbol_set, symbol_id)
+        cdef FullSymbol result = FullSymbol()
+        if full_symbol is not NULL:
+            result.from_other_c(full_symbol)
+        else:
+            result = None
+        return result
 
     def remove_each_pivot(self,  FullSymbol new_symbol):
         assert self.symbol_set is not NULL
@@ -398,5 +408,23 @@ cdef class FullSymbolSet:
         assert new_symbol.symbol is not NULL
         full_symbol_add_with_elimination(self.symbol_set, new_symbol.symbol)
         return self
+
+    def get_min_id(self): # min, included
+        return self.symbol_set.first_symbol_id
+
+    def get_max_id(self): # max, included
+        return self.get_min_id()+self.symbol_set.size-1
+
+    def get(self, pivot_id):
+        if pivot_id < self.get_min_id() or pivot_id > self.get_max_id():
+            return None
+        idx = pivot_id - self.get_min_id()
+        cdef swif_full_symbol_t *fs = NULL
+        if self.symbol_set.full_symbol_tab[idx] is not NULL:
+            fs = self.symbol_set.full_symbol_tab[idx]
+            result = FullSymbol()
+            result.from_other_c(fs)
+            return result
+        else: return None
 
 #---------------------------------------------------------------------------
