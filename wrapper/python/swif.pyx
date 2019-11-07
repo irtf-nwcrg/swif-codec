@@ -12,6 +12,8 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy, memset
 from cpython.object cimport Py_EQ, Py_NE
 
+import numpy as np
+
 #---------------------------------------------------------------------------
 
 cdef check_swif_status(swif_status, swif_errno):
@@ -235,10 +237,32 @@ cdef class Symbol:
 #---------------------------------------------------------------------------
 
 cdef class FullSymbol:
-    cdef swif_full_symbol_t* symbol
+    cdef swif_full_symbol_t *symbol
 
-    def __init__(self):
+    def __init__(self, info=None):
         self.symbol = NULL
+        if info is not None:
+            self.init_from_info(info)
+        else:
+            self.to_zero()
+
+    def init_from_info(self, info):
+        if isinstance(info, tuple):
+            assert len(info) == 2 or len(info) == 3
+            if len(info) == 2:
+                first_id = 0
+                header, data = info
+            else:
+                first_id, header, data = info
+            header_bytes = bytes(header)
+            data_bytes = bytes(data)
+            self.symbol = full_symbol_create(
+                header_bytes, first_id, len(header_bytes),
+                data_bytes, len(data_bytes))
+
+    cpdef to_zero(self):
+        self.release()
+        self.symbol = full_symbol_alloc(SYMBOL_ID_NONE, SYMBOL_ID_NONE, 0)
 
     cpdef from_source_symbol(self, symbol_id, content):
         self.release()
@@ -331,11 +355,16 @@ cdef class FullSymbol:
     cpdef _add_base(self, FullSymbol other1, FullSymbol other2):
         return full_symbol_add_base(other1.symbol, other2.symbol, self.symbol)
 
+    cdef replace_symbol(self, swif_full_symbol_t *symbol):
+        self.release()
+        self.symbol = symbol
+    
     cpdef add(self, FullSymbol other):
         result_symbol = full_symbol_add(self.symbol, other.symbol)
         result = FullSymbol()
-        assert result.symbol is NULL
-        result.symbol = result_symbol
+        #assert result.symbol is NULL
+        result.replace_symbol(result_symbol)
+        #result.symbol = result_symbol
         return result
 
     cpdef _scale(self, coef):
@@ -345,6 +374,13 @@ cdef class FullSymbol:
     cpdef _scale_inv(self, coef):
         full_symbol_scale(self.symbol, gf256_inv(coef))
         return self
+
+    def __repr__(self):
+        offset, header, content = self.get_info()
+        h = list(b"\x00"*offset+header)
+        c = list(content)
+        return repr((h,c))
+        #return repr(self.get_info())
 
 #---------------------------------------------------------------------------
 
@@ -380,7 +416,7 @@ cdef class FullSymbolSet:
         assert self.symbol_set is not NULL
         return full_symbol_set_dump(self.symbol_set, stdio.stdout) 
 
-    def get_pivot(self, symbol_id):
+    def get_pivot(self, symbol_id): # XXX: not working well
         assert self.symbol_set is not NULL
         cdef swif_full_symbol_t *full_symbol = full_symbol_set_get_pivot(
             self.symbol_set, symbol_id)

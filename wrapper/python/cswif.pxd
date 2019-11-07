@@ -90,6 +90,8 @@ cdef extern from "../../src/swif_rlc_cb.h":
 #---------------------------------------------------------------------------
 
 cdef extern from "../../src/swif_symbol.h":
+    ctypedef uint32_t symbol_id_t
+
     uint8_t gf256_inv(uint8_t a)
     uint8_t gf256_add(uint8_t a, uint8_t b)
     uint8_t gf256_sub(uint8_t a, uint8_t b)    
@@ -114,8 +116,18 @@ cdef extern from "../../src/swif_symbol.h":
 #---------------------------------------------------------------------------
 
 cdef extern from "../../src/swif_full_symbol.h":
+     cdef unsigned int SYMBOL_ID_NONE
+
      cdef struct s_swif_full_symbol_t:
-         pass
+         uint8_t *coef     
+         symbol_id_t first_id
+         symbol_id_t last_id
+         symbol_id_t first_nonzero_id
+         symbol_id_t last_nonzero_id
+
+         uint8_t *data
+         uint32_t data_size
+
      ctypedef s_swif_full_symbol_t swif_full_symbol_t
 
      swif_full_symbol_t *full_symbol_create_from_source(
