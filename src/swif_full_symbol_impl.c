@@ -212,7 +212,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
     /* is_null variable is used to check if all the symbol coefs are NULL */
     bool is_null = true;
     full_symbol_adjust_min_max_coef(new_symbol);
-    if(new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
+    if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
         return SYMBOL_ID_NONE; 
 
     for (uint32_t i = new_symbol->first_nonzero_id ; i <= new_symbol->last_nonzero_id; i++) {
@@ -232,11 +232,11 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                     new_symbol =  symbol2;
                 }
                 if (new_symbol->coef[i] != NULL){
-                    is_null= false;
+                    is_null = false;
                 }
                 full_symbol_free(symbol1_cloned);
             } else {
-                is_null= false; 
+                is_null = false; 
             }
         }
     }
@@ -244,15 +244,16 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
         full_symbol_free(new_symbol);
         return NULL; 
     }
-    return new_symbol ; 
+    return new_symbol;
 }
   
 /*---------------------------------------------------------------------------*/
-void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
+void full_symbol_set_add_as_pivot
+(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
 {
     full_symbol_adjust_min_max_coef(new_symbol);
-    if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE){
-        return ;
+    if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE) {
+        return;
     }
     full_symbol_scale(new_symbol, gf256_inv(full_symbol_get_coef(new_symbol, new_symbol->first_nonzero_id))); 
     symbol_id_t first_index = new_symbol->first_nonzero_id; 
@@ -274,10 +275,12 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
 
 
 /*---------------------------------------------------------------------------*/
-void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
+void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set,
+				      swif_full_symbol_t *new_symbol) 
 {
-    swif_full_symbol_t *fss_remove_pivot= full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
-    if(fss_remove_pivot)
+    swif_full_symbol_t *fss_remove_pivot
+      = full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
+    if (fss_remove_pivot)
         full_symbol_set_add_as_pivot(full_symbol_set, fss_remove_pivot);
     full_symbol_free(fss_remove_pivot);
 }

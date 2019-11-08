@@ -13,6 +13,7 @@ from libc.string cimport memcpy, memset
 from cpython.object cimport Py_EQ, Py_NE
 
 import numpy as np
+import warnings
 
 #---------------------------------------------------------------------------
 
@@ -330,6 +331,9 @@ cdef class FullSymbol:
         assert self.symbol is not NULL    
         return FullSymbol().from_other(self)
 
+    cpdef copy(self):
+        return self.clone()
+
     cpdef release(self):
         if self.symbol is NULL:
             return
@@ -343,10 +347,7 @@ cdef class FullSymbol:
 
     cpdef get_info(self):
         assert self.symbol is not NULL
-        #if not self.is_zero():
         return self.get_coefs()+(self.get_data(),)
-        #else:
-        #    return (0, b"", self.get_data())
 
     cpdef dump(self):
         assert self.symbol is not NULL
@@ -369,7 +370,7 @@ cdef class FullSymbol:
 
     cpdef _scale(self, coef):
         full_symbol_scale(self.symbol, coef)
-        return self
+        return self # XXX
 
     cpdef _scale_inv(self, coef):
         full_symbol_scale(self.symbol, gf256_inv(coef))
@@ -382,6 +383,26 @@ cdef class FullSymbol:
         return repr((h,c))
         #return repr(self.get_info())
 
+    def __add__(self, other):
+        return self.add(other)
+
+    def __sub__(self, other):
+        return self.sub(other)
+
+    def __mul__(v1, v2):
+        if isinstance(v1, GF256Elem):
+            v1 = v1.value
+        if isinstance(v2, GF256Elem):
+            v2 = v2.value
+        if isinstance(v1, FullSymbol):
+            return v1.clone()._scale(v2)
+        else:
+            return v2.clone()._scale(v1)
+
+    def __truediv__(self, coef):
+        return self.div(coef)
+
+
 #---------------------------------------------------------------------------
 
 cdef class FullSymbolSet:
@@ -390,6 +411,11 @@ cdef class FullSymbolSet:
 
     def __init__(self):
         self.symbol_set = NULL
+        self._allocate()
+
+    def alloc_set(self):
+        warnings.warn("obsolete method")
+        return self
 
     cpdef release_set(self):
         if self.symbol_set is NULL:
@@ -402,12 +428,10 @@ cdef class FullSymbolSet:
             full_symbol_set_free(self.symbol_set)
             self.symbol_set = NULL
 
-    cpdef alloc_set(self):
-        result_symbol = full_symbol_set_alloc()
-        result = FullSymbolSet()
-        assert result.symbol_set is NULL
-        result.symbol_set = result_symbol
-        return result
+    cpdef _allocate(self):
+        assert self.symbol_set is NULL
+        self.symbol_set = full_symbol_set_alloc()
+
 
     cpdef set_add(self, FullSymbol other):
         return full_symbol_set_add(self.symbol_set, other.symbol)
@@ -442,8 +466,8 @@ cdef class FullSymbolSet:
     def add_with_elimination(self,  FullSymbol new_symbol):
         assert self.symbol_set is not NULL
         assert new_symbol.symbol is not NULL
-        full_symbol_add_with_elimination(self.symbol_set, new_symbol.symbol)
-        return self
+        res=full_symbol_add_with_elimination(self.symbol_set, new_symbol.symbol)
+        return res
 
     def get_min_id(self): # min, included
         return self.symbol_set.first_symbol_id
@@ -462,5 +486,26 @@ cdef class FullSymbolSet:
             result.from_other_c(fs)
             return result
         else: return None
+
+    def get_matrix(self):
+        symbol_list = []
+        for symbol_id in  range(self.get_min_id(), self.get_max_id()+1):
+            symbol = self.get(symbol_id)
+            if symbol is not None:
+                symbol_list.append(symbol)
+        return to_matrix(symbol_list)
+
+
+def to_matrix(symbol_list):
+    if len(symbol_list) == 0:
+        return np.array([[]], type=np.int)
+    max_id = max([symbol.get_max_symbol_id() for symbol in symbol_list])
+    def to_int_list(coefs):
+        min_id, coef_bytes = coefs
+        result = min_id*[0] + list(coef_bytes)
+        result = result + (max_id+1 - len(result))* [0]
+        return result
+    result = [to_int_list(symbol.get_coefs()) for symbol in symbol_list]
+    return np.array(result, dtype=np.int)
 
 #---------------------------------------------------------------------------
