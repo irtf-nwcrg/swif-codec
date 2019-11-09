@@ -90,36 +90,65 @@ cdef class RlcDecoder:
 #---------------------------------------------------------------------------
 
 cdef class GF256Elem:
-    cdef public uint8_t value
+    cdef public uint8_t _value
 
     def __cinit__(self, value=0):
-        self.value = value
+        self._value = self.int_to_polyint(value)
 
+    cdef int_to_polyint(self, i):
+        return i
+
+    cdef polyint_to_int(self, uint8_t i):
+        return i
+
+    cpdef make(self, polyint):
+        return GF256Elem(polyint)
+        
     def __add__(self, other):
-        return GF256Elem(gf256_add(self.value, other.value))
+        return self.make(gf256_add(self._value, other._value))
 
     def __sub__(self, other):
-        return GF256Elem(gf256_sub(self.value, other.value))
+        return self.make(gf256_sub(self._value, other._value))
 
     def __mul__(self, other):
-        return GF256Elem(gf256_mul(self.value, other.value))
+        return self.make(gf256_mul(self._value, other._value))
 
     def __truediv__(self, other):
-        return GF256Elem(gf256_div(self.value, other.value))
+        return self.make(gf256_div(self._value, other._value))
 
     def inverse(self):
-        return GF256Elem(gf256_inv(self.value))
+        return self.make(gf256_inv(self._value))
 
     def __repr__(self):
-        return "GF256Elem("+repr(self.value)+")"
+        return "GF256Elem("+repr(self.as_int())+")"
+
+    def __pow__(self, v1, v2):
+        if v2 is not None:
+            raise ValueError("cannot compute pow modulo", v2)
+
+        if isinstance(v1, GF256Elem):
+            # XXX: what is the semantics of this?
+            # technically it is polynomial power to another polynomial
+            raise ValueError("not implemented GF256Elem ** GF256Elem", v1)
+        
+        if v1 < 0:
+            return (self**(-v1)).inverse()
+        result = self.make(1)
+        current = self
+        while v1>0:
+            if v1 & 1 != 0:
+                result = result * current
+            current = current*current
+            v1 = v1 >> 1
+        return result
 
     def __richcmp__(self, other, int op):
         if op != Py_EQ and op != Py_NE:
             raise ValueError("Impossible comparison operation", op)
         if isinstance(other, GF256Elem):
-            eq = (self.value == other.value)
+            eq = (self._value == other._value)
         else:
-            eq = (self.value == other)
+            eq = (self.as_int() == other)
         if op == Py_EQ:
             return eq
         else:
@@ -128,6 +157,59 @@ cdef class GF256Elem:
 
     def __hash__(self):
         return hash(self.value)
+
+    def as_int(self):
+        return self.polyint_to_int(self._value)
+
+    cdef as_gf256(self):
+        return GF256Elem.make(self, self._value)
+
+
+cpdef GF256Elem gf256_one = GF256Elem(1)
+cpdef GF256Elem gf256_zero = GF256Elem(0)
+assert gf256_one._value == 1
+assert gf256_zero._value == 0
+
+cpdef gf256_roots_of_unity(p):
+    result = []
+    cdef int i
+    for i in range(256):
+        x = GF256Elem(i) 
+        if x**p == 1:
+            result.append(x)
+    return result
+
+# any element x of a subfield GF(2^q) will satisfy x**(q-1) == 1
+# in our GF256, it appears that only subfield elem do so - XXX: prove?
+subfield_GF16 = [0] + [x.as_int() for x in gf256_roots_of_unity(15)]
+index_in_subfield_GF16 = { x:i for i,x in enumerate(subfield_GF16) }
+subfield_GF4 = [0] + [x.as_int() for x in gf256_roots_of_unity(3)]
+index_in_subfield_GF4 = { x:i for i,x in enumerate(subfield_GF4) }
+
+assert subfield_GF16[1] == 1
+assert subfield_GF4[1] == 1
+
+cpdef as_gf16_int(GF256Elem elem):
+    return index_in_subfield_GF16.get(elem._value)
+
+cpdef as_gf4_int(GF256Elem elem):
+    return index_in_subfield_GF4.get(elem._value)
+
+cpdef as_gf2_int(GF256Elem elem):
+    assert elem._value == 0 or elem._value == 1
+    return elem._value
+
+cpdef make_gf16(int i):
+    assert 0 <=i and i<16
+    return GF256Elem(subfield_GF16[i])
+
+cpdef make_gf4(int i):
+    assert 0 <=i and i<4
+    return GF256Elem(subfield_GF4[i])
+
+cpdef make_gf2(int i):
+    assert 0 <=i and i<2
+    return GF256Elem(i)
 
 #---------------------------------------------------------------------------
 
@@ -487,19 +569,21 @@ cdef class FullSymbolSet:
             return result
         else: return None
 
-    def get_matrix(self):
+    def get_matrix(self, nb_col=None):
         symbol_list = []
         for symbol_id in  range(self.get_min_id(), self.get_max_id()+1):
             symbol = self.get(symbol_id)
             if symbol is not None:
                 symbol_list.append(symbol)
-        return to_matrix(symbol_list)
+        return to_matrix(symbol_list, nb_col)
 
 
-def to_matrix(symbol_list):
+def to_matrix(symbol_list, nb_col=None):
     if len(symbol_list) == 0:
         return np.array([[]], type=np.int)
     max_id = max([symbol.get_max_symbol_id() for symbol in symbol_list])
+    if nb_col is not None:
+        max_id = nb_col-1
     def to_int_list(coefs):
         min_id, coef_bytes = coefs
         result = min_id*[0] + list(coef_bytes)
@@ -507,5 +591,14 @@ def to_matrix(symbol_list):
         return result
     result = [to_int_list(symbol.get_coefs()) for symbol in symbol_list]
     return np.array(result, dtype=np.int)
+
+def compute_rref(matrix):
+    if len(matrix) == 0:
+        return matrix.copy()
+    symbol_set = FullSymbolSet()
+    for row in matrix:
+        symbol = FullSymbol((0, list(row), b""))
+        symbol_set.add_with_elimination(symbol)
+    return symbol_set.get_matrix(len(matrix[0]))
 
 #---------------------------------------------------------------------------
