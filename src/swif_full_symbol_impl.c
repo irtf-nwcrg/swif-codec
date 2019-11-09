@@ -140,6 +140,8 @@ uint32_t full_symbol_set_add
             }
             set->full_symbol_tab = realloc(set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
             memmove(set->full_symbol_tab + (set_i0-new_i0), set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
+	    memset(set->full_symbol_tab, 0,
+		   sizeof(swif_full_symbol_t *)*(set_i0-new_i0)); /*XXX:check*/
         }
         IF_DEBUG(full_symbol_set_dump(set, stdout));
         if (set->full_symbol_tab == NULL) {
