@@ -130,6 +130,8 @@ uint32_t full_symbol_set_add
         if (set_i0 - new_i0 < set->size) {
             memmove(set->full_symbol_tab+(set_i0-new_i0), set->full_symbol_tab, 
                     sizeof(swif_full_symbol_t *) * (set->size-(set_i0-new_i0)));
+	    memset(set->full_symbol_tab, 0,
+		   sizeof(swif_full_symbol_t *)*(set_i0-new_i0));
         } else { 
             if (set_i0 - new_i0 < (set->size * 2)) {
                 set->size *= 2;
@@ -396,7 +398,8 @@ swif_full_symbol_t *full_symbol_create
  * @brief Release a full_symbol
  */
 void full_symbol_free(swif_full_symbol_t* full_symbol)
-{    
+{
+    DEBUG_PRINT("free: %08x\n", (unsigned int)full_symbol);
     assert(full_symbol != NULL);
     assert(full_symbol->coef != NULL);
     free(full_symbol->coef);
