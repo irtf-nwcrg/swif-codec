@@ -21,7 +21,7 @@ cdef check_swif_status(swif_status, swif_errno):
     if swif_status == SWIF_STATUS_ERROR:
         raise RuntimeError("SWIF Error", swif_errno) #XXX
 
-cdef uint8_t* memclone(uint8_t* data, int data_size):
+cpdef uint8_t* memclone(uint8_t* data, int data_size):
     cdef uint8_t* result = <uint8_t*> malloc(data_size)
     memcpy(result, data, data_size)
     return result
@@ -52,7 +52,7 @@ cdef class RlcEncoder:
         assert self.encoder is not NULL
         result = bytes(self.symbol_size)
         cdef uint8_t *data = result
-        status = swif_build_repair_symbol(self.encoder, data)
+        status = swif_build_repair_symbol(self.encoder, data) # XXX: ref bytes?
         check_swif_status(status, self.encoder.swif_errno)
         return result
 
@@ -405,8 +405,8 @@ cdef class FullSymbol:
     cpdef get_data(self):
         assert self.symbol is not NULL
         symbol_size = self.get_size()
-        result = bytes(symbol_size)
-        full_symbol_get_data(self.symbol, result)
+        result = bytes(symbol_size) 
+        full_symbol_get_data(self.symbol, result) # XXX: passing `result' safe?
         return result
 
     cpdef clone(self):

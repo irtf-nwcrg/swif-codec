@@ -32,8 +32,7 @@ clean:
 test:
 	python3 -m pytest
 
-test-swif: 
-	#est_swif.c Makefile
+test-swif:
 	gcc -g3 -o test_swif test_swif.c -I../../src -L../../src -L../../liblc/src -lswif
 	./test_swif
 

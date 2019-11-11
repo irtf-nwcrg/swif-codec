@@ -33,8 +33,8 @@
  * @author  Cedric Adjih <cedric.adjih@inria.fr>
  */
 
-#ifndef __GENERAL_H__
-#define __GENERAL_H__
+#ifndef __SWIF_GENERAL_H__
+#define __SWIF_GENERAL_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,8 +62,8 @@ extern "C" {
 #define STATIC_ENSURE_EQUAL(name,a,b) \
   struct name { char l1[(a)-(b)]; char l2[(b)-(a)]; };
 
-#define MAX(a,b) ((a) > (b) ? a : b)
-#define MIN(a,b) ((a) < (b) ? a : b)
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 static inline uint16_t min_except(uint16_t v1, uint16_t v2, uint16_t ignored)
 {
@@ -103,6 +103,6 @@ static inline void DEBUG_DUMP(void *data, unsigned int data_size)
 }
 #endif
 
-#endif /* __GENERAL_H__ */
+#endif /* __SWIF_GENERAL_H__ */
 /*---------------------------------------------------------------------------*/
 /** @} */

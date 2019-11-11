@@ -8,7 +8,7 @@
 from libc.stdint cimport uint8_t, uint32_t, int64_t, bool
 from libc.stdio cimport FILE
 
-cdef extern from "../../src/swif_api.h":
+cdef extern from "swif_api.h":
     ctypedef enum swif_status_t:
         SWIF_STATUS_OK = 0
         SWIF_STATUS_FAILURE
@@ -77,7 +77,7 @@ cdef extern from "../../src/swif_api.h":
 
 #---------------------------------------------------------------------------
 
-cdef extern from "../../src/swif_rlc_cb.h":
+cdef extern from "swif_rlc_cb.h":
     ctypedef struct swif_encoder_rlc_cb_t:
         swif_codepoint_t  codepoint
         swif_errno_t      swif_errno
@@ -89,7 +89,7 @@ cdef extern from "../../src/swif_rlc_cb.h":
 
 #---------------------------------------------------------------------------
 
-cdef extern from "../../src/swif_symbol.h":
+cdef extern from "swif_symbol.h":
     ctypedef uint32_t symbol_id_t
 
     uint8_t gf256_inv(uint8_t a)
@@ -115,7 +115,7 @@ cdef extern from "../../src/swif_symbol.h":
 
 #---------------------------------------------------------------------------
 
-cdef extern from "../../src/swif_full_symbol.h":
+cdef extern from "swif_full_symbol.h":
      cdef unsigned int SYMBOL_ID_NONE
 
      cdef struct s_swif_full_symbol_t:
@@ -170,7 +170,7 @@ cdef extern from "../../src/swif_full_symbol.h":
 #---------------------------------------------------------------------------
 
 
-cdef extern from "../../src/swif_full_symbol_impl.h":
+cdef extern from "swif_full_symbol_impl.h":
 
      cdef struct s_swif_full_symbol_set_t:
          uint32_t size
