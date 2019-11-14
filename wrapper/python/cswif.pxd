@@ -74,19 +74,32 @@ cdef extern from "../../src/swif_api.h":
         uint32_t        max_coding_window_size,
         uint32_t        max_linear_system_size);
 
+    swif_status_t swif_decoder_add_source_symbol_to_coding_window (
+        swif_decoder_t* dec,
+        esi_t           new_src_symbol_esi)
 
 #---------------------------------------------------------------------------
 
-cdef extern from "../../src/swif_rlc_cb.h":
-    ctypedef struct swif_encoder_rlc_cb_t:
-        swif_codepoint_t  codepoint
-        swif_errno_t      swif_errno
-        uint32_t          verbosity
-        uint32_t          max_coding_window_size
-        uint32_t          symbol_size
-        uint8_t	          *cc_tab
-        uint32_t          cw_nb_in_list
+#cdef extern from "../../src/swif_rlc_cb.h":
+#    ctypedef struct swif_encoder_rlc_cb_t:
+#        swif_codepoint_t  codepoint
+#        swif_errno_t      swif_errno
+#        uint32_t          verbosity
+#        uint32_t          max_coding_window_size
+#        uint32_t          symbol_size
+#        uint8_t	          *cc_tab
+#        uint32_t          cw_nb_in_list
 
+#     ctypedef struct swif_decoder_rlc_cb_t:
+#        swif_codepoint_t  codepoint
+#        swif_errno_t      swif_errno
+#        uint32_t          verbosity
+#       uint32_t          max_coding_window_size
+#       uint32_t          symbol_size
+#       uint8_t	          *coef_tab
+#       uint32_t          nb_id
+
+        
 #---------------------------------------------------------------------------
 
 cdef extern from "../../src/swif_symbol.h":
@@ -212,3 +225,18 @@ cdef extern from "../../src/swif_full_symbol_impl.h":
 
 
 #---------------------------------------------------------------------------
+cdef extern from "../../src/swif_rlc_api.h":
+     swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (    
+                                swif_decoder_t* dec,
+                                void* const     new_symbol_buf,
+                                esi_t           new_symbol_esi)
+    
+     swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
+                                swif_decoder_t* dec,
+                                void* const     new_symbol_buf,
+                                esi_t           new_symbol_esi)
+    
+     swif_status_t   swif_rlc_decoder_generate_coding_coefs (
+                                swif_decoder_t* dec,
+                                uint32_t        key,
+                                uint32_t        add_param)

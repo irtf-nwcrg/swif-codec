@@ -35,9 +35,21 @@ def try_encoder():
     for packet in packet_list:
         print(packet)
 
+def try_decoder():
+    packet_list = []
+    decoder = swif.RlcDecoder(SYMBOL_SIZE, MAX_CODING_WINDOW_SIZE)
+    source_id = 1
+    symbol = make_source_symbol(source_id)
+    decoder.add_source_symbol_to_coding_window(source_id)
+    packet = Packet(first_id=source_id, nb_id=1, key=None, data=symbol)
+    source_id += 1
+    packet_list.append(packet)
+    decoder.decoder_generate_coding_coefs(key=0, add_param=0)
+    
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    try_encoder()
+    #try_encoder()
+    try_decoder()
 
 #---------------------------------------------------------------------------

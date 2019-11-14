@@ -87,6 +87,15 @@ typedef struct swif_decoder_rlc_cb {
 
 	/* set of packets being decoded through gaussian elimination */
         swif_full_symbol_set_t *symbol_set;
+
+	/* coding coefficients table. To be initialized before building a new repair symbol */
+	uint8_t*		coef_tab;
+	/* the index of the first source symbol (included) */
+	uint32_t 		first_id;
+	/** number of symbols currently in the encoding window 
+	* useful to differentiate the state of the buffer
+	*/
+	uint32_t 		nb_id;
         
 	void (*source_symbol_removed_from_linear_system_callback) (
 					void*   context,
@@ -101,5 +110,6 @@ typedef struct swif_decoder_rlc_cb {
 
 	void*			context_4_callback;
 
+	
 	/* add whatever may be needed hereafter... */
 } swif_decoder_rlc_cb_t;

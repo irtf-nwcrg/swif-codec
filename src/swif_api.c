@@ -117,7 +117,7 @@ swif_decoder_t* swif_decoder_create (
                                 uint32_t        max_coding_window_size,
                                 uint32_t        max_linear_system_size)
 {
-    /* initialize the encoder */
+    /* initialize the decoder */
     switch (codepoint) {
         case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
             return (swif_rlc_decoder_create(codepoint, verbosity, symbol_size, max_coding_window_size, max_linear_system_size));

@@ -185,11 +185,10 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
         swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
-        full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
+        full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
         fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
-
 
 /**
  * Submit a received repair symbol and try to progress in the decoding.
@@ -204,11 +203,12 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
         //XXX;
         swif_full_symbol_t *full_symbol = NULL;
-        full_symbol = full_symbol_create_from_source(new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
-        full_symbol_set_add(rlc_dec->symbol_set, full_symbol);
+        full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
+        full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
         fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
+
 
 
 /*******************************************************************************
@@ -233,6 +233,19 @@ swif_status_t   swif_rlc_encoder_reset_coding_window (swif_encoder_t*  enc)
 swif_status_t   swif_rlc_decoder_reset_coding_window (swif_decoder_t*  dec)
 {
 // NOT YET
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+    
+    
+    if (rlc_dec->coef_tab == NULL) {
+        /* free the structure in case of problem */
+        uint8_t *coef
+        = (uint8_t *)calloc(rlc_dec->symbol_size , sizeof(uint8_t));
+        rlc_dec->coef_tab = coef;
+    }
+    
+    memset(rlc_dec->coef_tab, 0, rlc_dec->symbol_size);
+    rlc_dec->first_id = SYMBOL_ID_NONE ; 
+    rlc_dec->nb_id = 0 ; 
 	return SWIF_STATUS_OK;
 }
 
@@ -283,7 +296,23 @@ swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
                                 esi_t           new_src_symbol_esi)
 {
 // NOT YET
-	return SWIF_STATUS_OK;
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+
+    if (rlc_dec->first_id == SYMBOL_ID_NONE) {
+        assert(rlc_dec->nb_id == 0);
+        rlc_dec->first_id = new_src_symbol_esi ;  
+    }
+    if ((new_src_symbol_esi - rlc_dec->first_id) <= rlc_dec->max_coding_window_size) {
+
+        //rlc_dec->coef_tab[new_src_symbol_esi - rlc_dec->first_id] = coef;
+        rlc_dec->nb_id++;
+    } else {
+        fprintf(stderr, "swif_rlc_decoder_add_source_symbol_to_coding_window() failed!");
+        return SWIF_STATUS_ERROR; 
+    }
+  
+    return SWIF_STATUS_OK;
+    
 }
 
 
@@ -406,6 +435,28 @@ swif_status_t   swif_rlc_decoder_generate_coding_coefs (
                                 uint32_t        add_param)
 {
         // repair keys
+	 /* XXX: check why uint32_t key */
+        DEBUG_PRINT("generate coding coefs: ");
+        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+        
+        if (rlc_dec->coef_tab == NULL) {
+                /* XXX: need to use allocation functions */
+                rlc_dec->coef_tab = (uint8_t*) malloc(
+                    rlc_dec->max_coding_window_size*sizeof(uint8_t) );
+                if (rlc_dec->coef_tab == NULL) {
+                        fprintf(stderr, "Error, swif_rlc_decoder_generate_"
+                                "coding_coefs: malloc failed\n");
+                        return SWIF_STATUS_ERROR;
+                }
+        }
+
+        assert(rlc_dec->nb_id <= rlc_dec->max_coding_window_size);
+        swif_rlc_generate_coding_coefficients (
+            (uint16_t)key, rlc_dec->coef_tab,
+            rlc_dec->nb_id, /* upper bound: enc->max_window_size */
+            15 /* density dt [0-15] XXX dt=1*/  ,
+            8 /*=m - GF(2^^m) */);
+        DEBUG_DUMP(rlc_dec->coef_tab, rlc_dec->nb_id); 
 	return SWIF_STATUS_OK;
 }
 

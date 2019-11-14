@@ -82,7 +82,25 @@ cdef class RlcDecoder:
             0, symbol_size, max_coding_window_size, 2*max_coding_window_size)
         self.symbol_size = symbol_size
         if self.decoder is NULL:
-            raise RuntimeError("SWIF Error", "encoder_create returned NULL")#XXX
+            raise RuntimeError("SWIF Error", "decoder_create returned NULL")#XXX
+
+    # XXX add code here
+    def decode_with_new_source_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
+        swif_rlc_decoder_decode_with_new_source_symbol(self.decoder, new_symbol_buf, new_size_esi)
+
+    def decode_with_new_repair_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
+        swif_rlc_decoder_decode_with_new_repair_symbol(self.decoder, new_symbol_buf, new_size_esi)
+
+    def decoder_generate_coding_coefs(self, uint32_t key, uint32_t add_param):
+        swif_rlc_decoder_generate_coding_coefs(self.decoder, key, add_param)
+    
+    def add_source_symbol_to_coding_window(self, esi_t symbol_id):
+        assert self.decoder is not NULL
+        status = swif_decoder_add_source_symbol_to_coding_window(
+            self.decoder, symbol_id)
+        check_swif_status(status, self.decoder.swif_errno)
+
+    # XXX end of modifications 
 
 #---------------------------------------------------------------------------
 
