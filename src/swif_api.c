@@ -133,7 +133,13 @@ swif_decoder_t* swif_decoder_create (
  **/
 swif_status_t   swif_decoder_release (swif_decoder_t*        dec)
 {
-    return SWIF_STATUS_OK;
+    switch (dec->codepoint) {
+        case SWIF_CODEPOINT_RLC_GF_256_FULL_DENSITY_CODEC:
+            return (swif_rlc_decoder_release(dec));
+        default:
+            fprintf(stderr, "Error, swif_decoder_release: codepoint not recognized\n");
+            return SWIF_STATUS_ERROR;
+    }
 }
 
 

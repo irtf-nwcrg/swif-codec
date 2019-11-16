@@ -113,7 +113,13 @@ swif_status_t   swif_rlc_build_repair_symbol (
  **/
 swif_status_t   swif_rlc_decoder_release (swif_decoder_t*        dec)
 {
-// NOT YET
+	assert(dec);
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+    if (rlc_dec->coef_tab)
+        free(rlc_dec->coef_tab);
+    if (rlc_dec->symbol_set)
+        full_symbol_set_free(rlc_dec->symbol_set);
+    free(rlc_dec);
 	return SWIF_STATUS_OK;
 }
 
