@@ -91,11 +91,36 @@ void test_clone(void)
     full_symbol_free(symbol1);
 
 }
+
+void test_rref_mat(void)
+{
+    uint8_t data[7][11] = {{   0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+			   {   0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+			   {  68, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+			   { 215, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+			   {   0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+			   { 153, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+			   {  69, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+
+    swif_full_symbol_set_t *set = full_symbol_set_alloc();
+    uint8_t content;
+    for (int i=0; i<7; i++) {
+	swif_full_symbol_t *symbol
+	    = full_symbol_create(data[i], 0, 11, &content, 0);
+	full_symbol_dump(symbol, stdout);
+	full_symbol_add_with_elimination(set, symbol);
+	full_symbol_free(symbol);
+    }
+    full_symbol_set_dump(set, stdout);
+    full_symbol_set_free(set);
+}
+
 int main(int argc, char **argv)
 {
     //test_set();
     //test_set2();
-    test_add_with_elimination();
+    //test_add_with_elimination();
     //test_clone();
+    test_rref_mat();
     exit(0);
 }

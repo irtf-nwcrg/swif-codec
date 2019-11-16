@@ -6,7 +6,6 @@
 #ifndef SWIF_INCLUDES_H
 #define SWIF_INCLUDES_H
 
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>

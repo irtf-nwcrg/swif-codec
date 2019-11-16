@@ -8,7 +8,7 @@ extern "C" {
 /* XXX: move in more general header file */
 #define WARNING_PRINT(fmt, args...) fprintf(stderr, "WARNING: %s: %d: %s(): " fmt, \
     __FILE__, __LINE__, __func__, ##args)
-#define WITH_DEBUG
+//#define WITH_DEBUG
 #ifdef WITH_DEBUG
 #define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s: %d: %s(): " fmt, \
     __FILE__, __LINE__, __func__, ##args)
@@ -47,7 +47,7 @@ extern "C" {
 struct s_swif_full_symbol_t {
     /* first_id, last_id  relate to the memory allocation
        can be SYMBOL_ID_NONE (when no coefficient available) */
-    uint8_t* coef; /* never NULL */
+    uint8_t *coef; /* never NULL */
     symbol_id_t first_id; /* coef[0] is the coefficient of first symbol_id */
     symbol_id_t last_id;  /* (last included) */
 
@@ -58,7 +58,7 @@ struct s_swif_full_symbol_t {
     symbol_id_t first_nonzero_id;
     symbol_id_t last_nonzero_id;    
     
-    uint8_t* data; /* the coded symbol itself (the data) - never NULL */
+    uint8_t *data; /* the coded symbol itself (the data) - never NULL */
     uint32_t data_size; /* size of the coded symbol */
 };
 
@@ -80,7 +80,7 @@ struct s_swif_full_symbol_set_t {
  * @brief Create a set of full_symbol_t
  * Initially it is empty.
  */
-swif_full_symbol_set_t *full_symbol_set_alloc();
+swif_full_symbol_set_t *full_symbol_set_alloc(void);
 
 /**
  * @brief Free a full_symbol set
@@ -189,18 +189,7 @@ swif_full_symbol_t* full_symbol_add
 
 /*---------------------------------------------------------------------------*/
 
-
-
-
 void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out);
-
-
-
-
-
-
-
-
 
 /*---------------------------------------------------------------------------*/
 
