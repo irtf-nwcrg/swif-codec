@@ -215,8 +215,8 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 {   
     /* only copies of symbol are stored, so first clone it */
     swif_full_symbol_t *new_symbol = full_symbol_clone(new_symbol1);
-    /* is_null variable is used to check if all the symbol coefs are NULL */
-    bool is_null = true;
+    /* is_null variable is used to check if all the symbol coefs are zero */
+    bool is_zero = true;
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
         return NULL;
@@ -233,20 +233,20 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                 full_symbol_scale(symbol1_cloned, coef);
                 swif_full_symbol_t *symbol2 = full_symbol_add(new_symbol, symbol1_cloned);
                 /* After the addition, symbol2 may be null, in this case w eliminate it */
-                if(!full_symbol_is_zero(symbol2)){
+                if (!full_symbol_is_zero(symbol2)) {
                     full_symbol_free(new_symbol);
                     new_symbol =  symbol2;
                 }
-                if (new_symbol->coef[i] != NULL){
-                    is_null = false;
-                }
+                //if (new_symbol->coef[i] != NULL) { // XXX:remove 
+                //    is_zero = false;
+                //}
                 full_symbol_free(symbol1_cloned);
             } else {
-                is_null = false; 
+                is_zero = false; 
             }
         }
     }
-    if (is_null) {
+    if (is_zero) {
         full_symbol_free(new_symbol);
         return NULL; 
     }
@@ -319,6 +319,11 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set,
 	    assert(full_symbol_get_coef(stored_symbol, si)  == 1);
 	    full_symbol_set_notify_decoded(full_symbol_set, si);
 	}
+    }
+
+#warning "XXX: remove:"
+    if (full_symbol_set->nmbr_packets == 979) {
+      full_symbol_set_dump(full_symbol_set, stdout);
     }
 }
 /*---------------------------------------------------------------------------*/
