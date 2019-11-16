@@ -89,9 +89,11 @@ cdef class RlcDecoder:
 
     # XXX add code here
     def decode_with_new_source_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
+        assert self.symbol_size == len(new_symbol_buf)
         swif_rlc_decoder_decode_with_new_source_symbol(self.decoder, new_symbol_buf, new_size_esi)
 
     def decode_with_new_repair_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
+        assert self.symbol_size == len(new_symbol_buf)
         swif_rlc_decoder_decode_with_new_repair_symbol(self.decoder, new_symbol_buf, new_size_esi)
 
     def decoder_generate_coding_coefs(self, uint32_t key, uint32_t add_param): 

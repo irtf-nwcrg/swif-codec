@@ -187,6 +187,7 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
 
         swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        full_symbol_dump(full_symbol,stdout);
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
         //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;

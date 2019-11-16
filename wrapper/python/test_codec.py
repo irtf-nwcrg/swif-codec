@@ -50,9 +50,9 @@ def try_decoder():
 
 def test_with_2_packets():
     symbol1 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([1,0,0]), b"azerty")
+        1, bytes([1,0,0]), b"azertyazertyasdf")
     symbol2 = swif.FullSymbol().from_coefs_and_symbol(
-        1, bytes([0,1,0]), b"querty")
+        1, bytes([0,1,0]), b"quertyquertyasdf")
     print("dump 2 ")
     symbol2.dump()
     src1 = symbol1.clone()
@@ -64,7 +64,7 @@ def test_with_2_packets():
     decoder = swif.RlcDecoder(SYMBOL_SIZE, MAX_CODING_WINDOW_SIZE)
     decoder.decoder_reset_coding_window()
     decoder.decode_with_new_source_symbol(symbol1.get_data(), symbol1.get_min_symbol_id())
-    #decoder.swif_decoder_decode_with_new_source_symbol(symbol2)
+    #decoder.decode_with_new_source_symbol(symbol2.get_data(), symbol2.get_min_symbol_id())
     decoder.add_source_symbol_to_coding_window(1)
     decoder.add_source_symbol_to_coding_window(2)
     decoder.decoder_generate_coding_coefs(key=0, add_param=0)

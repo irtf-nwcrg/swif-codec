@@ -275,8 +275,6 @@ void full_symbol_set_add_as_pivot
     }
     IF_DEBUG(full_symbol_dump(new_symbol, stdout));
     full_symbol_set_add(full_symbol_set, new_symbol );
-    printf("=======\n");
-    full_symbol_set_dump(full_symbol_set, stdout);
 }
 
 
