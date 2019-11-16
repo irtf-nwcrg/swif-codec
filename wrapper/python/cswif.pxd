@@ -233,7 +233,7 @@ cdef extern from "swif_full_symbol_impl.h":
      swif_full_symbol_t *full_symbol_set_remove_each_pivot(
          swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol)
 
-     void full_symbol_set_add_as_pivot(
+     uint32_t full_symbol_set_add_as_pivot(
         swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol)
 
      void full_symbol_add_with_elimination(

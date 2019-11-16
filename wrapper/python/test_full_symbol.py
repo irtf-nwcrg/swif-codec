@@ -266,7 +266,7 @@ def test_all():
 
 if __name__ == "__main__":
     #test_all()
-    #try_elimination()
+    try_elimination()
     test_full_symbol_set_add_previous_id()
 
 #---------------------------------------------------------------------------
