@@ -380,7 +380,7 @@ swif_status_t   swif_decoder_set_callback_functions (
                 void* (*decodable_source_symbol_callback) (
                                         void    *context,
                                         esi_t   esi),
-                void* (*decoded_source_symbol_callback) (
+                void (*decoded_source_symbol_callback) (
                                         void    *context,
                                         void    *new_symbol_buf,
                                         esi_t   esi),
