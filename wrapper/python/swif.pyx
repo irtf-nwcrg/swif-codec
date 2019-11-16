@@ -520,6 +520,9 @@ cdef class FullSymbolSet:
         self.symbol_set = NULL
         self._allocate()
 
+    def set_notify(self): # XXX
+        self.symbol_set.notify_decoded_func = notify_decoded_print
+        
     def alloc_set(self):
         warnings.warn("obsolete method")
         return self
@@ -625,5 +628,10 @@ def compute_rref(matrix):
         symbol = FullSymbol((0, list(row), b""))
         symbol_set.add_with_elimination(symbol)
     return symbol_set.get_matrix(len(matrix[0]))
+
+#---------------------------------------------------------------------------
+
+cdef public void notify_decoded_print(swif_full_symbol_set_t *set, symbol_id_t symbol_id, void *context):
+    print("notify decoded:",symbol_id)
 
 #---------------------------------------------------------------------------

@@ -41,6 +41,8 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
     }
     result->full_symbol_tab = full_symbol_tab;
     result->first_symbol_id = SYMBOL_ID_NONE ;
+    result->notify_decoded_func = NULL;
+    result->notify_context = NULL;    
     return result; 
 }
 
@@ -255,9 +257,11 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 
 /* callback should not add new symbols to full_symbol_set */
 void full_symbol_set_notify_decoded
-(swif_full_symbol_set_t *full_symbol_set, symbol_id_t decoded_id) 
+(swif_full_symbol_set_t *set, symbol_id_t decoded_id) 
 {
-    fprintf(stdout, "decoded: %u\n", decoded_id);
+    if (set->notify_decoded_func != NULL) {
+	set->notify_decoded_func(set, decoded_id, set->notify_context);
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -647,7 +651,6 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
  */
 void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
 {
-    uint8_t *result;
     assert(symbol1->coef != NULL);
     assert(symbol1->data != NULL);
     if (symbol1->first_id == SYMBOL_ID_NONE || symbol1->first_nonzero_id == SYMBOL_ID_NONE) {
