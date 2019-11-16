@@ -91,7 +91,7 @@ cdef class RlcDecoder:
     def decode_with_new_repair_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
         swif_rlc_decoder_decode_with_new_repair_symbol(self.decoder, new_symbol_buf, new_size_esi)
 
-    def decoder_generate_coding_coefs(self, uint32_t key, uint32_t add_param):
+    def decoder_generate_coding_coefs(self, uint32_t key, uint32_t add_param): 
         swif_rlc_decoder_generate_coding_coefs(self.decoder, key, add_param)
     
     def add_source_symbol_to_coding_window(self, esi_t symbol_id):
@@ -99,6 +99,11 @@ cdef class RlcDecoder:
         status = swif_decoder_add_source_symbol_to_coding_window(
             self.decoder, symbol_id)
         check_swif_status(status, self.decoder.swif_errno)
+    def decoder_reset_coding_window(self):
+        swif_rlc_decoder_reset_coding_window(self.decoder)
+    def decode_with_new_source_symbol(self, uint8_t* new_symbol_buf, esi_t new_size_esi):
+        swif_rlc_decoder_decode_with_new_source_symbol(self.decoder, new_symbol_buf, new_size_esi)
+
 
     # XXX end of modifications 
 

@@ -3,6 +3,7 @@
 #include "swif_includes.h"
 #include "swif_rlc_api.h"
 #include "swif_coding_coefficients.h"
+#include "swif_full_symbol_impl.c"
 
 /*******************************************************************************
  * Encoder functions
@@ -183,10 +184,11 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
                                 esi_t           new_symbol_esi)
 {
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+
         swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
-        fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
+        //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
 
@@ -200,12 +202,13 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 void* const     new_symbol_buf,
                                 esi_t           new_symbol_esi)
 {
+       
         swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
         //XXX;
         swif_full_symbol_t *full_symbol = NULL;
         full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
-        fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
+        //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
 
@@ -300,7 +303,7 @@ swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
 
     if (rlc_dec->first_id == SYMBOL_ID_NONE) {
         assert(rlc_dec->nb_id == 0);
-        rlc_dec->first_id = new_src_symbol_esi ;  
+        rlc_dec->first_id = new_src_symbol_esi ;
     }
     if ((new_src_symbol_esi - rlc_dec->first_id) <= rlc_dec->max_coding_window_size) {
 
@@ -310,7 +313,6 @@ swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
         fprintf(stderr, "swif_rlc_decoder_add_source_symbol_to_coding_window() failed!");
         return SWIF_STATUS_ERROR; 
     }
-  
     return SWIF_STATUS_OK;
     
 }
@@ -424,7 +426,7 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
             rlc_enc->ew_ss_nb, /* upper bound: enc->max_window_size */
             15 /* density dt [0-15] XXX dt=1*/,
             8 /*=m - GF(2^^m) */);
-        DEBUG_DUMP(rlc_enc->cc_tab, rlc_enc->ew_ss_nb);
+       
 	return SWIF_STATUS_OK;
 }
 
@@ -437,8 +439,7 @@ swif_status_t   swif_rlc_decoder_generate_coding_coefs (
         // repair keys
 	 /* XXX: check why uint32_t key */
         DEBUG_PRINT("generate coding coefs: ");
-        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
-        
+        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec; 
         if (rlc_dec->coef_tab == NULL) {
                 /* XXX: need to use allocation functions */
                 rlc_dec->coef_tab = (uint8_t*) malloc(
@@ -456,8 +457,8 @@ swif_status_t   swif_rlc_decoder_generate_coding_coefs (
             rlc_dec->nb_id, /* upper bound: enc->max_window_size */
             15 /* density dt [0-15] XXX dt=1*/  ,
             8 /*=m - GF(2^^m) */);
-        DEBUG_DUMP(rlc_dec->coef_tab, rlc_dec->nb_id); 
-	return SWIF_STATUS_OK;
+        DEBUG_DUMP(rlc_dec->coef_tab, rlc_dec->nb_id);
+    	return SWIF_STATUS_OK;
 }
 
 

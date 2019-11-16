@@ -240,3 +240,11 @@ cdef extern from "../../src/swif_rlc_api.h":
                                 swif_decoder_t* dec,
                                 uint32_t        key,
                                 uint32_t        add_param)
+     swif_status_t   swif_rlc_decoder_reset_coding_window (
+                                swif_decoder_t*  dec)
+    
+     swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
+                                swif_decoder_t* dec,
+                                void* const     new_symbol_buf,
+                                esi_t           new_symbol_esi)
+

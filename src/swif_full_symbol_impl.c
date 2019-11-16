@@ -270,6 +270,8 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
     }
     full_symbol_dump(new_symbol, stdout);
     full_symbol_set_add(full_symbol_set, new_symbol );
+    printf("=======\n");
+    full_symbol_set_dump(full_symbol_set, stdout);
 }
 
 
@@ -277,9 +279,10 @@ void full_symbol_set_add_as_pivot(swif_full_symbol_set_t *full_symbol_set, swif_
 void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
 {
     swif_full_symbol_t *fss_remove_pivot= full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
-    if(fss_remove_pivot)
+    if(fss_remove_pivot){
         full_symbol_set_add_as_pivot(full_symbol_set, fss_remove_pivot);
-    full_symbol_free(fss_remove_pivot);
+        full_symbol_free(fss_remove_pivot);
+    }
 }
 /*---------------------------------------------------------------------------*/
 /**
