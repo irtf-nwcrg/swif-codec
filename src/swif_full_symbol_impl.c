@@ -41,6 +41,8 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
     }
     result->full_symbol_tab = full_symbol_tab;
     result->first_symbol_id = SYMBOL_ID_NONE ;
+    result->notify_decoded_func = NULL;
+    result->notify_context = NULL;    
     return result; 
 }
 
@@ -183,7 +185,7 @@ uint32_t full_symbol_set_add
         WARNING_PRINT("failed to reallocate full_symbol_tab");
         full_symbol_free(full_symbol_cloned);
         free(set->full_symbol_tab);
-        return SYMBOL_ID_NONE;
+        return ENTRY_INDEX_NONE;
     }
 
     set->full_symbol_tab[idx_pos] = full_symbol_cloned;
@@ -217,7 +219,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
     bool is_null = true;
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
-        return SYMBOL_ID_NONE; 
+        return NULL;
 
     for (uint32_t i = new_symbol->first_nonzero_id ; i <= new_symbol->last_nonzero_id; i++) {
         uint8_t coef = full_symbol_get_coef(new_symbol, i); 
@@ -252,7 +254,19 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 }
   
 /*---------------------------------------------------------------------------*/
-void full_symbol_set_add_as_pivot
+
+/* callback should not add new symbols to full_symbol_set */
+void full_symbol_set_notify_decoded
+(swif_full_symbol_set_t *set, symbol_id_t decoded_id) 
+{
+    if (set->notify_decoded_func != NULL) {
+	set->notify_decoded_func(set, decoded_id, set->notify_context);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+
+uint32_t full_symbol_set_add_as_pivot
 (swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol) 
 {
     full_symbol_adjust_min_max_coef(new_symbol);
@@ -265,16 +279,22 @@ void full_symbol_set_add_as_pivot
     for(uint32_t i = 0 ; i < full_symbol_set->size; i++) {
         if (full_symbol_set->full_symbol_tab[i]) {
             swif_full_symbol_t *symbol_cloned = full_symbol_clone(new_symbol);
-            uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], first_index);
+            uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], first_index); /* XXX: if coef == 0, nothing to do */
             full_symbol_scale(symbol_cloned, coef);
-            swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i], symbol_cloned);                  
+            swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i], symbol_cloned);
+	    bool is_decoded = !full_symbol_has_one_id(full_symbol_set->full_symbol_tab[i]) && full_symbol_has_one_id(symbol2);
             full_symbol_free(full_symbol_set->full_symbol_tab[i]);
             full_symbol_set->full_symbol_tab[i] = symbol2;
             full_symbol_free(symbol_cloned);
+	    if (is_decoded) {
+  	        symbol_id_t si = full_symbol_get_min_symbol_id(symbol2);
+	        assert(full_symbol_get_coef(symbol2, si)  == 1);
+	        full_symbol_set_notify_decoded(full_symbol_set, si);
+	    }
         }
     }
     IF_DEBUG(full_symbol_dump(new_symbol, stdout));
-    full_symbol_set_add(full_symbol_set, new_symbol );
+    return full_symbol_set_add(full_symbol_set, new_symbol);
 }
 
 
@@ -285,8 +305,20 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set,
     swif_full_symbol_t *fss_remove_pivot
       = full_symbol_set_remove_each_pivot(full_symbol_set, new_symbol);
     if (fss_remove_pivot) {
-        full_symbol_set_add_as_pivot(full_symbol_set, fss_remove_pivot);
+        uint32_t idx = full_symbol_set_add_as_pivot(
+	      full_symbol_set, fss_remove_pivot);
         full_symbol_free(fss_remove_pivot);
+	if (idx  == ENTRY_INDEX_NONE)
+	  return;
+	swif_full_symbol_t* stored_symbol
+	  = full_symbol_set->full_symbol_tab[idx];
+	bool is_decoded = (!full_symbol_has_one_id(new_symbol))
+	  && full_symbol_has_one_id(stored_symbol);
+	if (is_decoded) {
+	    symbol_id_t si = full_symbol_get_min_symbol_id(stored_symbol);
+	    assert(full_symbol_get_coef(stored_symbol, si)  == 1);
+	    full_symbol_set_notify_decoded(full_symbol_set, si);
+	}
     }
 }
 /*---------------------------------------------------------------------------*/
@@ -619,7 +651,6 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
  */
 void full_symbol_scale(swif_full_symbol_t *symbol1, uint8_t coef)
 {
-    uint8_t *result;
     assert(symbol1->coef != NULL);
     assert(symbol1->data != NULL);
     if (symbol1->first_id == SYMBOL_ID_NONE || symbol1->first_nonzero_id == SYMBOL_ID_NONE) {

@@ -64,11 +64,16 @@ struct s_swif_full_symbol_t {
 
 /*---------------------------------------------------------------------------*/
 
+typedef void (*notify_decoded_func_t)(swif_full_symbol_set_t *set, symbol_id_t symbol_id, void *context);
+  
 struct s_swif_full_symbol_set_t {
     uint32_t size; /* size of the table containing pointers to full_symbol */
     uint32_t first_symbol_id; /* the index of full_symbol_tab */
     uint32_t nmbr_packets;
     swif_full_symbol_t **full_symbol_tab;
+
+    notify_decoded_func_t notify_decoded_func; /* XXX: manually set */
+    void                 *notify_context;
 };
 
 /* The following constant is used to declare that an entry is not used */

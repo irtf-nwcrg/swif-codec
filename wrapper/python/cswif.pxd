@@ -185,14 +185,19 @@ cdef extern from "swif_full_symbol.h":
 
 cdef extern from "swif_full_symbol_impl.h":
 
+     ctypedef s_swif_full_symbol_set_t swif_full_symbol_set_t
+
+     ctypedef void (*notify_decoded_func_t)(swif_full_symbol_set_t *set, symbol_id_t symbol_id, void *context);
+
+
      cdef struct s_swif_full_symbol_set_t:
          uint32_t size
          uint32_t first_symbol_id
          uint32_t nmbr_packets
          swif_full_symbol_t **full_symbol_tab
+         notify_decoded_func_t notify_decoded_func
+         void                  *notify_context
      
-     ctypedef s_swif_full_symbol_set_t swif_full_symbol_set_t
-
      ctypedef uint32_t symbol_id_t
 
      swif_full_symbol_set_t *full_symbol_set_alloc()
@@ -233,7 +238,7 @@ cdef extern from "swif_full_symbol_impl.h":
      swif_full_symbol_t *full_symbol_set_remove_each_pivot(
          swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol)
 
-     void full_symbol_set_add_as_pivot(
+     uint32_t full_symbol_set_add_as_pivot(
         swif_full_symbol_set_t *full_symbol_set, swif_full_symbol_t *new_symbol)
 
      void full_symbol_add_with_elimination(

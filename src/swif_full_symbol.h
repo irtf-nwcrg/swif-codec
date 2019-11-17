@@ -111,6 +111,17 @@ static inline bool full_symbol_is_zero(swif_full_symbol_t *full_symbol)
 {return full_symbol_get_min_symbol_id(full_symbol) == SYMBOL_ID_NONE;}
 
 /**
+ * @brief Returns whether the symbol is an empty symbol
+ */
+static inline bool full_symbol_has_one_id(swif_full_symbol_t *full_symbol)
+{
+  return (!full_symbol_is_zero(full_symbol))
+    && (full_symbol_get_min_symbol_id(full_symbol)
+	== full_symbol_get_max_symbol_id(full_symbol));
+}
+
+ 
+/**
  * @brief Release a full_symbol
  */
 void full_symbol_free(swif_full_symbol_t *swif_full_symbol);
