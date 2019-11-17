@@ -145,6 +145,9 @@ swif_status_t   swif_rlc_decoder_set_callback_functions (
                 void*        context_4_callback)
 {
 // NOT YET
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+    rlc_dec->symbol_set->notify_context = context_4_callback ;
+    rlc_dec->decoded_source_symbol_callback = decoded_source_symbol_callback; 
 	return SWIF_STATUS_OK;
 }
 
