@@ -43,10 +43,10 @@ OBJS = $(SRCS:.c=.o)
 
 all: simple_client simple_server
 
-simple_server: simple_server.o ../../src/libswif.a
+simple_server: simple_server.o ../../src/libswif.a simple_client_server.h
 	${CC} ${CFLAGS} -o $@ $< -lswif -lm -L. -L../../src/
 
-simple_client: simple_client.o ../../src/libswif.a
+simple_client: simple_client.o ../../src/libswif.a simple_client_server.h
 	${CC} ${CFLAGS} -o $@ $< -lswif -L. -L../../src/
 
 #---------------------------------------------------------------------------

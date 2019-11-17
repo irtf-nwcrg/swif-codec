@@ -25,6 +25,11 @@ static void	dump_buffer_32 (void	*buf,
 				uint32_t	len32);
 
 /**
+ * Should the next packet be lost?
+ */
+static bool should_be_lost ();
+
+/**
  * Callback (not really required).
  */
 static void	source_symbol_removed_from_coding_window_callback (void*   context,
@@ -144,16 +149,20 @@ main (int argc, char* argv[])
 		fpi->nss = htons(0);			/* only meaningful in case of a repair */
 		fpi->esi = htonl(esi);
 		memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-		if (VERBOSITY > 1) {
-			printf("src[%03d]= ", esi);
-			dump_buffer_32(pkt_with_fpi, 8);
+		if (should_be_lost()) {
+				printf(" => src symbol %u is lost\n", esi);
 		} else {
-			printf(" => sending src symbol %u\n", esi);
-		}
-		if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
-			fprintf(stderr, "Error, sendto() failed!\n");
-			ret = -1;
-			goto end;
+			if (VERBOSITY > 1) {
+				printf("src[%03d]= ", esi);
+				dump_buffer_32(pkt_with_fpi, 8);
+			} else {
+				printf(" => sending src symbol %u\n", esi);
+			}
+			if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
+				fprintf(stderr, "Error, sendto() failed!\n");
+				ret = -1;
+				goto end;
+			}
 		}
 		/* perform a short usleep() to slow down transmissions and avoid UDP socket saturation at the receiver.
 		 * Note that the true solution consists in adding some rate control mechanism here... */
@@ -192,6 +201,8 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
+
+
 			fpi = (fpi_t*)pkt_with_fpi;
 			fpi->is_source	= htons(0);
 			fpi->repair_key	= htons(idx);
@@ -279,9 +290,26 @@ dump_buffer_32 (void	*buf,
 }
 
 
+static bool
+should_be_lost ()
+{
+	uint32_t	lost;
+
+	/* Randomly loose LOSS_RATE fraction of packets. */
+	lost =  rand() % 100;
+	if (lost < (LOSS_RATE * 100)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 static void 
 source_symbol_removed_from_coding_window_callback (void*   context,
 						   esi_t   old_symbol_esi)
 {
-	printf("callback: symbol %u removed\n", old_symbol_esi);
+	if (VERBOSITY > 1) {
+		printf("callback: symbol %u removed\n", old_symbol_esi);
+	}
 }

@@ -46,7 +46,7 @@
 #define	DEFAULT_EW_SIZE	10		/* default encoding window size assumed constant */
 #define CODE_RATE	0.667		/* k/n = 2/3 means we add 50% of repair symbols */
 #define LOSS_RATE	0.30		/* we consider 30% of packet losses... It assumes there's no additional loss during UDP transmissions */
-#define VERBOSITY	2		/* Define the verbosity level:
+#define VERBOSITY	1		/* Define the verbosity level:
 					 *	0 : no trace
 					 *	1 : main traces
 					 *	2 : full traces with packet dumps */
