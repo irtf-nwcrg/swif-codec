@@ -37,8 +37,26 @@ static swif_status_t	get_next_pkt (SOCKET	so,
 static void	dump_buffer_32 (void		*buf,
 				uint32_t	len32);
 
+/**
+ * Our callback each time a new source symbol is decoded.
+ */
+static void decoded_source_symbol_callback (void*	context,
+					    void	*new_symbol_buf,
+					    esi_t	esi);
+
+
+void**		src_symbols_tab	= NULL;			/* table containing pointers to the source symbol buffers, either received from the
+							 * network or decoded. In the first case the allocated buffer starts sizeof(FPI)
+							 * before, in the second case, the allocated buffer starts at this address. */
+src_symbol_status_at_recv_t*	src_symbols_status_tab	= NULL;		/* table containing source symbol status: missing/received/decoded. This is
+							 * extremely useful for memory management, since in case of a decoded source symbol
+							 * the buffer starts exactly at the src_symbol_tab address. */
+void**		repair_symbols_tab	= NULL;		/* table containing pointers to the received repair symbol buffers.
+							 * The allocated buffer starts sizeof(FPI) before this symbol. */
+
 
 /*************************************************************************************************/
+
 
 
 int
@@ -54,11 +72,7 @@ main (int argc, char* argv[])
 	char*		pkt_with_fpi	= NULL;			/* buffer containing a fixed size packet plus a header consisting only of the FPI */
 	fec_oti_t*	fec_oti		= NULL;			/* FEC Object Transmission Information as sent to the client */
 	fpi_t*		fpi;					/* header (FEC Payload Information) for source and repair symbols */
-	bool		done		= false;		/* true as soon as all source symbols have been received or recovered */
 	uint32_t	ret		= -1;
-	void**		recvd_symbols_tab= NULL;		/* table containing pointers to received symbols (no FPI here).
-								 * The allocated buffer start 4 bytes (i.e., sizeof(FPI)) before... */
-	void**		src_symbols_tab	= NULL;			/* table containing pointers to the source symbol buffers (no FPI here) */
 	int32_t		len;					/* len of the received packet */
 	uint32_t	n_received	= 0;			/* number of symbols (source or repair) received so far */
 
@@ -106,22 +120,25 @@ main (int argc, char* argv[])
 		ret = -1;
 		goto end;
 	}
-	/* Open and initialize the openfec decoding session now that we know the various parameters used by the sender/encoder... */
+	if (((src_symbols_tab = (void**) calloc(tot_src, sizeof(void*))) == NULL) ||
+	    ((src_symbols_status_tab = (src_symbol_status_at_recv_t*) calloc(tot_src, sizeof(void*))) == NULL) ||
+	    ((repair_symbols_tab = (void**) calloc(tot_enc - tot_src, sizeof(void*))) == NULL)) {
+		fprintf(stderr, "Error, no memory (tot_enc=%u)\n", tot_enc);
+		ret = -1;
+		goto end;
+	}
+	/* Open and initialize the decoding session now that we know the various parameters used by the sender/encoder... */
 	if ((ses = swif_decoder_create(codepoint, VERBOSITY, SYMBOL_SIZE, ew_size, 2 * ew_size)) == NULL) {
 		fprintf(stderr, "Error, swif_decoder_create() failed\n");
 		ret = -1;
 		goto end;
 	}
-
-	printf( "Reception/decoding in progress...\n" );
-
-	/* allocate a table for the received encoding symbol buffers. We'll update it progressively */
-	if (((recvd_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL) ||
-	    ((src_symbols_tab = (void**) calloc(tot_enc, sizeof(void*))) == NULL)) {
-		fprintf(stderr, "Error, no memory (tot_enc=%u)\n", tot_enc);
+	if (swif_decoder_set_callback_functions (ses, NULL, NULL, &decoded_source_symbol_callback, NULL) != SWIF_STATUS_OK) {
+		fprintf(stderr, "Error, swif_decoder_set_callback_functions() failed\n");
 		ret = -1;
 		goto end;
 	}
+	printf( "Reception/decoding in progress...\n" );
 	len = SYMBOL_SIZE + sizeof(fpi_t);	/* size of the expected packet */
 	/*
 	 * submit each fresh symbol to the library ASAP, upon reception.
@@ -131,9 +148,10 @@ main (int argc, char* argv[])
 		uint16_t	repair_key;	/* only meaningful in case of a repair */
 		uint16_t	nss;		/* only meaningful in case of a repair */
 		esi_t		esi;		/* esi of a source symbol, or esi of the first source symbol of the encoding window in case of a repair */
+		uint32_t	rep_idx = 0;	/* index in the repair symbol tab */
 		uint32_t	i;
 
-		/* OK, new packet received... */
+		/* OK, new packet received... and we know it'a fresh packet (no duplication here) */
 		n_received++;
 		fpi		= (fpi_t*)pkt_with_fpi;
 		is_source	= ntohs(fpi->is_source);
@@ -150,15 +168,21 @@ main (int argc, char* argv[])
 			ret = -1;
 			goto end;
 		}
-		recvd_symbols_tab[esi] = pkt_with_fpi + sizeof(fpi_t);	/* remember */
 		printf("%05d => receiving symbol esi=%u (%s), key=%u, nss=%u\n", n_received, esi, (is_source) ? "src" : "repair", repair_key, nss);
 		if (is_source) {
-			if (swif_decoder_decode_with_new_source_symbol(ses, (char*)pkt_with_fpi + sizeof(fpi_t), esi) != SWIF_STATUS_OK) {
+			/* remember that we received this source symbol */
+			src_symbols_tab[esi] = pkt_with_fpi + sizeof(fpi_t);	/* remember */
+			src_symbols_status_tab[esi] = SRC_SYMBOL_STATUS_RECEIVED;
+
+			if (swif_decoder_decode_with_new_source_symbol(ses, src_symbols_tab[esi], esi) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_source_symbol() failed\n");
 				ret = -1;
 				goto end;
 			}
 		} else {
+			/* remember that we received this repair symbol */
+			repair_symbols_tab[rep_idx] = pkt_with_fpi + sizeof(fpi_t);	/* remember */
+
 			/* a bit more complex, it's a repair symbol: specify the coding window, generate the coding coefficients,
 			 * then submit the repair symbol  */
 			if (swif_decoder_reset_coding_window(ses) != SWIF_STATUS_OK) {
@@ -178,33 +202,35 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-			if (swif_decoder_decode_with_new_repair_symbol(ses, pkt_with_fpi + sizeof(fpi_t), esi) != SWIF_STATUS_OK) {
+			if (swif_decoder_decode_with_new_repair_symbol(ses, repair_symbols_tab[rep_idx], esi) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_decode_with_new_repair_symbol() failed\n");
 				ret = -1;
 				goto end;
 			}
-		}
-		/* check if completed in case we received k packets or more */
-		if ((n_received >= tot_src) && (0 == true) /* TODO: we need a termination test here! */) {
-			/* done, we recovered everything, no need to continue reception */
-			done = true;
-			break;
+			rep_idx++;
 		}
 		len = SYMBOL_SIZE + sizeof(fpi_t);	/* make sure len contains the size of the expected packet */
 	}
-	if (done) {
-		/* finally, get a copy of the pointers to all the source symbols, those received (that we already know) and those decoded.
-		 * In case of received symbols, the library does not change the pointers (same value). */
-		printf("\nDone! All source symbols rebuilt after receiving %u packets\n", n_received);
-		if (VERBOSITY > 1) {
-			for (esi = 0; esi < tot_src; esi++) {
-				printf("src[%u]= ", esi);
+	/* print reception and decoding final statistics */
+	uint32_t	n_src_recvd = 0;		/* number source symbols received */
+	uint32_t	n_src_decoded = 0;		/* number source symbols decoded */
+	for (esi = 0; esi < tot_src; esi++) {
+		if (src_symbols_status_tab[esi] != SRC_SYMBOL_STATUS_RECEIVED) {
+			n_src_recvd++;
+		} else {
+			n_src_decoded++;
+		}
+		if (VERBOSITY > 0) {
+			printf("src[%u]= ", esi);
+			if (src_symbols_status_tab[esi] != SRC_SYMBOL_STATUS_MISSING) {
 				dump_buffer_32(src_symbols_tab[esi], 1);
+			} else {
+				printf("NULL\n");
 			}
 		}
-	} else {
-		printf("\nFailed to recover all erased source symbols even after receiving %u packets\n", n_received);
 	}
+	printf("\n%u source symbols available after receiving %u packets: %u received, %u decoded\n",
+		n_src_recvd + n_src_decoded, n_received, n_src_recvd, n_src_decoded);
 
 
 end:
@@ -218,19 +244,25 @@ end:
 	if (fec_oti) {
 		free(fec_oti);
 	}
-	if (recvd_symbols_tab && src_symbols_tab) {
-		for (esi = 0; esi < tot_enc; esi++) {
-			if (recvd_symbols_tab[esi]) {
-				/* this is a symbol received from the network, without its FPI that starts 4 bytes before */
-				free((char*)recvd_symbols_tab[esi] - sizeof(fpi_t));
-			} //else if (esi < k && src_symbols_tab[esi]) {
-			//	/* this is a source symbol decoded by the openfec codec, so free it */
-			//	ASSERT(recvd_symbols_tab[esi] == NULL);
-			//	free(src_symbols_tab[esi]);
-			//}
+	if (src_symbols_tab && src_symbols_status_tab && repair_symbols_tab) {
+		for (esi = 0; esi < tot_src; esi++) {
+			if (src_symbols_status_tab[esi] == SRC_SYMBOL_STATUS_RECEIVED) {
+				/* here the buffer starts sizeof(FPI) bytes before */
+				free((char*)src_symbols_tab[esi] - sizeof(fpi_t));
+			} else if (src_symbols_status_tab[esi] == SRC_SYMBOL_STATUS_DECODED) {
+				/* this is a source symbol decoded by the codec, so free it directly */
+				free(src_symbols_tab[esi]);
+			}
 		}
-		free(recvd_symbols_tab);
 		free(src_symbols_tab);
+		free(src_symbols_status_tab);
+		for (uint32_t i = 0; i < tot_enc - tot_src; i++) {
+			if (repair_symbols_tab[i]) {
+				/* here the buffer starts sizeof(FPI) bytes before */
+				free((char*)repair_symbols_tab[i] - sizeof(fpi_t));
+			}
+		}
+		free(repair_symbols_tab);
 	}
 	return ret;
 }
@@ -337,7 +369,7 @@ get_next_pkt   (SOCKET		so,
  * Dumps len32 32-bit words of a buffer (typically a symbol).
  */
 static void
-dump_buffer_32 (void	*buf,
+dump_buffer_32 (void		*buf,
 		uint32_t	len32)
 {
 	uint32_t	*ptr;
@@ -355,3 +387,13 @@ dump_buffer_32 (void	*buf,
 	printf("\n");
 }
 
+
+static void
+decoded_source_symbol_callback (void*	context,
+				void*	new_symbol_buf,
+				esi_t	esi)
+{
+	printf("callback: symbol %u decoded\n", esi);
+	src_symbols_tab[esi] = new_symbol_buf;
+	src_symbols_status_tab[esi] = SRC_SYMBOL_STATUS_DECODED;
+}

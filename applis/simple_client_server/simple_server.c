@@ -164,24 +164,22 @@ main (int argc, char* argv[])
 			esi_t		last;
 			uint32_t	nss;
 
-            if (idx >= tot_enc) {
-                break;
-            }
-
+			if (idx >= tot_enc) {
+				/* we're done, no additional symbol to send */
+				break;
+			}
 			/* the index is the repair_key */
 			if (swif_encoder_generate_coding_coefs(ses, idx, 0) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_decoder_generate_coding_coefs() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
-            
-            //enc_symbols_tab[idx] memory alloc inside
+			/* the build_repair allocates memory for enc_symbols_tab[idx] and updates the table itself. */
 			if (swif_build_repair_symbol(ses, &enc_symbols_tab[idx]) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_build_repair_symbol() failed for repair_key=%u\n", idx);
 				ret = -1;
 				goto end;
 			}
-            
 			/* prepend a header in network byte order */
 			if (swif_encoder_get_coding_window_information(ses, &first, &last, &nss) != SWIF_STATUS_OK) {
 				fprintf(stderr, "Error, swif_encoder_get_coding_window_information() failed for repair_key=%u\n", idx);

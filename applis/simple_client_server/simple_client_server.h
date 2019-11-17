@@ -42,7 +42,7 @@
  * Simulation parameters...
  * Change as required
  */
-#define SYMBOL_SIZE	1024		/* symbol size, in bytes (must be multiple of 4 in this simple example) */
+#define SYMBOL_SIZE	16		/* symbol size, in bytes (must be multiple of 4 in this simple example) */
 #define	DEFAULT_EW_SIZE	10		/* default encoding window size assumed constant */
 #define CODE_RATE	0.667		/* k/n = 2/3 means we add 50% of repair symbols */
 #define LOSS_RATE	0.30		/* we consider 30% of packet losses... It assumes there's no additional loss during UDP transmissions */
@@ -52,6 +52,19 @@
 					 *	2 : full traces with packet dumps */
 #define DEST_IP		"127.0.0.1"	/* Destination IPv4 address */
 #define DEST_PORT	10978		/* Destination port (UDP) */
+
+
+/*
+ * Source symbol status at a decoder (in our case the simple_client receiver), namely:
+ * - is it a source symbol that is still missing, neither received nor decoded (default status)?
+ * - is it a source symbol associated to a received FEC source packet?
+ * - is it a decoded source symbol?
+ */
+typedef enum {
+	SRC_SYMBOL_STATUS_MISSING = 0,
+	SRC_SYMBOL_STATUS_RECEIVED,
+	SRC_SYMBOL_STATUS_DECODED
+} src_symbol_status_at_recv_t;
 
 
 /*
