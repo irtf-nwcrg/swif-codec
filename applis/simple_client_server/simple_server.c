@@ -201,24 +201,26 @@ main (int argc, char* argv[])
 				ret = -1;
 				goto end;
 			}
-
-
 			fpi = (fpi_t*)pkt_with_fpi;
 			fpi->is_source	= htons(0);
 			fpi->repair_key	= htons(idx);
 			fpi->nss	= htons(nss);
 			fpi->esi	= htonl(first);
 			memcpy(pkt_with_fpi + sizeof(fpi_t), enc_symbols_tab[idx], SYMBOL_SIZE);
-			if (VERBOSITY > 1) {
-				printf("repair[%03d]= ", first);
-				dump_buffer_32(pkt_with_fpi, 8);
+			if (should_be_lost()) {
+					printf(" => repair symbol %u is lost\n", esi);
 			} else {
-				printf(" => sending repair symbol %u\n", first);
-			}
-			if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
-				fprintf(stderr, "Error, sendto() failed!\n");
-				ret = -1;
-				goto end;
+				if (VERBOSITY > 1) {
+					printf("repair[%03d]= ", first);
+					dump_buffer_32(pkt_with_fpi, 8);
+				} else {
+					printf(" => sending repair symbol %u\n", first);
+				}
+				if ((ret = sendto(so, pkt_with_fpi, sizeof(fpi_t) + SYMBOL_SIZE, 0, (SOCKADDR *)&dst_host, sizeof(dst_host))) == SOCKET_ERROR) {
+					fprintf(stderr, "Error, sendto() failed!\n");
+					ret = -1;
+					goto end;
+				}
 			}
 			/* Perform a short usleep() to slow down transmissions and avoid UDP socket saturation at the receiver.
 			 * Note that the true solution consists in adding some rate control mechanism here, like a leaky or token bucket. */
