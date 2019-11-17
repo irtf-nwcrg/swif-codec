@@ -82,7 +82,7 @@ swif_status_t   swif_encoder_set_parameters  (
  * using a type/length/value approach for maximum flexibility.
  */
 swif_status_t   swif_encoder_get_parameters  (
-			swif_encoder_t* enc,
+                                swif_encoder_t* enc,
                                 uint32_t        type,
                                 uint32_t        length,
                                 void*           value)
@@ -157,7 +157,7 @@ swif_status_t   swif_decoder_set_callback_functions (
                 void* (*decodable_source_symbol_callback) (
                                         void    *context,
                                         esi_t   esi),
-                void* (*decoded_source_symbol_callback) (
+                void (*decoded_source_symbol_callback) (
                                         void    *context,
                                         void    *new_symbol_buf,
                                         esi_t   esi),
