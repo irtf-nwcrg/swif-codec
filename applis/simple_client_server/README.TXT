@@ -36,6 +36,10 @@ input argument.
            +------------------------------------+
               signaling traffic + data traffic
 
+In this simple example, a packet always contain a single source or repair symbol.
+In practice an application will generate a flow of data units that have no reason
+to be of fixed size, that of a symbol.
+
 Signaling is rudimentary in this toy example:
 	- FEC-Object Transmission Information (FEC-OTI) that enables encoder/
 	  decoder synchronisation does not comply with any RFC;
