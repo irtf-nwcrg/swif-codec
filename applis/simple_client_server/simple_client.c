@@ -215,9 +215,9 @@ main (int argc, char* argv[])
 	uint32_t	n_src_recvd = 0;		/* number source symbols received */
 	uint32_t	n_src_decoded = 0;		/* number source symbols decoded */
 	for (esi = 0; esi < tot_src; esi++) {
-		if (src_symbols_status_tab[esi] != SRC_SYMBOL_STATUS_RECEIVED) {
+		if (src_symbols_status_tab[esi] == SRC_SYMBOL_STATUS_RECEIVED) {
 			n_src_recvd++;
-		} else {
+		} else if (src_symbols_status_tab[esi] == SRC_SYMBOL_STATUS_DECODED) {
 			n_src_decoded++;
 		}
 		if (VERBOSITY > 0) {
