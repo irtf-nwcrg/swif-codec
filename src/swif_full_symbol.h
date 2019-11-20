@@ -1,6 +1,19 @@
 /**
+ * @defgroup    SWiF-Codec
+ * @ingroup     swif-codec-linear
+ * @brief       an open-source sliding window FEC codec in C (linear operations)
+ * @{
+ *
+ * @file
  * @brief       A "full symbol" is a symbol with a full specification of
  *              what it represents, e.g. an encoding header.
+ *
+ * @author      Oumaima Attia <oumaima.attia@inria.fr>
+ */
+
+/**
+ * SWiF Codec: 
+ * https://github.com/irtf-nwcrg/swif-codec
  */
 
 #ifndef __SWIF_FULL_SYMBOL_H__
@@ -169,5 +182,5 @@ static inline bool full_symbol_includes_id(swif_full_symbol_t* symbol,
 #endif
 
 #endif /* __SWIF_FULL_SYMBOL_H__ */
-
 /*---------------------------------------------------------------------------*/
+/** @} */

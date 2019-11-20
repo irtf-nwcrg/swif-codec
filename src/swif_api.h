@@ -1,4 +1,15 @@
 /**
+ * @defgroup    SWiF-Codec-API
+ * @ingroup     swif-codec-api
+ * @brief       an open-source sliding window FEC codec in C (API)
+ * @{
+ *
+ * @file        
+ * @brief       The Generic FEC API
+ *
+ */
+
+/**
  * SWiF Codec: an open-source sliding window FEC codec in C
  * https://github.com/irtf-nwcrg/swif-codec
  */

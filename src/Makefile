@@ -79,6 +79,7 @@ test-coded-packet: test-coded-packet.o libswif.a
 
 doc:
 	doxygen Doxyfile
+	sensible-browser html/index.html
 
 #---------------------------------------------------------------------------
 # Cleaning

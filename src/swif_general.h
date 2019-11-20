@@ -22,15 +22,16 @@
  *---------------------------------------------------------------------------*/
 
 /**
- * @defgroup    LibLC    Linear Coding Library
- * @ingroup     liblc
- * @brief       linear coding and decoding of packets.
+ * @defgroup    SWiF-Codec
+ * @ingroup     swif-codec-base
+ * @brief       an open-source sliding window FEC codec in C
  * @{
  *
  * @file
  * @brief   General definitions and macros
  *
  * @author  Cedric Adjih <cedric.adjih@inria.fr>
+ * @author  Vincent Roca
  */
 
 #ifndef __SWIF_GENERAL_H__

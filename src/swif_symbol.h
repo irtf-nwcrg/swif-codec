@@ -1,5 +1,18 @@
 /**
- * SWiF Codec: an open-source sliding window FEC codec in C
+ * @defgroup    SWiF-Codec
+ * @ingroup     swif-codec-linear
+ * @brief       an open-source sliding window FEC codec in C (linear operations)
+ * @{
+ *
+ * @file
+ * @brief       A symbol is a vector of GF(256) elements
+ *
+ * @author      Oumaima Attia <oumaima.attia@inria.fr>
+ * @author      Cedric Adjih <cedric.adjih@inria.fr>
+ */
+
+/**
+ * SWiF Codec: 
  * https://github.com/irtf-nwcrg/swif-codec
  */
 
@@ -109,3 +122,5 @@ void symbol_div
 #endif
 
 #endif /* __SWIF_SYMBOL_H__ */
+/*---------------------------------------------------------------------------*/
+/** @} */

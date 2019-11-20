@@ -22,9 +22,9 @@
  *---------------------------------------------------------------------------*/
 
 /**
- * @defgroup    LibLC    Linear Coding Library
- * @ingroup     liblc
- * @brief       linear coding and decoding of packets.
+ * @defgroup    SWIF-codec    (former) Linear Coding Library
+ * @ingroup     swif-codec
+ * @brief       (former lib. for) linear coding and decoding of packets.
  * @{
  *
  * @file
