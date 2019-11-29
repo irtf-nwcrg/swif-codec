@@ -121,7 +121,9 @@ static inline uint32_t full_symbol_count_coef(swif_full_symbol_t *full_symbol)
  * @brief Returns whether the symbol is an empty symbol
  */
 static inline bool full_symbol_is_zero(swif_full_symbol_t *full_symbol)
-{return full_symbol_get_min_symbol_id(full_symbol) == SYMBOL_ID_NONE;}
+{
+    return full_symbol_get_min_symbol_id(full_symbol) == SYMBOL_ID_NONE;
+}
 
 /**
  * @brief Returns whether the symbol is an empty symbol

@@ -70,18 +70,18 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
     fprintf(out, "{'size':%u, ", full_symbol_set->size);
     fprintf(out, "'first_symbol_id':%u, ", full_symbol_set->first_symbol_id);
     fprintf(out, "'set':{");
-
     bool is_first = true;
     for (uint32_t i = 0; i < full_symbol_set->size; i++) {
-        if (full_symbol_set->full_symbol_tab[i] != NULL) {
+        swif_full_symbol_t *fs =  full_symbol_set->full_symbol_tab[i];
+        if (fs != NULL) {
             if (!is_first) {
                 fprintf(out, ",");
             } else {
                 is_first = false;
             }
             fprintf(out, "%u:(%u, ", i,
-                full_symbol_set->full_symbol_tab[i]->first_nonzero_id-full_symbol_set->first_symbol_id);
-            full_symbol_dump(full_symbol_set->full_symbol_tab[i], out);
+                fs->first_nonzero_id-full_symbol_set->first_symbol_id);
+            full_symbol_dump(fs, out);
             fprintf(out, ")");
         }
     }
@@ -89,10 +89,7 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
     fprintf(out, "}\n");
 }
 
-static inline symbol_id_t calculate_min(symbol_id_t index1, symbol_id_t index2)
-{
-    return (index1 <= index2 ? index1 : index2) ;
-}
+#define MIN(a,b)(a <= b ? a : b)
 
 /**
  * @brief Add a full_symbol to a packet set.
@@ -143,7 +140,7 @@ uint32_t full_symbol_set_add
             set->full_symbol_tab = realloc(set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
             memmove(set->full_symbol_tab + (set_i0-new_i0), set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
 	    memset(set->full_symbol_tab, 0,
-		   sizeof(swif_full_symbol_t *)*(set_i0-new_i0)); /*XXX:check*/
+		   sizeof(swif_full_symbol_t *)*(set_i0-new_i0));
         }
         IF_DEBUG(full_symbol_set_dump(set, stdout));
         if (set->full_symbol_tab == NULL) {
@@ -154,7 +151,7 @@ uint32_t full_symbol_set_add
         }
         set->full_symbol_tab[0] = full_symbol_cloned;
         set->nmbr_packets++;
-        set->first_symbol_id = calculate_min(set_i0, new_i0); /* actually should be new_i0 */
+        set->first_symbol_id = MIN(set_i0, new_i0); /* actually should be new_i0 */
         set_i0 = set->first_symbol_id;
         return new_i0 - set_i0; /* should be 0 */
     }
@@ -177,7 +174,7 @@ uint32_t full_symbol_set_add
     assert(idx_pos < set->size);
 
     /* reallocate memory for the table of pointers in full_symbol */
-    set->full_symbol_tab =realloc(
+    set->full_symbol_tab = realloc(
         set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
     memset(set->full_symbol_tab+old_size, 0, sizeof(swif_full_symbol_t*)*(set->size-old_size));
 
@@ -215,7 +212,7 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 {   
     /* only copies of symbol are stored, so first clone it */
     swif_full_symbol_t *new_symbol = full_symbol_clone(new_symbol1);
-    /* is_null variable is used to check if all the symbol coefs are zero */
+    /* is_zero variable is used to check if all the symbol coefs are zero */
     bool is_zero = true;
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
@@ -237,9 +234,6 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                     full_symbol_free(new_symbol);
                     new_symbol =  symbol2;
                 }
-                //if (new_symbol->coef[i] != NULL) { // XXX:remove 
-                //    is_zero = false;
-                //}
                 full_symbol_free(symbol1_cloned);
             } else {
                 is_zero = false; 
@@ -320,11 +314,6 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set,
 	    full_symbol_set_notify_decoded(full_symbol_set, si);
 	}
     }
-
-#warning "XXX: remove:"
-    if (full_symbol_set->nmbr_packets == 979) {
-      full_symbol_set_dump(full_symbol_set, stdout);
-    }
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -352,13 +341,13 @@ swif_full_symbol_t *full_symbol_alloc
         return NULL;
     }
     /* allocate coef and data */
-     uint8_t *coef = (uint8_t *)calloc(symbol_id_size , sizeof(uint8_t));
+     uint8_t *coef = (uint8_t *)calloc(symbol_id_size, sizeof(uint8_t));
     if (coef == NULL) {
         /* free the structure in case of problem */
         free(result);
         return NULL; 
     }
-    result->coef = coef ;
+    result->coef = coef;
 
     uint32_t safe_symbol_size = symbol_size;
     if (safe_symbol_size == 0) {
@@ -389,7 +378,7 @@ swif_full_symbol_t *full_symbol_alloc
 uint8_t full_symbol_get_coef
 (swif_full_symbol_t *full_symbol, uint32_t symbol_id)
 {
-    if (full_symbol_includes_id(full_symbol , symbol_id)) {
+    if (full_symbol_includes_id(full_symbol, symbol_id)) {
         return full_symbol->coef[symbol_id-full_symbol->first_id];
     }
     return 0; 
@@ -409,9 +398,9 @@ symbol_id_t full_symbol_get_coef_index
 swif_full_symbol_t *full_symbol_create_from_source
 (uint32_t symbol_id, uint8_t *symbol_data, uint32_t symbol_size)
 {
-    swif_full_symbol_t *full_symbol = full_symbol_alloc( symbol_id,  symbol_id, symbol_size);
-    symbol_id_t coef_index = full_symbol_get_coef_index( full_symbol, symbol_id);
-    full_symbol->coef[coef_index]=1;
+    swif_full_symbol_t *full_symbol = full_symbol_alloc(symbol_id, symbol_id, symbol_size);
+    symbol_id_t coef_index = full_symbol_get_coef_index(full_symbol, symbol_id);
+    full_symbol->coef[coef_index] = 1;
     full_symbol_adjust_min_max_coef(full_symbol);
     memcpy(full_symbol->data, symbol_data, symbol_size);  
     full_symbol->data_size = symbol_size;   
@@ -422,14 +411,15 @@ swif_full_symbol_t *full_symbol_create
 (uint8_t* symbol_coef_table, uint32_t min_symbol_id, uint32_t nb_symbol_id,
  uint8_t* symbol_data, uint32_t symbol_size)
 {
-    swif_full_symbol_t *full_symbol = full_symbol_alloc(min_symbol_id, min_symbol_id+nb_symbol_id-1 , symbol_size);
+    swif_full_symbol_t *full_symbol = full_symbol_alloc(min_symbol_id, 
+                            min_symbol_id+nb_symbol_id-1, symbol_size);
     /* copy the coefs */
     memcpy(full_symbol->coef, symbol_coef_table, nb_symbol_id * sizeof(uint8_t));
     full_symbol->first_id = min_symbol_id;
-    full_symbol->last_id = min_symbol_id+nb_symbol_id-1;
+    full_symbol->last_id = min_symbol_id + nb_symbol_id - 1;
     full_symbol_adjust_min_max_coef(full_symbol);
     /* copy the data */
-    memcpy(full_symbol->data, symbol_data,  symbol_size);   
+    memcpy(full_symbol->data, symbol_data, symbol_size);   
     full_symbol->data_size = symbol_size;  
     return full_symbol;
 }
@@ -510,7 +500,7 @@ static bool full_symbol_adjust_min_coef(swif_full_symbol_t* symbol)
     bool result = false;
     symbol->first_nonzero_id = SYMBOL_ID_NONE;
 
-    for (symbol_id_t  i=symbol->first_id ;i<=symbol->last_id; i++) {
+    for (symbol_id_t i = symbol->first_id; i <= symbol->last_id; i++) {
         if (full_symbol_get_coef(symbol, i) != 0){
             symbol->first_nonzero_id = i;
             result = true;
@@ -542,8 +532,8 @@ static bool full_symbol_adjust_max_coef(swif_full_symbol_t* symbol)
     bool result = false;
     symbol->last_nonzero_id = SYMBOL_ID_NONE;
 
-    for (symbol_id_t  j=0; j<full_symbol_count_allocated_coef(symbol); j++) {    
-        symbol_id_t  i = symbol->last_id-j;    
+    for (symbol_id_t j = 0; j < full_symbol_count_allocated_coef(symbol); j++) {    
+        symbol_id_t i = symbol->last_id - j;    
          if (full_symbol_get_coef(symbol, i) != 0){
             symbol->last_nonzero_id = i;
             result = true;
@@ -628,8 +618,8 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
 
     fprintf(out, ", 'coef_value':[");
     uint32_t i;
-    if ( full_symbol->first_id != SYMBOL_ID_NONE) {
-        for (i=full_symbol->first_id; i<=full_symbol->last_id; i++) {
+    if (full_symbol->first_id != SYMBOL_ID_NONE) {
+        for (i = full_symbol->first_id; i <= full_symbol->last_id; i++) {
             if (i > full_symbol->first_id)
                 fprintf(out, ", ");
         fprintf(out, "%u", full_symbol_get_coef(full_symbol,i));
@@ -638,7 +628,7 @@ void full_symbol_dump(swif_full_symbol_t *full_symbol, FILE *out)
     fprintf(out, "]");
     fprintf(out, ", 'data':");
     fprintf(out, "'");
-    for (i=0; i<full_symbol->data_size; i++)
+    for (i=0; i < full_symbol->data_size; i++)
         fprintf(out, "\\x%02x", full_symbol->data[i]);
     fprintf(out, "'");
     fprintf(out, " }");
@@ -695,17 +685,17 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
         symbol_result->last_nonzero_id = SYMBOL_ID_NONE;
     }
     if ( symbol1->first_nonzero_id <= symbol2->first_nonzero_id){
-         first_coef_index = symbol1->first_nonzero_id ;
+         first_coef_index = symbol1->first_nonzero_id;
     }
     else {
-         first_coef_index = symbol2->first_nonzero_id ;
+         first_coef_index = symbol2->first_nonzero_id;
     }
 
     if ( symbol1->last_nonzero_id >= symbol2->last_nonzero_id){
-         last_coef_index = symbol1->last_nonzero_id ;
+         last_coef_index = symbol1->last_nonzero_id;
     }
     else {
-         last_coef_index = symbol2->last_nonzero_id ;
+         last_coef_index = symbol2->last_nonzero_id;
     }
 
     memset(symbol_result->coef , 0, sizeof(uint8_t)*(first_coef_index-symbol_result->first_id));

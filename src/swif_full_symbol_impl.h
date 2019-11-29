@@ -82,17 +82,6 @@ struct s_swif_full_symbol_set_t {
 /*---------------------------------------------------------------------------*/
 
 /**
- * @brief Create a set of full_symbol_t
- * Initially it is empty.
- */
-swif_full_symbol_set_t *full_symbol_set_alloc(void);
-
-/**
- * @brief Free a full_symbol set
- */
-void full_symbol_set_free(swif_full_symbol_set_t *set);
-
-/**
  * @brief Add a full_symbol to a packet set.
  * 
  * Online Gaussian elimination is performed.
@@ -171,26 +160,6 @@ void full_symbol_add_base(swif_full_symbol_t *symbol1, swif_full_symbol_t *symbo
 swif_full_symbol_t* full_symbol_add
 (swif_full_symbol_t *symbol1, swif_full_symbol_t *symbol2);
 
-
-
-/* Substration */
-//void full_symbol_sub(void *symbol1, void *symbol2, uint32_t symbol_size, uint8_t* result);
-
-
-/**
- * @brief Take a symbol and multiply it by another symbol, e.g. performs the equivalent of: result = p1 * p2
- * @param[in] p1     First symbol (to which coeff will be multiplied)
- * @param[in]     coeff      Coefficient by which the second packet is multiplied
- */
-//void full_symbol_mul(void *symbol1, uint8_t coeff, uint32_t symbol_size, uint8_t* result);
-
-
-/**
- * @brief Take a symbol and divide it by another symbol, e.g. performs the equivalent of: result = p1 / p2
- * @param[in] p1     First symbol (to which coeff will be divided)
- * @param[in]     coeff      Coefficient by which the second packet is divided
- */
-//void full_symbol_div(void *symbol1, uint32_t symbol_size, uint8_t coeff, uint8_t* result);
 
 /*---------------------------------------------------------------------------*/
 
