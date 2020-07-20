@@ -264,7 +264,7 @@ uint32_t full_symbol_set_add_as_pivot
 {
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE) {
-        return;
+        return ENTRY_INDEX_NONE;
     }
     full_symbol_scale(new_symbol, gf256_inv(full_symbol_get_coef(new_symbol, new_symbol->first_nonzero_id))); 
     symbol_id_t first_index = new_symbol->first_nonzero_id; 
