@@ -89,7 +89,6 @@ void full_symbol_set_dump(swif_full_symbol_set_t *full_symbol_set, FILE *out)
     fprintf(out, "}\n");
 }
 
-#define MIN(a,b)(a <= b ? a : b)
 
 /**
  * @brief Add a full_symbol to a packet set.

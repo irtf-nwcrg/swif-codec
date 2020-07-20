@@ -10,11 +10,10 @@ extern "C" {
     __FILE__, __LINE__, __func__, ##args)
 //#define WITH_DEBUG
 #ifdef WITH_DEBUG
-#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s: %d: %s(): " fmt, \
-    __FILE__, __LINE__, __func__, ##args)
+//#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s: %d: %s(): " fmt, __FILE__, __LINE__, __func__, ##args)
 #define IF_DEBUG(...) do { __VA_ARGS__; } while(0)
 #else
-#define DEBUG_PRINT(fmt, args...) do { } while(0)
+// #define DEBUG_PRINT(fmt, args...) do { } while(0)
 #define IF_DEBUG(...) do { } while(0)
 #endif
 /*---------------------------------------------------------------------------*/
