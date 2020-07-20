@@ -47,7 +47,7 @@ struct s_swif_full_symbol_t {
     /* first_id, last_id  relate to the memory allocation
        can be SYMBOL_ID_NONE (when no coefficient available) */
     uint8_t *coef; /* never NULL */
-    symbol_id_t first_id; /* coef[0] is the coefficient of first symbol_id */
+    symbol_id_t first_id; /* coef[0] is the coefficient of first_id */
     symbol_id_t last_id;  /* (last included) */
 
     /* first_nonzero_id, last_nonzero_id relate to the coef array

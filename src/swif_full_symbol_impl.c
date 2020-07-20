@@ -253,7 +253,7 @@ void full_symbol_set_notify_decoded
 (swif_full_symbol_set_t *set, symbol_id_t decoded_id) 
 {
     if (set->notify_decoded_func != NULL) {
-	set->notify_decoded_func(set, decoded_id, set->notify_context);
+        set->notify_decoded_func(set, decoded_id, set->notify_context);
     }
 }
 
@@ -383,6 +383,7 @@ uint8_t full_symbol_get_coef
     return 0; 
 }
 
+
 symbol_id_t full_symbol_get_coef_index
 (swif_full_symbol_t *full_symbol, uint32_t symbol_id)
 {                              
@@ -428,7 +429,7 @@ swif_full_symbol_t *full_symbol_create
  */
 void full_symbol_free(swif_full_symbol_t* full_symbol)
 {
-    DEBUG_PRINT("free: %08x\n", (unsigned int)full_symbol);
+    //DEBUG_PRINT("free: %08x\n", (unsigned int)full_symbol);
     assert(full_symbol != NULL);
     assert(full_symbol->coef != NULL);
     free(full_symbol->coef);

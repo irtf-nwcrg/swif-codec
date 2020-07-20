@@ -123,6 +123,32 @@ swif_status_t   swif_rlc_decoder_release (swif_decoder_t*        dec)
 	return SWIF_STATUS_OK;
 }
 
+/**
+ * Internal function: map the decoded callback function of full_symbol
+ * to the one of swif_rlc_decoder,
+ **/
+static void rlc_decoder_notify_decoded(
+			   swif_full_symbol_set_t *set,
+			   symbol_id_t decoded_id,
+			   void* dec)
+{
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+    printf("notify decoded: %u\n", decoded_id);
+	swif_full_symbol_t *full_symbol = full_symbol_set_get_pivot(
+        rlc_dec->symbol_set,
+		decoded_id);
+	uint8_t *symbol_data = (uint8_t*)malloc(full_symbol->data_size);
+	if (symbol_data == NULL) {
+        fprintf(stderr, "rlc_decoder_notify_decoded() failed! No memory \n");
+        return;
+    }
+	full_symbol_get_data(full_symbol, symbol_data);
+	rlc_dec->decoded_source_symbol_callback(
+        rlc_dec->context_4_callback,
+		symbol_data,
+		(esi_t)decoded_id); // XXX: esi_t is different from symbol_id_t
+}
+
 
 /**
  * Set the various callback functions for this decoder.
@@ -147,7 +173,10 @@ swif_status_t   swif_rlc_decoder_set_callback_functions (
 // NOT YET
     swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
     rlc_dec->symbol_set->notify_context = context_4_callback ;
-    rlc_dec->decoded_source_symbol_callback = decoded_source_symbol_callback; 
+    rlc_dec->decoded_source_symbol_callback = decoded_source_symbol_callback;
+	assert(rlc_dec->symbol_set != NULL);
+	rlc_dec->symbol_set->notify_decoded_func = rlc_decoder_notify_decoded;
+	rlc_dec->symbol_set->notify_context = (void*)rlc_dec;	
 	return SWIF_STATUS_OK;
 }
 
@@ -213,12 +242,12 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
                                 esi_t           new_symbol_esi)
 {
        
-        swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
-        //XXX;
-        swif_full_symbol_t *full_symbol = NULL;
-        full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
-        full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
-        //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+	//XXX;
+	swif_full_symbol_t *full_symbol = NULL;
+	full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
+	full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
+    //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
 
