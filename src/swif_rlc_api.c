@@ -1,5 +1,3 @@
-#define DEBUG 1
-
 #include "swif_includes.h"
 #include "swif_rlc_api.h"
 #include "swif_coding_coefficients.h"
@@ -88,10 +86,16 @@ swif_status_t   swif_rlc_build_repair_symbol (
     uint32_t	i;
 
     if (*new_buf == 0)
+    {
         if ((*new_buf = calloc(1, enc->symbol_size)) == NULL) {
             fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
             return SWIF_STATUS_ERROR;
         }
+    }
+    else
+    {
+        memset(*new_buf,0,enc->symbol_size);
+    }
 
     DEBUG_PRINT("\nbuild-repair: \n");
     for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
