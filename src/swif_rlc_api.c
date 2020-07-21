@@ -173,6 +173,7 @@ swif_status_t   swif_rlc_decoder_set_callback_functions (
 // NOT YET
     swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
     rlc_dec->symbol_set->notify_context = context_4_callback ;
+    rlc_dec->context_4_callback = context_4_callback;
     rlc_dec->decoded_source_symbol_callback = decoded_source_symbol_callback;
 	assert(rlc_dec->symbol_set != NULL);
 	rlc_dec->symbol_set->notify_decoded_func = rlc_decoder_notify_decoded;
