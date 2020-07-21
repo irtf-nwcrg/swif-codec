@@ -312,7 +312,7 @@ swif_status_t   swif_rlc_encoder_add_source_symbol_to_coding_window (
     if (enc->ew_ss_nb == enc->max_coding_window_size) {
         if (enc->source_symbol_removed_from_coding_window_callback != NULL) {
             enc->source_symbol_removed_from_coding_window_callback(enc->context_4_callback,
-                                                                    enc->ew_esi_right  - enc->ew_ss_nb);
+                                                                    enc->ew_esi_right + 1 - enc->ew_ss_nb);
         }
         enc->ew_tab[enc->ew_left] = new_src_symbol_buf;
         enc->ew_right = enc->ew_left;
