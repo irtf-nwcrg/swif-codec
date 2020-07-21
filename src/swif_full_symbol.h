@@ -23,11 +23,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-    
-#include "swif_api.h"
-
 /* There were initially two designed implementations of the full_symbol
  * - one reimplemented in swif_full_symbol_impl.c (DEFAULT ONE)
  * - one as wrapper on top of liblc (NO LONGER USED, fixed size, no malloc)

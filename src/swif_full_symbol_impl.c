@@ -6,7 +6,8 @@
  * encoding header specifying this linear combination.
  */
 
-#include "swif_full_symbol_impl.h" 
+//#include "swif_full_symbol_impl.h" 
+#include "swif_includes.h"
 
 /*---------------------------------------------------------------------------*/
 
