@@ -27,7 +27,14 @@
 
 #--------------------------------------------------
 
-CFLAGS += -Wall -g3 -fPIC -std=c99
+ifeq ($(WITH_SANITIZE),1)
+SANITIZE=-fsanitize=leak -fsanitize=address -fsanitize=undefined  -static-libasan -static-libubsan -fno-omit-frame-pointer
+else
+SANTIZE=
+endif
+
+
+CFLAGS += -Wall -g3 -fPIC -std=c99 -O3 $(SANITIZE)
 
 #------------------------------
 

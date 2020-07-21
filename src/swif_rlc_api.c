@@ -87,10 +87,11 @@ swif_status_t   swif_rlc_build_repair_symbol (
     swif_encoder_rlc_cb_t* enc = (swif_encoder_rlc_cb_t*) generic_encoder;
     uint32_t	i;
 
-    if ((*new_buf = calloc(1, enc->symbol_size)) == NULL) {
-        fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
-        return SWIF_STATUS_ERROR;
-    }
+    if (*new_buf == 0)
+        if ((*new_buf = calloc(1, enc->symbol_size)) == NULL) {
+            fprintf(stderr, "swif_rlc_build_repair_symbol failed! No memory\n");
+            return SWIF_STATUS_ERROR;
+        }
 
     DEBUG_PRINT("\nbuild-repair: \n");
     for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
@@ -137,15 +138,10 @@ static void rlc_decoder_notify_decoded(
 	swif_full_symbol_t *full_symbol = full_symbol_set_get_pivot(
         rlc_dec->symbol_set,
 		decoded_id);
-	uint8_t *symbol_data = (uint8_t*)malloc(full_symbol->data_size);
-	if (symbol_data == NULL) {
-        fprintf(stderr, "rlc_decoder_notify_decoded() failed! No memory \n");
-        return;
-    }
-	full_symbol_get_data(full_symbol, symbol_data);
+
 	rlc_dec->decoded_source_symbol_callback(
         rlc_dec->context_4_callback,
-		symbol_data,
+		full_symbol->data,
 		(esi_t)decoded_id); // XXX: esi_t is different from symbol_id_t
 }
 
@@ -228,6 +224,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
         full_symbol_dump(full_symbol,stdout);
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
+        
+        full_symbol_free(full_symbol);
+        
         //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
@@ -248,6 +247,8 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
 	swif_full_symbol_t *full_symbol = NULL;
 	full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
 	full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
+
+	full_symbol_free(full_symbol);
     //fprintf(stderr, "[XXX] not checking if too many stored symbols\n");
 	return SWIF_STATUS_OK;
 }
