@@ -216,8 +216,10 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
     bool is_zero = true;
     full_symbol_adjust_min_max_coef(new_symbol);
     if (new_symbol->first_nonzero_id == SYMBOL_ID_NONE)
+    {
+        full_symbol_free(new_symbol);
         return NULL;
-
+    }
     for (uint32_t i = new_symbol->first_nonzero_id ; i <= new_symbol->last_nonzero_id; i++) {
         uint8_t coef = full_symbol_get_coef(new_symbol, i); 
         if (coef != 0) {
@@ -233,6 +235,10 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                 if (!full_symbol_is_zero(symbol2)) {
                     full_symbol_free(new_symbol);
                     new_symbol =  symbol2;
+                }
+                else
+                {
+                 full_symbol_free(symbol2);
                 }
                 full_symbol_free(symbol1_cloned);
             } else {
@@ -303,7 +309,9 @@ void full_symbol_add_with_elimination(swif_full_symbol_set_t *full_symbol_set,
 	      full_symbol_set, fss_remove_pivot);
         full_symbol_free(fss_remove_pivot);
 	if (idx  == ENTRY_INDEX_NONE)
+	{
 	  return;
+        }
 	swif_full_symbol_t* stored_symbol
 	  = full_symbol_set->full_symbol_tab[idx];
 	bool is_decoded = (!full_symbol_has_one_id(new_symbol))
