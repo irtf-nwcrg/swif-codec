@@ -226,6 +226,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
 
         swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
+        if (full_symbol == NULL) {
+            return SWIF_STATUS_ERROR;
+        }
         full_symbol_dump(full_symbol,stdout);
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
         
@@ -250,6 +253,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
 	//XXX;
 	swif_full_symbol_t *full_symbol = NULL;
 	full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
+	if (full_symbol == NULL) {
+	    return SWIF_STATUS_ERROR;
+	}
 	full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
 
 	full_symbol_free(full_symbol);
@@ -288,6 +294,9 @@ swif_status_t   swif_rlc_decoder_reset_coding_window (swif_decoder_t*  dec)
         /* free the structure in case of problem */
         uint8_t *coef
         = (uint8_t *)calloc(rlc_dec->symbol_size , sizeof(uint8_t));
+        if (coef == NULL) {
+            return SWIF_STATUS_ERROR;
+        }
         rlc_dec->coef_tab = coef;
     }
     
@@ -550,11 +559,14 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->max_coding_window_size = max_coding_window_size;
     if ((enc->cc_tab = calloc(max_coding_window_size, sizeof(uint8_t))) == NULL){
         fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
+        free(enc);
         return NULL;
     }
 
     if ((enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
         fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
+        free(enc->cc_tab);
+        free(enc);
         return NULL;
     }
     enc->ew_right = enc->ew_left = 0;
@@ -602,6 +614,11 @@ swif_decoder_t* swif_rlc_decoder_create (
     dec->max_coding_window_size = max_coding_window_size;
     dec->max_linear_system_size = max_linear_system_size;
     dec->symbol_set = full_symbol_set_alloc();
+    if (dec->symbol_set == NULL) {
+        fprintf(stderr, "swif_decoder_create() failed! No memory for symbol_set\n");
+        free(dec);
+        return NULL;
+    }
 #if 0
     dec->ew_right = dec->ew_left = 0;
     dec->ew_esi_right = INVALID_ESI;
