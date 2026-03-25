@@ -244,7 +244,7 @@ end:
 	if (fec_oti) {
 		free(fec_oti);
 	}
-	if (src_symbols_tab && src_symbols_status_tab && repair_symbols_tab) {
+	if (src_symbols_tab && src_symbols_status_tab) {
 		for (esi = 0; esi < tot_src; esi++) {
 			if (src_symbols_status_tab[esi] == SRC_SYMBOL_STATUS_RECEIVED) {
 				/* here the buffer starts sizeof(FPI) bytes before */
@@ -254,8 +254,14 @@ end:
 				free(src_symbols_tab[esi]);
 			}
 		}
+	}
+	if (src_symbols_tab) {
 		free(src_symbols_tab);
+	}
+	if (src_symbols_status_tab) {
 		free(src_symbols_status_tab);
+	}
+	if (repair_symbols_tab) {
 		for (uint32_t i = 0; i < tot_enc - tot_src; i++) {
 			if (repair_symbols_tab[i]) {
 				/* here the buffer starts sizeof(FPI) bytes before */

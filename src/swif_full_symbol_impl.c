@@ -37,7 +37,7 @@ swif_full_symbol_set_t *full_symbol_set_alloc()
     swif_full_symbol_t **full_symbol_tab
       = calloc(result->size, sizeof(swif_full_symbol_t *)); 
     if (full_symbol_tab == NULL) {
-        free(full_symbol_tab);
+        free(result);
         return NULL;
     }
     result->full_symbol_tab = full_symbol_tab;
@@ -137,18 +137,18 @@ uint32_t full_symbol_set_add
             } else {
                 set->size = set_i0-new_i0 +1;
             }
-            set->full_symbol_tab = realloc(set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
+            swif_full_symbol_t **new_tab = realloc(set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
+            if (new_tab == NULL) {
+                WARNING_PRINT("failed to reallocate full_symbol_tab");
+                full_symbol_free(full_symbol_cloned);
+                return ENTRY_INDEX_NONE;
+            }
+            set->full_symbol_tab = new_tab;
             memmove(set->full_symbol_tab + (set_i0-new_i0), set->full_symbol_tab, sizeof(swif_full_symbol_t*) * old_size);
 	    memset(set->full_symbol_tab, 0,
 		   sizeof(swif_full_symbol_t *)*(set_i0-new_i0));
         }
         IF_DEBUG(full_symbol_set_dump(set, stdout));
-        if (set->full_symbol_tab == NULL) {
-            WARNING_PRINT("failed to reallocate full_symbol_tab");
-            full_symbol_free(full_symbol_cloned);
-            free(set->full_symbol_tab);
-            return ENTRY_INDEX_NONE;
-        }
         set->full_symbol_tab[0] = full_symbol_cloned;
         set->nmbr_packets++;
         set->first_symbol_id = MIN(set_i0, new_i0); /* actually should be new_i0 */
@@ -174,16 +174,15 @@ uint32_t full_symbol_set_add
     assert(idx_pos < set->size);
 
     /* reallocate memory for the table of pointers in full_symbol */
-    set->full_symbol_tab = realloc(
+    swif_full_symbol_t **new_tab = realloc(
         set->full_symbol_tab, set->size * sizeof(swif_full_symbol_t *));
-    memset(set->full_symbol_tab+old_size, 0, sizeof(swif_full_symbol_t*)*(set->size-old_size));
-
-    if (set->full_symbol_tab == NULL) {
+    if (new_tab == NULL) {
         WARNING_PRINT("failed to reallocate full_symbol_tab");
         full_symbol_free(full_symbol_cloned);
-        free(set->full_symbol_tab);
         return ENTRY_INDEX_NONE;
     }
+    set->full_symbol_tab = new_tab;
+    memset(set->full_symbol_tab+old_size, 0, sizeof(swif_full_symbol_t*)*(set->size-old_size));
 
     set->full_symbol_tab[idx_pos] = full_symbol_cloned;
     set->nmbr_packets++;
@@ -212,6 +211,10 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
 {   
     /* only copies of symbol are stored, so first clone it */
     swif_full_symbol_t *new_symbol = full_symbol_clone(new_symbol1);
+    if (new_symbol == NULL) {
+        WARNING_PRINT("cannot allocate memory for full_symbol cloning");
+        return NULL;
+    }
     /* is_zero variable is used to check if all the symbol coefs are zero */
     bool is_zero = true;
     full_symbol_adjust_min_max_coef(new_symbol);
@@ -228,10 +231,21 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                 swif_full_symbol_t *symbol1 = symbol_pivot;
                 /* the symbol is not modified: we first clone it */
                 swif_full_symbol_t *symbol1_cloned = full_symbol_clone(symbol1);
+                if (symbol1_cloned == NULL) {
+                    WARNING_PRINT("cannot allocate memory for full_symbol cloning");
+                    full_symbol_free(new_symbol);
+                    return NULL;
+                }
                 /* symbol1_cloned is multiplied by the associated coef */
                 full_symbol_scale(symbol1_cloned, coef);
                 swif_full_symbol_t *symbol2 = full_symbol_add(new_symbol, symbol1_cloned);
-                /* After the addition, symbol2 may be null, in this case w eliminate it */
+                full_symbol_free(symbol1_cloned);
+                if (symbol2 == NULL) {
+                    WARNING_PRINT("cannot allocate memory for full_symbol addition");
+                    full_symbol_free(new_symbol);
+                    return NULL;
+                }
+                /* After the addition, symbol2 may be null, in this case we eliminate it */
                 if (!full_symbol_is_zero(symbol2)) {
                     full_symbol_free(new_symbol);
                     new_symbol =  symbol2;
@@ -240,7 +254,6 @@ swif_full_symbol_t *full_symbol_set_remove_each_pivot
                 {
                  full_symbol_free(symbol2);
                 }
-                full_symbol_free(symbol1_cloned);
             } else {
                 is_zero = false; 
             }
@@ -279,13 +292,21 @@ uint32_t full_symbol_set_add_as_pivot
     for(uint32_t i = 0 ; i < full_symbol_set->size; i++) {
         if (full_symbol_set->full_symbol_tab[i]) {
             swif_full_symbol_t *symbol_cloned = full_symbol_clone(new_symbol);
+            if (symbol_cloned == NULL) {
+                WARNING_PRINT("cannot allocate memory for full_symbol cloning");
+                return ENTRY_INDEX_NONE;
+            }
             uint8_t coef = full_symbol_get_coef(full_symbol_set->full_symbol_tab[i], first_index); /* XXX: if coef == 0, nothing to do */
             full_symbol_scale(symbol_cloned, coef);
             swif_full_symbol_t * symbol2 = full_symbol_add(full_symbol_set->full_symbol_tab[i], symbol_cloned);
+            full_symbol_free(symbol_cloned);
+            if (symbol2 == NULL) {
+                WARNING_PRINT("cannot allocate memory for full_symbol addition");
+                return ENTRY_INDEX_NONE;
+            }
 	    bool is_decoded = !full_symbol_has_one_id(full_symbol_set->full_symbol_tab[i]) && full_symbol_has_one_id(symbol2);
             full_symbol_free(full_symbol_set->full_symbol_tab[i]);
             full_symbol_set->full_symbol_tab[i] = symbol2;
-            full_symbol_free(symbol_cloned);
 	    if (is_decoded) {
   	        symbol_id_t si = full_symbol_get_min_symbol_id(symbol2);
 	        assert(full_symbol_get_coef(symbol2, si)  == 1);
@@ -345,7 +366,6 @@ swif_full_symbol_t *full_symbol_alloc
     swif_full_symbol_t *result
         = (swif_full_symbol_t *)calloc(1, sizeof(swif_full_symbol_t));
     if (result == NULL) {
-        free(result);
         return NULL;
     }
     /* allocate coef and data */
@@ -408,6 +428,9 @@ swif_full_symbol_t *full_symbol_create_from_source
 (uint32_t symbol_id, uint8_t *symbol_data, uint32_t symbol_size)
 {
     swif_full_symbol_t *full_symbol = full_symbol_alloc(symbol_id, symbol_id, symbol_size);
+    if (full_symbol == NULL) {
+        return NULL;
+    }
     symbol_id_t coef_index = full_symbol_get_coef_index(full_symbol, symbol_id);
     full_symbol->coef[coef_index] = 1;
     full_symbol_adjust_min_max_coef(full_symbol);
@@ -422,6 +445,9 @@ swif_full_symbol_t *full_symbol_create
 {
     swif_full_symbol_t *full_symbol = full_symbol_alloc(min_symbol_id, 
                             min_symbol_id+nb_symbol_id-1, symbol_size);
+    if (full_symbol == NULL) {
+        return NULL;
+    }
     /* copy the coefs */
     memcpy(full_symbol->coef, symbol_coef_table, nb_symbol_id * sizeof(uint8_t));
     full_symbol->first_id = min_symbol_id;
@@ -768,6 +794,9 @@ swif_full_symbol_t* full_symbol_add(swif_full_symbol_t *symbol1, swif_full_symbo
    
     swif_full_symbol_t *symbol_result = full_symbol_alloc(first_coef_index, last_coef_index,
         data_size);
+    if (symbol_result == NULL) {
+        return NULL;
+    }
 
     full_symbol_add_base(symbol1, symbol2, symbol_result);
     return symbol_result; 
