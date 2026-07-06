@@ -43,10 +43,13 @@ typedef struct swif_encoder_rlc_cb {
 	 */
 	esi_t 			ew_esi_right;
 
-	/** number of source currently in the encoding window 
+	/** number of source currently in the encoding window
 	* useful to differentiate the state of the buffer
 	*/
 	uint32_t 		ew_ss_nb;
+
+	/* density threshold for coding coefficient generation [0..15], 15=full density */
+	uint8_t			dt;
 
 	void (*source_symbol_removed_from_coding_window_callback) (
                                         void*   context,
@@ -92,18 +95,21 @@ typedef struct swif_decoder_rlc_cb {
 	uint8_t*		coef_tab;
 	/* the index of the first source symbol (included) */
 	uint32_t 		first_id;
-	/** number of symbols currently in the encoding window 
+	/** number of symbols currently in the encoding window
 	* useful to differentiate the state of the buffer
 	*/
 	uint32_t 		nb_id;
-        
+
+	/* density threshold for coding coefficient generation [0..15], 15=full density */
+	uint8_t			dt;
+
 	void (*source_symbol_removed_from_linear_system_callback) (
 					void*   context,
 					esi_t   old_symbol_esi);
 	void* (*decodable_source_symbol_callback) (
 					void    *context,
 					esi_t   esi);
-	void* (*decoded_source_symbol_callback) (
+	void (*decoded_source_symbol_callback) (
 					void    *context,
 					void    *new_symbol_buf,
 					esi_t   esi);

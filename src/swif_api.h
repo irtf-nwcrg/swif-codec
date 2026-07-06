@@ -285,7 +285,7 @@ typedef struct swif_decoder {
 	swif_status_t   (*set_callback_functions) (
 		struct swif_decoder*, void (*) (void*, esi_t),
 		void* (*) (void*, esi_t),
-		void* (*) (void*, void*, esi_t), void*);
+		void  (*) (void*, void*, esi_t), void*);
 	swif_status_t   (*set_parameters)  (
 		struct swif_decoder*, uint32_t, uint32_t, void*);
 	swif_status_t   (*get_parameters)  (
