@@ -22,8 +22,8 @@ K=7
 W=50
 
 # Netem impairment parameters
-DELAY_MS=20              # one-way delay in ms
-LOSS_PCT=2               # loss percentage
+DELAY=20              # one-way delay in ms
+LOSS=2               # loss percentage
 
 cleanup() {
     kill $(jobs -p) 2>/dev/null || true
@@ -62,5 +62,5 @@ sleep 1
 ${SWIF_TUN} -i ${TUN} -c ${VPEER_ADDR} -k ${K} -w ${W} &
 sleep 1
 
-sudo tc qdisc add dev $VETH root netem delay ${DELAY_MS}ms loss ${LOSS_PCT}%
-echo "=== Netem : delay=${DELAY_MS}ms, loss=${LOSS_PCT}% ==="
+sudo tc qdisc add dev $VETH root netem delay ${DELAY}ms loss ${LOSS}%
+echo "=== Netem : delay=${DELAY}ms, loss=${LOSS}% ==="
