@@ -1,8 +1,8 @@
 /*
- * SWIF Codec TUN tunnel — FEC-protected bidirectional UDP tunnel.
+ * SWiF Codec TUN tunnel — FEC-protected bidirectional UDP tunnel.
  *
- * Each endpoint runs both an encoder (local TUN → UDP) and a decoder
- * (UDP → local TUN).  Packets read from the TUN interface are padded to
+ * Each endpoint runs both an encoder (local TUN -> UDP) and a decoder
+ * (UDP -> local TUN).  Packets read from the TUN interface are padded to
  * SYMBOL_SIZE and sent as FEC source symbols.  A repair symbol is
  * generated every k source symbols.  On the receiving side, source
  * symbols are written to TUN immediately; FEC-recovered symbols are
@@ -268,7 +268,7 @@ main(int argc, char *argv[])
 	}
 	printf("Connected to TUN interface %s\n", if_name);
 
-	/* initialize SWIF encoder */
+	/* initialize SWiF encoder */
 	if ((enc = swif_encoder_create(codepoint, verbosity, SYMBOL_SIZE,
 				       ew_size)) == NULL) {
 		fprintf(stderr, "swif_encoder_create() failed\n");
@@ -282,7 +282,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* initialize SWIF decoder (linear system = 2 x window) */
+	/* initialize SWiF decoder (linear system = 2 x window) */
 	if ((dec = swif_decoder_create(codepoint, verbosity, SYMBOL_SIZE,
 				       ew_size, 2 * ew_size)) == NULL) {
 		fprintf(stderr, "swif_decoder_create() failed\n");
