@@ -56,7 +56,19 @@ swif_status_t   swif_rlc_encoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    switch (type) {
+    case swif_ENCODER_SET_PARAM_RLC_DENSITY_THRESHOLD:
+        if (length != sizeof(uint8_t) || value == NULL) {
+            enc->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+            return SWIF_STATUS_ERROR;
+        }
+        rlc_enc->dt = *(uint8_t *)value;
+        break;
+    default:
+        enc->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    }
 	return SWIF_STATUS_OK;
 }
 
@@ -70,7 +82,15 @@ swif_status_t   swif_rlc_encoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    switch (type) {
+    case swif_ENCODER_GET_PARAM_ENCODER_STATISTICS:
+        /* statistics not yet implemented */
+        enc->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    default:
+        enc->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    }
 	return SWIF_STATUS_OK;
 }
 
@@ -98,10 +118,10 @@ swif_status_t   swif_rlc_build_repair_symbol (
     }
 
     DEBUG_PRINT("\nbuild-repair: \n");
-    for (i = enc->ew_left; i < enc->ew_ss_nb; i++) {
-        uint32_t idx = i % enc->max_coding_window_size;
-        DEBUG_PRINT(" +%u.P[%u->%u]", enc->cc_tab[idx], i, idx);
-        symbol_add_scaled(*new_buf, enc->cc_tab[idx], enc->ew_tab[idx], enc->symbol_size);
+    for (i = 0; i < enc->ew_ss_nb; i++) {
+        uint32_t idx = (enc->ew_left + i) % enc->max_coding_window_size;
+        DEBUG_PRINT(" +%u.P[%u->%u]", enc->cc_tab[i], i, idx);
+        symbol_add_scaled(*new_buf, enc->cc_tab[i], enc->ew_tab[idx], enc->symbol_size);
     }
     DEBUG_PRINT("\n");
     return SWIF_STATUS_OK;
@@ -138,15 +158,15 @@ static void rlc_decoder_notify_decoded(
 			   void* dec)
 {
     swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
-    printf("notify decoded: %u\n", decoded_id);
 	swif_full_symbol_t *full_symbol = full_symbol_set_get_pivot(
         rlc_dec->symbol_set,
 		decoded_id);
 
-	rlc_dec->decoded_source_symbol_callback(
-        rlc_dec->context_4_callback,
-		full_symbol->data,
-		(esi_t)decoded_id); // XXX: esi_t is different from symbol_id_t
+	if (rlc_dec->decoded_source_symbol_callback != NULL)
+		rlc_dec->decoded_source_symbol_callback(
+			rlc_dec->context_4_callback,
+			full_symbol->data,
+			(esi_t)decoded_id);
 }
 
 
@@ -164,20 +184,21 @@ swif_status_t   swif_rlc_decoder_set_callback_functions (
                 void* (*decodable_source_symbol_callback) (
                                         void    *context,
                                         esi_t   esi),
-                void* (*decoded_source_symbol_callback) (
+                void (*decoded_source_symbol_callback) (
                                         void    *context,
                                         void    *new_symbol_buf,
                                         esi_t   esi),
                 void*        context_4_callback)
 {
-// NOT YET
     swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
-    rlc_dec->symbol_set->notify_context = context_4_callback ;
+    assert(rlc_dec->symbol_set != NULL);
     rlc_dec->context_4_callback = context_4_callback;
-    rlc_dec->decoded_source_symbol_callback = decoded_source_symbol_callback;
-	assert(rlc_dec->symbol_set != NULL);
-	rlc_dec->symbol_set->notify_decoded_func = rlc_decoder_notify_decoded;
-	rlc_dec->symbol_set->notify_context = (void*)rlc_dec;	
+    rlc_dec->source_symbol_removed_from_linear_system_callback =
+                            source_symbol_removed_from_linear_system_callback;
+    rlc_dec->decodable_source_symbol_callback  = decodable_source_symbol_callback;
+    rlc_dec->decoded_source_symbol_callback    = decoded_source_symbol_callback;
+    rlc_dec->symbol_set->notify_decoded_func   = rlc_decoder_notify_decoded;
+    rlc_dec->symbol_set->notify_context        = (void*)rlc_dec;
 	return SWIF_STATUS_OK;
 }
 
@@ -192,7 +213,19 @@ swif_status_t   swif_rlc_decoder_set_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+    switch (type) {
+    case swif_DECODER_SET_PARAM_RLC_DENSITY_THRESHOLD:
+        if (length != sizeof(uint8_t) || value == NULL) {
+            dec->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+            return SWIF_STATUS_ERROR;
+        }
+        rlc_dec->dt = *(uint8_t *)value;
+        break;
+    default:
+        dec->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    }
 	return SWIF_STATUS_OK;
 }
 
@@ -207,7 +240,15 @@ swif_status_t   swif_rlc_decoder_get_parameters  (
                                 uint32_t        length,
                                 void*           value)
 {
-// NOT YET
+    switch (type) {
+    case swif_DECODER_GET_PARAM_DECODER_STATISTICS:
+        /* statistics not yet implemented */
+        dec->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    default:
+        dec->swif_errno = SWIF_ERRNO_UNSUPPORTED_CODEPOINT;
+        return SWIF_STATUS_ERROR;
+    }
 	return SWIF_STATUS_OK;
 }
 
@@ -226,7 +267,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_source_symbol (
 
         swif_full_symbol_t *full_symbol = full_symbol_create_from_source(
                  new_symbol_esi, new_symbol_buf, rlc_dec->symbol_size);
-        full_symbol_dump(full_symbol,stdout);
+        if (full_symbol == NULL) {
+            return SWIF_STATUS_ERROR;
+        }
         full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
         
         full_symbol_free(full_symbol);
@@ -250,6 +293,9 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
 	//XXX;
 	swif_full_symbol_t *full_symbol = NULL;
 	full_symbol = full_symbol_create(rlc_dec->coef_tab, rlc_dec->first_id, rlc_dec->nb_id,new_symbol_buf,  rlc_dec->symbol_size);
+	if (full_symbol == NULL) {
+	    return SWIF_STATUS_ERROR;
+	}
 	full_symbol_add_with_elimination(rlc_dec->symbol_set, full_symbol);
 
 	full_symbol_free(full_symbol);
@@ -274,26 +320,30 @@ swif_status_t   swif_rlc_decoder_decode_with_new_repair_symbol (
  */
 swif_status_t   swif_rlc_encoder_reset_coding_window (swif_encoder_t*  enc)
 {
-// NOT YET
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    rlc_enc->ew_left      = 0;
+    rlc_enc->ew_right     = 0;
+    rlc_enc->ew_esi_right = INVALID_ESI;
+    rlc_enc->ew_ss_nb     = 0;
 	return SWIF_STATUS_OK;
 }
 
 swif_status_t   swif_rlc_decoder_reset_coding_window (swif_decoder_t*  dec)
 {
-// NOT YET
     swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
-    
-    
+
     if (rlc_dec->coef_tab == NULL) {
-        /* free the structure in case of problem */
         uint8_t *coef
-        = (uint8_t *)calloc(rlc_dec->symbol_size , sizeof(uint8_t));
+        = (uint8_t *)calloc(rlc_dec->max_coding_window_size, sizeof(uint8_t));
+        if (coef == NULL) {
+            return SWIF_STATUS_ERROR;
+        }
         rlc_dec->coef_tab = coef;
     }
-    
-    memset(rlc_dec->coef_tab, 0, rlc_dec->symbol_size);
-    rlc_dec->first_id = SYMBOL_ID_NONE ; 
-    rlc_dec->nb_id = 0 ; 
+
+    memset(rlc_dec->coef_tab, 0, rlc_dec->max_coding_window_size);
+    rlc_dec->first_id = SYMBOL_ID_NONE;
+    rlc_dec->nb_id = 0;
 	return SWIF_STATUS_OK;
 }
 
@@ -365,12 +415,27 @@ swif_status_t   swif_rlc_decoder_add_source_symbol_to_coding_window (
 
 /**
  * Remove this source symbol from the coding window.
+ * Only leftmost (oldest) removal is supported.
  */
 swif_status_t   swif_rlc_encoder_remove_source_symbol_from_coding_window (
                                 swif_encoder_t* enc,
                                 esi_t           old_src_symbol_esi)
 {
-// NOT YET
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+    esi_t left_esi;
+
+    if (rlc_enc->ew_ss_nb == 0)
+        return SWIF_STATUS_FAILURE;
+    left_esi = rlc_enc->ew_esi_right - rlc_enc->ew_ss_nb + 1;
+    if (old_src_symbol_esi != left_esi) {
+        fprintf(stderr, "swif_rlc_encoder_remove_source_symbol_from_coding_window() "
+                "failed! only leftmost removal supported (expected %u, got %u)\n",
+                left_esi, old_src_symbol_esi);
+        return SWIF_STATUS_ERROR;
+    }
+    rlc_enc->ew_tab[rlc_enc->ew_left] = NULL;
+    rlc_enc->ew_left = (rlc_enc->ew_left + 1) % rlc_enc->max_coding_window_size;
+    rlc_enc->ew_ss_nb--;
 	return SWIF_STATUS_OK;
 }
 
@@ -378,7 +443,20 @@ swif_status_t   swif_rlc_decoder_remove_source_symbol_from_coding_window (
                                 swif_decoder_t* dec,
                                 esi_t           old_src_symbol_esi)
 {
-// NOT YET
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+
+    if (rlc_dec->nb_id == 0 || rlc_dec->first_id == SYMBOL_ID_NONE)
+        return SWIF_STATUS_FAILURE;
+    if ((uint32_t)old_src_symbol_esi != rlc_dec->first_id) {
+        fprintf(stderr, "swif_rlc_decoder_remove_source_symbol_from_coding_window() "
+                "failed! only leftmost removal supported\n");
+        return SWIF_STATUS_ERROR;
+    }
+    rlc_dec->first_id++;
+    rlc_dec->nb_id--;
+    if (rlc_dec->nb_id == 0) {
+        rlc_dec->first_id = SYMBOL_ID_NONE;
+    }
 	return SWIF_STATUS_OK;
 }
 
@@ -430,7 +508,17 @@ swif_status_t   swif_rlc_decoder_set_coding_coefs_tab (
                                 void*           coding_coefs_tab,
                                 uint32_t        nb_coefs_in_tab)
 {
-// NOT YET
+    swif_decoder_rlc_cb_t *rlc_dec = (swif_decoder_rlc_cb_t *) dec;
+
+    assert(nb_coefs_in_tab <= rlc_dec->max_coding_window_size);
+    if (rlc_dec->coef_tab == NULL) {
+        if ((rlc_dec->coef_tab = (uint8_t *)calloc(
+                rlc_dec->max_coding_window_size, sizeof(uint8_t))) == NULL) {
+            fprintf(stderr, "swif_rlc_decoder_set_coding_coefs_tab() failed! No memory\n");
+            return SWIF_STATUS_ERROR;
+        }
+    }
+    memcpy(rlc_dec->coef_tab, coding_coefs_tab, nb_coefs_in_tab * sizeof(uint8_t));
 	return SWIF_STATUS_OK;
 }
 
@@ -469,7 +557,7 @@ swif_status_t   swif_rlc_encoder_generate_coding_coefs (
         swif_rlc_generate_coding_coefficients (
             (uint16_t)key, rlc_enc->cc_tab,
             rlc_enc->ew_ss_nb, /* upper bound: enc->max_window_size */
-            15 /* density dt [0-15] XXX dt=1*/,
+            rlc_enc->dt,
             8 /*=m - GF(2^^m) */);
        
 	return SWIF_STATUS_OK;
@@ -500,7 +588,7 @@ swif_status_t   swif_rlc_decoder_generate_coding_coefs (
         swif_rlc_generate_coding_coefficients (
             (uint16_t)key, rlc_dec->coef_tab,
             rlc_dec->nb_id, /* upper bound: enc->max_window_size */
-            15 /* density dt [0-15] XXX dt=1*/  ,
+            rlc_dec->dt,
             8 /*=m - GF(2^^m) */);
         DEBUG_DUMP(rlc_dec->coef_tab, rlc_dec->nb_id);
     	return SWIF_STATUS_OK;
@@ -519,7 +607,19 @@ swif_status_t   swif_rlc_encoder_get_coding_coefs_tab (
                                 void**          coding_coefs_tab,
                                 uint32_t*       nb_coefs_in_tab)
 {
-// NOT YET
+    swif_encoder_rlc_cb_t *rlc_enc = (swif_encoder_rlc_cb_t *) enc;
+
+    if (rlc_enc->cc_tab == NULL || rlc_enc->ew_ss_nb == 0) {
+        *coding_coefs_tab = NULL;
+        *nb_coefs_in_tab  = 0;
+        return SWIF_STATUS_FAILURE;
+    }
+    *nb_coefs_in_tab = rlc_enc->ew_ss_nb;
+    if ((*coding_coefs_tab = malloc(rlc_enc->ew_ss_nb * sizeof(uint8_t))) == NULL) {
+        fprintf(stderr, "swif_rlc_encoder_get_coding_coefs_tab() failed! No memory\n");
+        return SWIF_STATUS_ERROR;
+    }
+    memcpy(*coding_coefs_tab, rlc_enc->cc_tab, rlc_enc->ew_ss_nb * sizeof(uint8_t));
 	return SWIF_STATUS_OK;
 }
 
@@ -550,16 +650,20 @@ swif_encoder_t* swif_rlc_encoder_create (swif_codepoint_t codepoint,
     enc->max_coding_window_size = max_coding_window_size;
     if ((enc->cc_tab = calloc(max_coding_window_size, sizeof(uint8_t))) == NULL){
         fprintf(stderr, "swif_encoder_create cc_tab failed! No memory \n");
+        free(enc);
         return NULL;
     }
 
     if ((enc->ew_tab = calloc(max_coding_window_size, sizeof(uintptr_t))) == NULL){
         fprintf(stderr, "swif_encoder_create ew_tab failed! No memory \n");
+        free(enc->cc_tab);
+        free(enc);
         return NULL;
     }
     enc->ew_right = enc->ew_left = 0;
     enc->ew_esi_right = INVALID_ESI;
     enc->ew_ss_nb = 0;
+    enc->dt = 15; /* full density by default */
 
     enc->source_symbol_removed_from_coding_window_callback = NULL;
     enc->context_4_callback = NULL;
@@ -602,12 +706,18 @@ swif_decoder_t* swif_rlc_decoder_create (
     dec->max_coding_window_size = max_coding_window_size;
     dec->max_linear_system_size = max_linear_system_size;
     dec->symbol_set = full_symbol_set_alloc();
+    if (dec->symbol_set == NULL) {
+        fprintf(stderr, "swif_decoder_create() failed! No memory for symbol_set\n");
+        free(dec);
+        return NULL;
+    }
 #if 0
     dec->ew_right = dec->ew_left = 0;
     dec->ew_esi_right = INVALID_ESI;
     dec->ew_ss_nb = 0;
 #endif
 
+    dec->dt = 15; /* full density by default */
     dec->source_symbol_removed_from_linear_system_callback = NULL;
     dec->decodable_source_symbol_callback = NULL;
     dec->decoded_source_symbol_callback = NULL;

@@ -3,7 +3,6 @@
  * https://github.com/irtf-nwcrg/swif-codec
  */
 
-#define DEBUG 1
 #include "swif_includes.h"
 #include "swif_rlc_api.c"
 
