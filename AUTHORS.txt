@@ -7,6 +7,7 @@ Main contributors/developers (alphabetical order)
 
 Cedric Adjih (Inria, France)
 Oumaima Attia (Inria, France)
+Emmanuel Lochin (ENAC, France)
 Francois Michel (UCLouvain, Belgium)
 Vincent Roca (Inria, France)
 
